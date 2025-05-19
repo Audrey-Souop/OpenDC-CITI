@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScenarioReplayer.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.experiments.base.runner</a> &gt; <span class="el_source">ScenarioReplayer.kt</span></div><h1>ScenarioReplayer.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+@file:JvmName(&quot;ScenarioHelpers&quot;)
+
+package org.opendc.experiments.base.runner
+
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.yield
+import org.opendc.compute.api.TaskState
+import org.opendc.compute.failure.models.FailureModel
+import org.opendc.compute.simulator.TaskWatcher
+import org.opendc.compute.simulator.service.ComputeService
+import org.opendc.compute.simulator.service.ServiceTask
+import org.opendc.compute.simulator.service.TaskNature
+import org.opendc.compute.workload.Task
+import org.opendc.experiments.base.experiment.specs.FailureModelSpec
+import org.opendc.experiments.base.experiment.specs.createFailureModel
+import java.time.Duration
+import java.time.InstantSource
+import java.util.Random
+import kotlin.coroutines.coroutineContext
+import kotlin.math.max
+
+/**
+ * A watcher that is locked and waits for a change in the task state to unlock
+ * @param unlockStates determine which [TaskState] triggers an unlock.
+ *                     Default values are TERMINATED, ERROR, and DELETED.
+ */
+<span class="nc" id="L52">public class RunningTaskWatcher : TaskWatcher {</span>
+    // TODO: make this changeable
+<span class="nc" id="L54">    private val unlockStates: List&lt;TaskState&gt; = listOf(TaskState.DELETED)</span>
+
+<span class="nc" id="L56">    private val mutex: Mutex = Mutex()</span>
+
+    public suspend fun lock() {
+<span class="nc" id="L59">        mutex.lock()</span>
+<span class="nc" id="L60">    }</span>
+
+    public suspend fun wait() {
+<span class="nc" id="L63">        this.lock()</span>
+<span class="nc" id="L64">    }</span>
+
+    override fun onStateChanged(
+        task: ServiceTask,
+        newState: TaskState,
+    ) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (unlockStates.contains(newState)) {</span>
+<span class="nc" id="L71">            mutex.unlock()</span>
+        }
+<span class="nc" id="L73">    }</span>
+}
+
+/**
+ * Helper method to replay the specified list of [Task] and suspend execution util all VMs have finished.
+ *
+ * @param clock The simulation clock.
+ * @param trace The trace to simulate.
+ * @param seed The seed to use for randomness.
+ * @param submitImmediately A flag to indicate that the tasks are scheduled immediately (so not at their start time).
+ * @param failureModelSpec A failure model to use for injecting failures.
+ */
+<span class="nc" id="L85">public suspend fun ComputeService.replay(</span>
+    clock: InstantSource,
+    trace: List&lt;Task&gt;,
+<span class="nc" id="L88">    failureModelSpec: FailureModelSpec? = null,</span>
+<span class="nc" id="L89">    seed: Long = 0,</span>
+<span class="nc" id="L90">    submitImmediately: Boolean = false,</span>
+) {
+<span class="nc" id="L92">    val client = newClient()</span>
+
+    // Create a failure model based on the failureModelSpec, if not null, otherwise set failureModel to null
+<span class="nc" id="L95">    val failureModel: FailureModel? =</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        failureModelSpec?.let {</span>
+<span class="nc" id="L97">            createFailureModel(coroutineContext, clock, this, Random(seed), it)</span>
+        }
+
+<span class="nc" id="L100">    try {</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        coroutineScope {</span>
+            // Start the fault injector
+<span class="nc bnc" id="L103" title="All 2 branches missed.">            failureModel?.start()</span>
+
+<span class="nc" id="L105">            var simulationOffset = Long.MIN_VALUE</span>
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            for (entry in trace.sortedBy { it.submissionTime }) {</span>
+<span class="nc" id="L108">                val now = clock.millis()</span>
+<span class="nc" id="L109">                val start = entry.submissionTime</span>
+
+                // Set the simulationOffset based on the starting time of the first task
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                if (simulationOffset == Long.MIN_VALUE) {</span>
+<span class="nc" id="L113">                    simulationOffset = start - now</span>
+                }
+
+                // Delay the task based on the startTime given by the trace.
+<span class="nc bnc" id="L117" title="All 2 branches missed.">                if (!submitImmediately) {</span>
+<span class="nc" id="L118">                    delay(max(0, (start - now - simulationOffset)))</span>
+<span class="nc" id="L119">                    entry.deadline -= simulationOffset</span>
+                }
+
+<span class="nc" id="L122">                val workload = entry.trace</span>
+<span class="nc" id="L123">                val meta = mutableMapOf&lt;String, Any&gt;(&quot;workload&quot; to workload)</span>
+
+<span class="nc" id="L125">                val nature =</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">                    if (entry.nature == &quot;deferrable&quot;) {</span>
+<span class="nc" id="L127">                        TaskNature(true)</span>
+                    } else {
+<span class="nc" id="L129">                        TaskNature(false)</span>
+                    }
+
+<span class="nc" id="L132">                launch {</span>
+<span class="nc" id="L133">                    val task =</span>
+<span class="nc" id="L134">                        client.newTask(</span>
+<span class="nc" id="L135">                            entry.name,</span>
+<span class="nc" id="L136">                            nature,</span>
+<span class="nc" id="L137">                            Duration.ofMillis(entry.duration),</span>
+<span class="nc" id="L138">                            entry.deadline,</span>
+<span class="nc" id="L139">                            client.newFlavor(</span>
+<span class="nc" id="L140">                                entry.name,</span>
+<span class="nc" id="L141">                                entry.cpuCount,</span>
+<span class="nc" id="L142">                                entry.memCapacity,</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                                if (entry.cpuCapacity &gt; 0.0) mapOf(&quot;cpu-capacity&quot; to entry.cpuCapacity) else emptyMap(),</span>
+                            ),
+<span class="nc" id="L145">                            workload,</span>
+<span class="nc" id="L146">                            meta,</span>
+                        )
+
+<span class="nc" id="L149">                    val taskWatcher = RunningTaskWatcher()</span>
+<span class="nc" id="L150">                    taskWatcher.lock()</span>
+<span class="nc" id="L151">                    task.watch(taskWatcher)</span>
+
+                    // Wait until the task is terminated
+<span class="nc" id="L154">                    taskWatcher.wait()</span>
+<span class="nc" id="L155">                }</span>
+            }
+<span class="nc" id="L157">        }</span>
+<span class="nc" id="L158">        yield()</span>
+    } finally {
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        failureModel?.close()</span>
+<span class="nc" id="L161">        client.close()</span>
+    }
+<span class="nc" id="L163">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

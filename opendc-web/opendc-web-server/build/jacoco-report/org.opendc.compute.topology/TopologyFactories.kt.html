@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TopologyFactories.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.topology</a> &gt; <span class="el_source">TopologyFactories.kt</span></div><h1>TopologyFactories.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+@file:JvmName(&quot;TopologyFactories&quot;)
+
+package org.opendc.compute.topology
+
+import org.opendc.compute.topology.specs.BatteryJSONSpec
+import org.opendc.compute.topology.specs.ClusterJSONSpec
+import org.opendc.compute.topology.specs.ClusterSpec
+import org.opendc.compute.topology.specs.HostJSONSpec
+import org.opendc.compute.topology.specs.HostSpec
+import org.opendc.compute.topology.specs.PowerSourceSpec
+import org.opendc.compute.topology.specs.TopologySpec
+import org.opendc.simulator.compute.cpu.getPowerModel
+import org.opendc.simulator.compute.models.CpuModel
+import org.opendc.simulator.compute.models.MachineModel
+import org.opendc.simulator.compute.models.MemoryUnit
+import java.io.File
+import java.io.InputStream
+
+/**
+ * A [TopologyReader] that is used to read the cluster definition file.
+ */
+<span class="nc" id="L44">private val reader = TopologyReader()</span>
+
+// Lists used to make sure all cluster, host, power source and battery have unique names
+<span class="nc" id="L47">private val clusterNames: HashMap&lt;String, Int&gt; = HashMap()</span>
+<span class="nc" id="L48">private val hostNames: HashMap&lt;String, Int&gt; = HashMap()</span>
+<span class="nc" id="L49">private val powerSourceNames: HashMap&lt;String, Int&gt; = HashMap()</span>
+<span class="nc" id="L50">private val batteryNames: HashMap&lt;String, Int&gt; = HashMap()</span>
+
+/**
+ * Create a unique name for the specified [name] that is not already in the [names] list.
+ *
+ * If [name] is already in [names], &quot;-$i&quot; is appended to the name until a unique name is found.
+ * In which &quot;$i&quot; is an increasing integer starting from 0.
+ */
+private fun createUniqueName(
+    name: String,
+    names: MutableMap&lt;String, Int&gt;,
+): String {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">    if (name !in names) {</span>
+<span class="nc" id="L63">        names[name] = 0</span>
+<span class="nc" id="L64">        return name</span>
+    }
+
+<span class="nc" id="L67">    val latestValue = names[name]</span>
+
+<span class="nc" id="L69">    val newName = &quot;$name-$latestValue&quot;</span>
+
+<span class="nc" id="L71">    names[name] = latestValue!! + 1</span>
+
+<span class="nc" id="L73">    return newName</span>
+}
+
+/**
+ * Construct a topology from the specified [pathToFile].
+ */
+public fun clusterTopology(pathToFile: String): List&lt;ClusterSpec&gt; {
+<span class="nc" id="L80">    return clusterTopology(File(pathToFile))</span>
+}
+
+/**
+ * Construct a topology from the specified [file].
+ */
+public fun clusterTopology(file: File): List&lt;ClusterSpec&gt; {
+<span class="nc" id="L87">    val topology = reader.read(file)</span>
+<span class="nc" id="L88">    return topology.toClusterSpec()</span>
+}
+
+/**
+ * Construct a topology from the specified [input].
+ */
+public fun clusterTopology(input: InputStream): List&lt;ClusterSpec&gt; {
+<span class="nc" id="L95">    val topology = reader.read(input)</span>
+<span class="nc" id="L96">    return topology.toClusterSpec()</span>
+}
+
+/**
+ * Helper method to convert a [TopologySpec] into a list of [HostSpec]s.
+ */
+private fun TopologySpec.toClusterSpec(): List&lt;ClusterSpec&gt; {
+<span class="nc" id="L103">    clusterNames.clear()</span>
+<span class="nc" id="L104">    hostNames.clear()</span>
+<span class="nc" id="L105">    powerSourceNames.clear()</span>
+<span class="nc" id="L106">    batteryNames.clear()</span>
+
+<span class="nc" id="L108">    return clusters.map { cluster -&gt;</span>
+<span class="nc" id="L109">        cluster.toClusterSpec()</span>
+    }
+}
+
+/**
+ * Helper method to convert a [ClusterJSONSpec] into a list of [HostSpec]s.
+ */
+private fun ClusterJSONSpec.toClusterSpec(): ClusterSpec {
+<span class="nc" id="L117">    val clusterName = createUniqueName(this.name, clusterNames)</span>
+
+<span class="nc" id="L119">    val hostSpecs =</span>
+<span class="nc" id="L120">        hosts.flatMap { host -&gt;</span>
+            (
+<span class="nc bnc" id="L122" title="All 2 branches missed.">                List(host.count) {</span>
+<span class="nc" id="L123">                    host.toHostSpec(</span>
+<span class="nc" id="L124">                        clusterName,</span>
+                    )
+                }
+            )
+        }
+<span class="nc" id="L129">    val powerSourceSpec =</span>
+<span class="nc" id="L130">        PowerSourceSpec(</span>
+<span class="nc" id="L131">            createUniqueName(this.powerSource.name, powerSourceNames),</span>
+<span class="nc" id="L132">            totalPower = this.powerSource.totalPower,</span>
+<span class="nc" id="L133">            carbonTracePath = this.powerSource.carbonTracePath,</span>
+        )
+
+<span class="nc" id="L136">    var batterySpec: BatteryJSONSpec? = null</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">    if (this.battery != null) {</span>
+<span class="nc" id="L138">        batterySpec =</span>
+<span class="nc" id="L139">            BatteryJSONSpec(</span>
+<span class="nc" id="L140">                createUniqueName(this.battery.name, batteryNames),</span>
+<span class="nc" id="L141">                this.battery.capacity,</span>
+<span class="nc" id="L142">                this.battery.chargingSpeed,</span>
+<span class="nc" id="L143">                this.battery.batteryPolicy,</span>
+<span class="nc" id="L144">                this.battery.initialCharge,</span>
+<span class="nc" id="L145">                this.battery.embodiedCarbon,</span>
+<span class="nc" id="L146">                this.battery.expectedLifetime,</span>
+            )
+    }
+
+<span class="nc" id="L150">    return ClusterSpec(clusterName, hostSpecs, powerSourceSpec, batterySpec)</span>
+}
+
+/**
+ * Helper method to convert a [HostJSONSpec] into a [HostSpec]s.
+ */
+private var globalCoreId = 0
+
+private fun HostJSONSpec.toHostSpec(clusterName: String): HostSpec {
+<span class="nc" id="L159">    val units =</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        List(cpu.count) {</span>
+<span class="nc" id="L161">            CpuModel(</span>
+<span class="nc" id="L162">                globalCoreId++,</span>
+<span class="nc" id="L163">                cpu.coreCount,</span>
+<span class="nc" id="L164">                cpu.coreSpeed.toMHz(),</span>
+            )
+        }
+
+<span class="nc" id="L168">    val unknownMemoryUnit = MemoryUnit(memory.vendor, memory.modelName, memory.memorySpeed.toMHz(), memory.memorySize.toMiB().toLong())</span>
+<span class="nc" id="L169">    val machineModel =</span>
+<span class="nc" id="L170">        MachineModel(</span>
+<span class="nc" id="L171">            units,</span>
+<span class="nc" id="L172">            unknownMemoryUnit,</span>
+        )
+
+<span class="nc" id="L175">    val powerModel =</span>
+<span class="nc" id="L176">        getPowerModel(powerModel.modelType, powerModel.power.toWatts(), powerModel.maxPower.toWatts(), powerModel.idlePower.toWatts())</span>
+
+<span class="nc" id="L178">    val hostSpec =</span>
+<span class="nc" id="L179">        HostSpec(</span>
+<span class="nc" id="L180">            createUniqueName(this.name, hostNames),</span>
+<span class="nc" id="L181">            clusterName,</span>
+<span class="nc" id="L182">            machineModel,</span>
+<span class="nc" id="L183">            powerModel,</span>
+        )
+<span class="nc" id="L185">    return hostSpec</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

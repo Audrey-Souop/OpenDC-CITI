@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.simulator.SimulationDispatcherTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:28" hostname="ece-d6200-audu" time="0.133">
+  <properties/>
+  <testcase name="testRunCurrent()" classname="org.opendc.simulator.SimulationDispatcherTest" time="0.09"/>
+  <testcase name="testClock()" classname="org.opendc.simulator.SimulationDispatcherTest" time="0.011"/>
+  <testcase name="testAdvanceByLargeDelays()" classname="org.opendc.simulator.SimulationDispatcherTest" time="0.008"/>
+  <testcase name="testNegativeDelays()" classname="org.opendc.simulator.SimulationDispatcherTest" time="0.01"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="OdcVmTraceFormat" tests="10" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:34" hostname="ece-d6200-audu" time="2.706">
+  <properties/>
+  <testcase name="testResourceStatesWrite()" classname="formats.opendc.OdcVmTraceFormatTest" time="2.481"/>
+  <testcase name="[1] trace-v2.0" classname="formats.opendc.OdcVmTraceFormatTest" time="0.069"/>
+  <testcase name="[2] trace-v2.1" classname="formats.opendc.OdcVmTraceFormatTest" time="0.058"/>
+  <testcase name="[1] trace-v2.0" classname="formats.opendc.OdcVmTraceFormatTest" time="0.017"/>
+  <testcase name="[2] trace-v2.1" classname="formats.opendc.OdcVmTraceFormatTest" time="0.008"/>
+  <testcase name="testTableExists()" classname="formats.opendc.OdcVmTraceFormatTest" time="0.001"/>
+  <testcase name="testInterferenceGroupsEmpty()" classname="formats.opendc.OdcVmTraceFormatTest" time="0.004"/>
+  <testcase name="testInterferenceGroupsWrite()" classname="formats.opendc.OdcVmTraceFormatTest" time="0.016"/>
+  <testcase name="testTableDoesNotExist()" classname="formats.opendc.OdcVmTraceFormatTest" time="0.001"/>
+  <testcase name="testTables()" classname="formats.opendc.OdcVmTraceFormatTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

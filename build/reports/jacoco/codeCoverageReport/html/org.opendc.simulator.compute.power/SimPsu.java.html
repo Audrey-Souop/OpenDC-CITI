@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimPsu.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.compute.power</a> &gt; <span class="el_source">SimPsu.java</span></div><h1>SimPsu.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.compute.power;
+
+import java.util.List;
+import java.util.Map;
+import org.opendc.simulator.compute.cpu.SimCpu;
+import org.opendc.simulator.engine.engine.FlowEngine;
+import org.opendc.simulator.engine.graph.FlowConsumer;
+import org.opendc.simulator.engine.graph.FlowEdge;
+import org.opendc.simulator.engine.graph.FlowNode;
+import org.opendc.simulator.engine.graph.FlowSupplier;
+
+/**
+ * A {@link SimPsu} implementation that estimates the power consumption based on CPU usage.
+ */
+public final class SimPsu extends FlowNode implements FlowSupplier, FlowConsumer {
+    private long lastUpdate;
+
+<span class="fc" id="L40">    private double powerDemand = 0.0;</span>
+<span class="fc" id="L41">    private double powerSupplied = 0.0;</span>
+<span class="fc" id="L42">    private double totalEnergyUsage = 0.0;</span>
+
+    private FlowEdge cpuEdge;
+    private FlowEdge powerSupplyEdge;
+
+<span class="fc" id="L47">    private double capacity = Long.MAX_VALUE;</span>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Basic Getters and Setters
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Determine whether the InPort is connected to a {@link SimCpu}.
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if the InPort is connected to an OutPort, &lt;code&gt;false&lt;/code&gt; otherwise.
+     */
+    public boolean isConnected() {
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        return cpuEdge != null;</span>
+    }
+
+    /**
+     * Return the power demand of the machine (in W) measured in the PSU.
+     * &lt;p&gt;
+     * This method provides access to the power consumption of the machine before PSU losses are applied.
+     */
+    public double getPowerDemand() {
+<span class="nc" id="L68">        return this.powerDemand;</span>
+    }
+
+    /**
+     * Return the instantaneous power usage of the machine (in W) measured at the InPort of the power supply.
+     */
+    public double getPowerDraw() {
+<span class="fc" id="L75">        return this.powerSupplied;</span>
+    }
+
+    /**
+     * Return the cumulated energy usage of the machine (in J) measured at the InPort of the powers supply.
+     */
+    public double getEnergyUsage() {
+<span class="fc" id="L82">        updateCounters();</span>
+<span class="fc" id="L83">        return totalEnergyUsage;</span>
+    }
+
+    @Override
+    public double getCapacity() {
+<span class="fc" id="L88">        return this.capacity;</span>
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public SimPsu(FlowEngine engine) {
+<span class="fc" id="L96">        super(engine);</span>
+
+<span class="fc" id="L98">        lastUpdate = this.clock.millis();</span>
+<span class="fc" id="L99">    }</span>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // FlowNode related functionality
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public long onUpdate(long now) {
+<span class="fc" id="L107">        updateCounters();</span>
+<span class="fc" id="L108">        double powerSupply = this.powerDemand;</span>
+
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (powerSupply != this.powerSupplied) {</span>
+<span class="nc" id="L111">            this.pushOutgoingSupply(this.cpuEdge, powerSupply);</span>
+        }
+
+<span class="fc" id="L114">        return Long.MAX_VALUE;</span>
+    }
+
+    public void updateCounters() {
+<span class="fc" id="L118">        updateCounters(clock.millis());</span>
+<span class="fc" id="L119">    }</span>
+
+    /**
+     * Calculate the energy usage up until &lt;code&gt;now&lt;/code&gt;.
+     */
+    public void updateCounters(long now) {
+<span class="fc" id="L125">        long lastUpdate = this.lastUpdate;</span>
+<span class="fc" id="L126">        this.lastUpdate = now;</span>
+
+<span class="fc" id="L128">        long duration = now - lastUpdate;</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (duration &gt; 0) {</span>
+            // Compute the energy usage of the psu
+<span class="fc" id="L131">            this.totalEnergyUsage += (this.powerSupplied * duration * 0.001);</span>
+        }
+<span class="fc" id="L133">    }</span>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // FlowGraph Related functionality
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void pushOutgoingDemand(FlowEdge supplierEdge, double newDemand) {
+<span class="fc" id="L141">        this.powerDemand = newDemand;</span>
+<span class="fc" id="L142">        powerSupplyEdge.pushDemand(newDemand);</span>
+<span class="fc" id="L143">    }</span>
+
+    @Override
+    public void pushOutgoingSupply(FlowEdge consumerEdge, double newSupply) {
+<span class="fc" id="L147">        this.powerSupplied = newSupply;</span>
+<span class="fc" id="L148">        cpuEdge.pushSupply(newSupply);</span>
+<span class="fc" id="L149">    }</span>
+
+    @Override
+    public void handleIncomingDemand(FlowEdge consumerEdge, double newPowerDemand) {
+
+<span class="fc" id="L154">        updateCounters();</span>
+<span class="fc" id="L155">        this.powerDemand = newPowerDemand;</span>
+
+<span class="fc" id="L157">        pushOutgoingDemand(this.powerSupplyEdge, newPowerDemand);</span>
+<span class="fc" id="L158">    }</span>
+
+    @Override
+    public void handleIncomingSupply(FlowEdge supplierEdge, double newPowerSupply) {
+
+<span class="fc" id="L163">        updateCounters();</span>
+<span class="fc" id="L164">        this.powerSupplied = newPowerSupply;</span>
+
+<span class="fc" id="L166">        pushOutgoingSupply(this.cpuEdge, newPowerSupply);</span>
+<span class="fc" id="L167">    }</span>
+
+    @Override
+    public void addConsumerEdge(FlowEdge consumerEdge) {
+<span class="fc" id="L171">        this.cpuEdge = consumerEdge;</span>
+<span class="fc" id="L172">    }</span>
+
+    @Override
+    public void addSupplierEdge(FlowEdge supplierEdge) {
+<span class="fc" id="L176">        this.powerSupplyEdge = supplierEdge;</span>
+<span class="fc" id="L177">    }</span>
+
+    @Override
+    public void removeConsumerEdge(FlowEdge consumerEdge) {
+<span class="nc" id="L181">        this.cpuEdge = null;</span>
+<span class="nc" id="L182">    }</span>
+
+    @Override
+    public void removeSupplierEdge(FlowEdge supplierEdge) {
+<span class="fc" id="L186">        this.powerSupplyEdge = null;</span>
+<span class="fc" id="L187">    }</span>
+
+    @Override
+    public Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; getConnectedEdges() {
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        List&lt;FlowEdge&gt; supplyingEdges = cpuEdge != null ? List.of(cpuEdge) : List.of();</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        List&lt;FlowEdge&gt; consumingEdges = powerSupplyEdge != null ? List.of(powerSupplyEdge) : List.of();</span>
+
+<span class="nc" id="L194">        return Map.of(</span>
+                FlowEdge.NodeType.SUPPLYING, supplyingEdges,
+                FlowEdge.NodeType.CONSUMING, consumingEdges);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

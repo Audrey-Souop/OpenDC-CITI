@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Scenario.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.experiments.base.experiment</a> &gt; <span class="el_source">Scenario.kt</span></div><h1>Scenario.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.experiments.base.experiment
+
+import org.opendc.experiments.base.experiment.specs.CheckpointModelSpec
+import org.opendc.experiments.base.experiment.specs.ExportModelSpec
+import org.opendc.experiments.base.experiment.specs.FailureModelSpec
+import org.opendc.experiments.base.experiment.specs.ScenarioTopologySpec
+import org.opendc.experiments.base.experiment.specs.WorkloadSpec
+import org.opendc.experiments.base.experiment.specs.allocation.AllocationPolicySpec
+
+/**
+ * A data class representing a scenario for a set of experiments.
+ *
+ * @property topology The list of HostSpec representing the topology of the scenario.
+ * @property workload The WorkloadSpec representing the workload of the scenario.
+ * @property allocationPolicy The AllocationPolicySpec representing the allocation policy of the scenario.
+ * @property failureModel The FailureModel representing the failure model of the scenario. It can be null.
+ * @property exportModel The ExportSpec representing the export model of the scenario. It defaults to an instance of ExportSpec.
+ * @property outputFolder The String representing the output folder of the scenario. It defaults to &quot;output&quot;.
+ * @property name The String representing the name of the scenario. It defaults to an empty string.
+ * @property runs The Int representing the number of runs of the scenario. It defaults to 1.
+ * @property initialSeed The Int representing the initial seed of the scenario. It defaults to 0.
+ * @property computeExportConfig configures which parquet columns are to be included in the output files.
+ */
+<span class="nc" id="L46">public data class Scenario(</span>
+<span class="nc" id="L47">    var id: Int = -1,</span>
+<span class="nc" id="L48">    val name: String = &quot;&quot;,</span>
+<span class="nc" id="L49">    val outputFolder: String = &quot;output&quot;,</span>
+<span class="nc" id="L50">    val runs: Int = 1,</span>
+<span class="nc" id="L51">    val initialSeed: Int = 0,</span>
+<span class="nc" id="L52">    val topologySpec: ScenarioTopologySpec,</span>
+<span class="nc" id="L53">    val workloadSpec: WorkloadSpec,</span>
+<span class="nc" id="L54">    val allocationPolicySpec: AllocationPolicySpec,</span>
+<span class="nc" id="L55">    val exportModelSpec: ExportModelSpec = ExportModelSpec(),</span>
+<span class="nc" id="L56">    val failureModelSpec: FailureModelSpec?,</span>
+<span class="nc" id="L57">    val checkpointModelSpec: CheckpointModelSpec?,</span>
+<span class="nc" id="L58">    val maxNumFailures: Int = 10,</span>
+<span class="nc" id="L59">)</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

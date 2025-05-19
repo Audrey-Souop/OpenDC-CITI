@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.common.DispatcherCoroutineDispatcherTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:28" hostname="ece-d6200-audu" time="0.745">
+  <properties/>
+  <testcase name="testTimeout()" classname="org.opendc.common.DispatcherCoroutineDispatcherTest" time="0.717"/>
+  <testcase name="testDelay()" classname="org.opendc.common.DispatcherCoroutineDispatcherTest" time="0.006"/>
+  <testcase name="testYield()" classname="org.opendc.common.DispatcherCoroutineDispatcherTest" time="0.009"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

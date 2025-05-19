@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="TableReader for Resource States" tests="7" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:34" hostname="ece-d6200-audu" time="0.026">
+  <properties/>
+  <testcase name="testReadWithoutNextRow()" classname="formats.bitbrains.BitbrainsExTraceFormatTest$ResourceStatesTableReaderTest" time="0.006"/>
+  <testcase name="testReadAfterFinish()" classname="formats.bitbrains.BitbrainsExTraceFormatTest$ResourceStatesTableReaderTest" time="0.005"/>
+  <testcase name="testReadFully()" classname="formats.bitbrains.BitbrainsExTraceFormatTest$ResourceStatesTableReaderTest" time="0.001"/>
+  <testcase name="testVerifyNullColumns()" classname="formats.bitbrains.BitbrainsExTraceFormatTest$ResourceStatesTableReaderTest" time="0.001"/>
+  <testcase name="testResolve()" classname="formats.bitbrains.BitbrainsExTraceFormatTest$ResourceStatesTableReaderTest" time="0.002"/>
+  <testcase name="testResolveEmpty()" classname="formats.bitbrains.BitbrainsExTraceFormatTest$ResourceStatesTableReaderTest" time="0.001"/>
+  <testcase name="testReadNonExistentColumns()" classname="formats.bitbrains.BitbrainsExTraceFormatTest$ResourceStatesTableReaderTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

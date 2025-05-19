@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LocalParquetReader.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.util.parquet</a> &gt; <span class="el_source">LocalParquetReader.kt</span></div><h1>LocalParquetReader.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.util.parquet
+
+import org.apache.parquet.hadoop.ParquetReader
+import org.apache.parquet.hadoop.api.ReadSupport
+import org.apache.parquet.io.InputFile
+import java.io.File
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.isDirectory
+
+/**
+ * A helper class to read Parquet files from the filesystem.
+ *
+ * This class wraps a [ParquetReader] in order to support reading partitioned Parquet datasets.
+ *
+ * @param path The path to the Parquet file or directory to read.
+ * @param readSupport Helper class to perform conversion from Parquet to [T].
+ * @param strictTyping A flag to disable strict typing of primitive types.
+ */
+<span class="nc" id="L43">public class LocalParquetReader&lt;out T&gt;(</span>
+    path: Path,
+<span class="nc" id="L45">    private val readSupport: ReadSupport&lt;T&gt;,</span>
+<span class="nc" id="L46">    private val strictTyping: Boolean = true,</span>
+) : AutoCloseable {
+    /**
+     * The input files to process.
+     */
+    private val filesIterator =
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (path.isDirectory()) {</span>
+<span class="nc" id="L53">            Files.list(path)</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                .filter { !it.isDirectory() }</span>
+<span class="nc" id="L55">                .sorted()</span>
+<span class="nc" id="L56">                .map { LocalInputFile(it) }</span>
+<span class="nc" id="L57">                .iterator()</span>
+        } else {
+<span class="nc" id="L59">            listOf(LocalInputFile(path)).iterator()</span>
+        }
+
+    /**
+     * The Parquet reader to use.
+     */
+    private var reader: ParquetReader&lt;T&gt;? = null
+
+    /**
+     * Construct a [LocalParquetReader] for the specified [file].
+     */
+<span class="nc" id="L70">    public constructor(file: File, readSupport: ReadSupport&lt;T&gt;) : this(file.toPath(), readSupport)</span>
+
+    /**
+     * Read a single entry in the Parquet file.
+     */
+    public fun read(): T? {
+<span class="nc" id="L76">        return try {</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">            val next = reader?.read()</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            if (next != null) {</span>
+<span class="nc" id="L79">                next</span>
+            } else {
+<span class="nc" id="L81">                initReader()</span>
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                if (reader == null) {</span>
+<span class="nc" id="L84">                    null</span>
+                } else {
+<span class="nc" id="L86">                    read()</span>
+                }
+            }
+<span class="nc" id="L89">        } catch (e: InterruptedException) {</span>
+<span class="nc" id="L90">            throw IOException(e)</span>
+        }
+    }
+
+    /**
+     * Close the Parquet reader.
+     */
+    override fun close() {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        reader?.close()</span>
+<span class="nc" id="L99">    }</span>
+
+    /**
+     * Initialize the next reader.
+     */
+    private fun initReader() {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        reader?.close()</span>
+
+<span class="nc" id="L107">        try {</span>
+<span class="nc" id="L108">            this.reader =</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                if (filesIterator.hasNext()) {</span>
+<span class="nc" id="L110">                    createReader(filesIterator.next())</span>
+                } else {
+<span class="nc" id="L112">                    null</span>
+                }
+<span class="nc" id="L114">        } catch (e: Throwable) {</span>
+<span class="nc" id="L115">            this.reader = null</span>
+<span class="nc" id="L116">            throw e</span>
+        }
+<span class="nc" id="L118">    }</span>
+
+    /**
+     * Construct a [ParquetReader] for the specified [input] with a custom [ReadSupport].
+     */
+    private fun createReader(input: InputFile): ParquetReader&lt;T&gt; {
+<span class="nc" id="L124">        return object : ParquetReader.Builder&lt;T&gt;(input) {</span>
+<span class="nc" id="L125">            override fun getReadSupport(): ReadSupport&lt;@UnsafeVariance T&gt; = this@LocalParquetReader.readSupport</span>
+        }
+<span class="nc" id="L127">            .set(&quot;parquet.strict.typing&quot;, strictTyping.toString())</span>
+<span class="nc" id="L128">            .build()</span>
+    }
+<span class="nc" id="L130">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

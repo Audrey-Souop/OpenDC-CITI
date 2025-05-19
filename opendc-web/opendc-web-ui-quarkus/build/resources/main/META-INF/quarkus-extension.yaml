@@ -1,0 +1,17 @@
+---
+name: "OpenDC Web UI"
+metadata:
+  status: "preview"
+  unlisted: true
+  built-with-quarkus-core: "3.8.0"
+  extension-dependencies:
+  - "io.quarkus:quarkus-smallrye-context-propagation"
+  - "io.quarkus:quarkus-netty"
+  - "io.quarkus:quarkus-arc"
+  - "io.quarkus:quarkus-vertx"
+  - "io.quarkus:quarkus-mutiny"
+  - "io.quarkus:quarkus-core"
+  - "io.quarkus:quarkus-vertx-http"
+  - "io.quarkus:quarkus-virtual-threads"
+artifact: "org.opendc.web:opendc-web-ui-quarkus::jar:unspecified"
+description: "Quarkus extension for serving OpenDC web interface"

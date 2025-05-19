@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TableReaderTestKit.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.testkit</a> &gt; <span class="el_source">TableReaderTestKit.kt</span></div><h1>TableReaderTestKit.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.testkit
+
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertAll
+import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.assertThrows
+import org.opendc.trace.TableColumn
+import org.opendc.trace.TableColumnType
+import org.opendc.trace.TableReader
+
+/**
+ * A test suite for implementations of the [TableReader] interface.
+ */
+<span class="fc" id="L41">public abstract class TableReaderTestKit {</span>
+    /**
+     * The [TableReader] instance to test.
+     */
+    public abstract val reader: TableReader
+
+    /**
+     * The columns of the table.
+     */
+    public abstract val columns: List&lt;TableColumn&gt;
+
+    @AfterEach
+    public fun tearDown() {
+<span class="fc" id="L54">        reader.close()</span>
+<span class="fc" id="L55">    }</span>
+
+    /**
+     * Test that we can resolve the columns of a table successfully.
+     */
+    @Test
+    public fun testResolve() {
+<span class="fc" id="L62">        assertAll(columns.map { column -&gt; { assertNotEquals(-1, reader.resolve(column.name)) } })</span>
+<span class="fc" id="L63">    }</span>
+
+    /**
+     * Test that resolving an empty column name fails
+     */
+    @Test
+    public fun testResolveEmpty() {
+<span class="fc" id="L70">        assertEquals(-1, reader.resolve(&quot;&quot;))</span>
+<span class="fc" id="L71">    }</span>
+
+    /**
+     * Test that reading non-existent columns fails.
+     */
+    @Test
+    public fun testReadNonExistentColumns() {
+<span class="fc" id="L78">        assumeTrue(reader.nextRow())</span>
+<span class="fc" id="L79">        assertAll(</span>
+<span class="pc" id="L80">            { assertThrows&lt;IllegalArgumentException&gt; { reader.isNull(-1) } },</span>
+<span class="pc" id="L81">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getBoolean(-1) } },</span>
+<span class="pc" id="L82">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getInt(-1) } },</span>
+<span class="pc" id="L83">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getLong(-1) } },</span>
+<span class="pc" id="L84">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getFloat(-1) } },</span>
+<span class="pc" id="L85">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getDouble(-1) } },</span>
+<span class="pc" id="L86">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getString(-1) } },</span>
+<span class="pc" id="L87">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getUUID(-1) } },</span>
+<span class="pc" id="L88">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getInstant(-1) } },</span>
+<span class="pc" id="L89">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getDuration(-1) } },</span>
+<span class="pc" id="L90">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getList(-1, Any::class.java) } },</span>
+<span class="pc" id="L91">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getSet(-1, Any::class.java) } },</span>
+<span class="pc" id="L92">            { assertThrows&lt;IllegalArgumentException&gt; { reader.getMap(-1, Any::class.java, Any::class.java) } },</span>
+        )
+<span class="fc" id="L94">    }</span>
+
+    /**
+     * Test that ensures [TableReader.isNull] reports the correct value.
+     */
+    @Test
+    public fun testVerifyNullColumns() {
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        while (reader.nextRow()) {</span>
+<span class="fc" id="L102">            assertAll(</span>
+<span class="fc" id="L103">                columns.map { column -&gt;</span>
+<span class="fc" id="L104">                    {</span>
+<span class="fc" id="L105">                        when (column.type) {</span>
+<span class="pc bpc" id="L106" title="5 of 6 branches missed.">                            is TableColumnType.Boolean -&gt; assertFalse(reader.isNull(column.name) &amp;&amp; !reader.getBoolean(column.name))</span>
+<span class="pc bpc" id="L107" title="3 of 6 branches missed.">                            is TableColumnType.Int -&gt; assertFalse(reader.isNull(column.name) &amp;&amp; reader.getInt(column.name) != 0)</span>
+<span class="pc bpc" id="L108" title="5 of 6 branches missed.">                            is TableColumnType.Long -&gt; assertFalse(reader.isNull(column.name) &amp;&amp; reader.getLong(column.name) != 0L)</span>
+<span class="pc bpc" id="L109" title="7 of 8 branches missed.">                            is TableColumnType.Float -&gt; assertFalse(reader.isNull(column.name) &amp;&amp; reader.getFloat(column.name) != 0f)</span>
+<span class="pc bpc" id="L110" title="7 of 8 branches missed.">                            is TableColumnType.Double -&gt; assertFalse(reader.isNull(column.name) &amp;&amp; reader.getDouble(column.name) != 0.0)</span>
+<span class="pc bpc" id="L111" title="3 of 6 branches missed.">                            is TableColumnType.String -&gt; assertFalse(reader.isNull(column.name) &amp;&amp; reader.getString(column.name) != null)</span>
+<span class="pc bpc" id="L112" title="5 of 6 branches missed.">                            is TableColumnType.UUID -&gt; assertFalse(reader.isNull(column.name) &amp;&amp; reader.getUUID(column.name) != null)</span>
+<span class="pc bpc" id="L113" title="5 of 6 branches missed.">                            is TableColumnType.Instant -&gt; assertFalse(reader.isNull(column.name) &amp;&amp; reader.getInstant(column.name) != null)</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">                            is TableColumnType.Duration -&gt;</span>
+<span class="fc" id="L115">                                assertFalse(</span>
+<span class="pc bpc" id="L116" title="3 of 4 branches missed.">                                    reader.isNull(column.name) &amp;&amp; reader.getDuration(column.name) != null,</span>
+                                )
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">                            is TableColumnType.List -&gt;</span>
+<span class="nc" id="L119">                                assertFalse(</span>
+<span class="nc bnc" id="L120" title="All 4 branches missed.">                                    reader.isNull(column.name) &amp;&amp; reader.getList(column.name, Any::class.java) != null,</span>
+                                )
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">                            is TableColumnType.Set -&gt;</span>
+<span class="fc" id="L123">                                assertFalse(</span>
+<span class="pc bpc" id="L124" title="3 of 4 branches missed.">                                    reader.isNull(column.name) &amp;&amp; reader.getSet(column.name, Any::class.java) != null,</span>
+                                )
+<span class="nc bnc" id="L126" title="All 2 branches missed.">                            is TableColumnType.Map -&gt;</span>
+<span class="nc" id="L127">                                assertFalse(</span>
+<span class="nc bnc" id="L128" title="All 4 branches missed.">                                    reader.isNull(column.name) &amp;&amp; reader.getMap(column.name, Any::class.java, Any::class.java) != null,</span>
+                                )
+                        }
+<span class="fc" id="L131">                    }</span>
+                },
+            )
+        }
+<span class="fc" id="L135">    }</span>
+
+    /**
+     * Test that we can read the entire table without any issue.
+     */
+    @Test
+    public fun testReadFully() {
+<span class="fc" id="L142">        assertDoesNotThrow {</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            while (reader.nextRow()) {</span>
+<span class="fc" id="L144">                assertAll(columns.map { column -&gt; { assertDoesNotThrow { reader.get(column) } } })</span>
+            }
+<span class="fc" id="L146">            reader.close()</span>
+<span class="fc" id="L147">        }</span>
+
+<span class="pc" id="L149">        assertFalse(reader.nextRow()) { &quot;Reader does not reset&quot; }</span>
+<span class="fc" id="L150">    }</span>
+
+    /**
+     * Test that the reader throws an exception when the columns are read without a call to [TableReader.nextRow]
+     */
+    @Test
+    public fun testReadWithoutNextRow() {
+<span class="pc" id="L157">        assertAll(columns.map { column -&gt; { assertThrows&lt;IllegalStateException&gt; { reader.get(column) } } })</span>
+<span class="fc" id="L158">    }</span>
+
+    /**
+     * Test that the reader throws an exception when the columns are read after the [TableReader] is finished.
+     */
+    @Test
+    public fun testReadAfterFinish() {
+        @Suppress(&quot;ControlFlowWithEmptyBody&quot;)
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        while (reader.nextRow()) {}</span>
+
+<span class="fc" id="L168">        testReadWithoutNextRow()</span>
+<span class="fc" id="L169">    }</span>
+
+    /**
+     * Helper method to map a [TableColumn] to a read.
+     */
+    private fun TableReader.get(column: TableColumn): Any? {
+<span class="fc" id="L175">        return when (column.type) {</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">            is TableColumnType.Boolean -&gt; getBoolean(column.name)</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">            is TableColumnType.Int -&gt; getInt(column.name)</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">            is TableColumnType.Long -&gt; getLong(column.name)</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">            is TableColumnType.Float -&gt; getFloat(column.name)</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">            is TableColumnType.Double -&gt; getDouble(column.name)</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">            is TableColumnType.String -&gt; getString(column.name)</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">            is TableColumnType.UUID -&gt; getUUID(column.name)</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">            is TableColumnType.Instant -&gt; getInstant(column.name)</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">            is TableColumnType.Duration -&gt; getDuration(column.name)</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">            is TableColumnType.List -&gt; getList(column.name, Any::class.java)</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">            is TableColumnType.Set -&gt; getSet(column.name, Any::class.java)</span>
+<span class="nc" id="L187">            is TableColumnType.Map -&gt; getMap(column.name, Any::class.java, Any::class.java)</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

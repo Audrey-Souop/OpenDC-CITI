@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Unit.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.common.units</a> &gt; <span class="el_source">Unit.kt</span></div><h1>Unit.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+@file:OptIn(InternalUse::class, NonInlinableUnit::class)
+
+package org.opendc.common.units
+
+import org.opendc.common.annotations.InternalUse
+import org.opendc.common.units.TimeDelta.Companion.toTimeDelta
+import org.opendc.common.utils.DFLT_MIN_EPS
+import org.opendc.common.utils.adaptiveEps
+import org.opendc.common.utils.approx
+import org.opendc.common.utils.approxLarger
+import org.opendc.common.utils.approxLargerOrEq
+import org.opendc.common.utils.approxSmaller
+import org.opendc.common.utils.approxSmallerOrEq
+import java.time.Duration
+import kotlin.experimental.ExperimentalTypeInference
+
+/**
+ * Value classes can extend this interface to represent
+ * unit of measure with much higher type safety than [Double] (*If used from kotlin*)
+ * and approximately same performances.
+ * ```kotlin
+ * // e.g.
+ * @JvmInline value class DataRate(override val value) : Unit&lt;DataRate&gt; { }
+ * ```
+ * This interface provides most of the utility functions and
+ * mathematical operations that are available to [Double] (including threshold comparison methods),
+ * but applicable to [T] (also with scalar multiplication and division),
+ * and operations between different unit of measures (e.g., DataRate * TimeDelta = DataSize, and many others).
+ *
+ * ```
+ * // e.g. sum of data-rates
+ * val a: DataRate = DataRate.ofMibps(100)
+ * val b: DataRate = DataRate.ofGibps(1)
+ * val c: DataRate = a + b
+ * c.fmt(&quot;%.3f&quot;) // &quot;1.097 Gibps&quot;
+ *
+ * // e.g. data-rate times scalar
+ * val e: DataRate = a * 2
+ * e.fmt() // &quot;200 Mibps&quot;
+ *
+ * // e.g. threshold comparison
+ * if (e approx a) { ... }
+ *
+ * // e.g. operations between different unit of measures
+ * val a: DataRate = DataRate.ofMBps(1)
+ * val b: TimeDelta = TimeDelta.ofSec(3)
+ * val c: DataSize = a * b
+ * c.fmt() // &quot;3MB&quot;
+ * ```
+ * &amp;nbsp;
+ * ###### Java interoperability
+ * Functions that concern inline classes are not callable from java by default (at least for now).
+ * Hence, the JvmName annotation is necessary for java interoperability.Only methods that allow java
+ * to interact with kotlin code concerning inline classes should be made accessible to java.**
+ * Java will never be able to invoke instance methods, only static ones.
+ *
+ * Java sees value classes as the standard data type they represent (in this case, double).
+ * Meaning there is no type safety from java, nevertheless, functions can be invoked
+ * to provide methods with the correct unit value (and for improved understandability).
+ *
+ * ```kotlin
+ * // kotlin
+ * @JvmStatic @JvmName(&quot;function&quot;)
+ * fun function(time: TimeDelta) {  }
+ * ```
+ * ```java
+ * // java
+ * double time = TimeDelta.ofHours(2);
+ * function(time)
+ * // or
+ * function(TimeDelta.ofHours(2))
+ * ```
+ *
+ * @param[T] the unit of measure that is represented (e.g. [DataRate])
+ */
+public sealed interface Unit&lt;T : Unit&lt;T&gt;&gt; : Comparable&lt;T&gt; {
+    /**
+     * The actual value of this unit of measure used for computation and comparisons.
+     *
+     * What magnitude this value represents (e.g., Kbps, Mbps etc.) is up to the interface implementation,
+     * and it does not interfere with the operations; hence this property should be reserved for internal use.
+     */
+    @InternalUse
+    @NonInlinableUnit
+    public val value: Double
+
+    /**
+     * If `this` is -0.0 it is converted to +0.0.
+     */
+    @NonInlinableUnit
+    public fun ifNeg0ThenPos0(): T
+
+    /**
+     * @return the sum with [other] as [T].
+     */
+    @NonInlinableUnit
+    public operator fun plus(other: T): T
+
+    /**
+     * @return the subtraction of [other] from *this* as [T].
+     */
+    @NonInlinableUnit
+    public operator fun minus(other: T): T
+
+    /**
+     * @return *this* divided by scalar [scalar] as [T].
+     */
+    @NonInlinableUnit
+    public operator fun div(scalar: Number): T
+
+    /**
+     * @return *this* divided by [other] as [Double].
+     */
+    @NonInlinableUnit
+    public operator fun div(other: T): Percentage
+
+    /**
+     * @return *this* multiplied by scalar [scalar] as [T].
+     */
+    @NonInlinableUnit
+    public operator fun times(scalar: Number): T
+
+    /**
+     * @return *this* multiplied by percentage [Percentage] as [T].
+     */
+    @NonInlinableUnit
+    public operator fun times(percentage: Percentage): T
+
+    /**
+     * @return *this* negated.
+     */
+    @NonInlinableUnit
+    public operator fun unaryMinus(): T
+
+    /**
+     * @return `true` if *this* is equal to 0 (using `==` operator).
+     */
+    @NonInlinableUnit
+    public fun isZero(): Boolean
+
+    /**
+     * @return `true` if *this* is approximately equal to 0.
+     * @see[Double.approx]
+     */
+    @NonInlinableUnit
+<span class="nc" id="L168">    public fun approxZero(epsilon: Double = DFLT_MIN_EPS): Boolean</span>
+
+    /**
+     * @see[Double.approx]
+     */
+    @NonInlinableUnit
+<span class="nc" id="L174">    public fun approx(</span>
+        other: T,
+<span class="nc" id="L176">        minEpsilon: Double = DFLT_MIN_EPS,</span>
+<span class="nc" id="L177">        epsilon: Double = adaptiveEps(this.value, other.value, minEpsilon),</span>
+    ): Boolean
+
+    /**
+     * @see[Double.approx]
+     */
+    @NonInlinableUnit
+    public infix fun approx(other: T): Boolean
+
+    /**
+     * @see[Double.approxLarger]
+     */
+    @NonInlinableUnit
+<span class="nc" id="L190">    public fun approxLarger(</span>
+        other: T,
+<span class="nc" id="L192">        minEpsilon: Double = DFLT_MIN_EPS,</span>
+<span class="nc" id="L193">        epsilon: Double = adaptiveEps(this.value, other.value, minEpsilon),</span>
+    ): Boolean
+
+    /**
+     * @see[Double.approxLarger]
+     */
+    @NonInlinableUnit
+    public infix fun approxLarger(other: T): Boolean
+
+    /**
+     * @see[Double.approxLargerOrEq]
+     */
+    @NonInlinableUnit
+<span class="nc" id="L206">    public fun approxLargerOrEq(</span>
+        other: T,
+<span class="nc" id="L208">        minEpsilon: Double = DFLT_MIN_EPS,</span>
+<span class="nc" id="L209">        epsilon: Double = adaptiveEps(this.value, other.value, minEpsilon),</span>
+    ): Boolean
+
+    /**
+     * @see[Double.approxLargerOrEq]
+     */
+    @NonInlinableUnit
+    public infix fun approxLargerOrEq(other: T): Boolean
+
+    /**
+     * @see[Double.approxSmaller]
+     */
+    @NonInlinableUnit
+<span class="nc" id="L222">    public fun approxSmaller(</span>
+        other: T,
+<span class="nc" id="L224">        minEpsilon: Double = DFLT_MIN_EPS,</span>
+<span class="nc" id="L225">        epsilon: Double = adaptiveEps(this.value, other.value, minEpsilon),</span>
+    ): Boolean
+
+    /**
+     * @see[Double.approxSmaller]
+     */
+    @NonInlinableUnit
+    public infix fun approxSmaller(other: T): Boolean
+
+    /**
+     * @see[Double.approxSmallerOrEq]
+     */
+    @NonInlinableUnit
+<span class="nc" id="L238">    public fun approxSmallerOrEq(</span>
+        other: T,
+<span class="nc" id="L240">        minEpsilon: Double = DFLT_MIN_EPS,</span>
+<span class="nc" id="L241">        epsilon: Double = adaptiveEps(this.value, other.value, minEpsilon),</span>
+    ): Boolean
+
+    /**
+     * @see[Double.approxSmallerOrEq]
+     */
+    @NonInlinableUnit
+    public infix fun approxSmallerOrEq(other: T): Boolean
+
+    /**
+     * @return the max value between *this* and [other].
+     */
+    @NonInlinableUnit
+    public infix fun max(other: T): T
+
+    /**
+     * @return the minimum value between *this* and [other].
+     */
+    @NonInlinableUnit
+    public infix fun min(other: T): T
+
+    /**
+     * @return the absolute value of *this*.
+     */
+    @NonInlinableUnit
+    public fun abs(): T
+
+    /**
+     * @return *this* approximated to [to] if within `0 - epsilon` and `0 + epsilon`.
+     */
+    @NonInlinableUnit
+<span class="nc" id="L272">    public fun roundToIfWithinEpsilon(</span>
+        to: T,
+<span class="nc" id="L274">        epsilon: Double = DFLT_MIN_EPS,</span>
+    ): T
+
+    /**
+     * Returns the formatted string representation of the unit of measure (e.g. &quot;1.2 Gbps&quot;)
+     * with the formatter [fmt] applied to the value part of the resulting string.
+     *
+     * ```kotlin
+     * val dr = DataRate.ofGbps(1.234567)
+     * dr.fmtValue() // &quot;1.234567 Gbps&quot;
+     * dr.fmtValue(&quot;%.2f&quot;) // &quot;1.23 Gbps&quot;
+     * ```
+     */
+<span class="nc" id="L287">    public fun fmtValue(fmt: String = &quot;%f&quot;): String</span>
+
+    public companion object {
+        /**
+         * @return [unit] multiplied by scalar [this].
+         */
+        @NonInlinableUnit
+<span class="nc" id="L294">        public operator fun &lt;T : Unit&lt;T&gt;&gt; Number.times(unit: T): T = unit * this</span>
+
+        /**
+         * @return minimum value between [units].
+         */
+        @NonInlinableUnit
+        public inline fun &lt;reified T : Unit&lt;T&gt;&gt; minOf(vararg units: T): T = units.minBy { it.value }
+
+        /**
+         * @return maximum value between [units].
+         */
+        @NonInlinableUnit
+        public inline fun &lt;reified T : Unit&lt;T&gt;&gt; maxOf(vararg units: T): T = units.maxBy { it.value }
+
+<span class="nc" id="L308">        public operator fun Duration.times(dataRate: DataRate): DataSize = toTimeDelta() * dataRate</span>
+
+<span class="nc" id="L310">        public operator fun Duration.times(power: Power): Energy = toTimeDelta() * power</span>
+
+<span class="nc" id="L312">        public operator fun Number.div(timeDelta: TimeDelta): Frequency = Frequency.ofHz(this.toDouble() / timeDelta.toSec())</span>
+
+<span class="nc" id="L314">        public operator fun Number.div(duration: Duration): Frequency = this / duration.toTimeDelta()</span>
+
+        // Defined here so that they can overload the same method name, instead of having a different name forEach unit.
+        // You cannot overload `sumOf` and using that name results in not
+        // being able to use the overloads for unit and for number in the same file.
+
+        // A reified version that does not need overloads can also be defined,
+        // with a switch statement on the reified unit type for the base value.
+        // Then, if a unit is not included in the switch, a runtime error occurs, not compile time.
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;sumOfDataRate&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.sumOfUnit(selector: (T) -&gt; DataRate): DataRate {
+<span class="nc" id="L328">            var sum: DataRate = DataRate.zero</span>
+<span class="nc" id="L329">            forEach { sum += selector(it) }</span>
+<span class="nc" id="L330">            return sum</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;sumOfDataSize&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.sumOfUnit(selector: (T) -&gt; DataSize): DataSize {
+<span class="nc" id="L337">            var sum: DataSize = DataSize.zero</span>
+<span class="nc" id="L338">            forEach { sum += selector(it) }</span>
+<span class="nc" id="L339">            return sum</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;sumOfEnergy&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.sumOfUnit(selector: (T) -&gt; Energy): Energy {
+<span class="nc" id="L346">            var sum: Energy = Energy.zero</span>
+<span class="nc" id="L347">            forEach { sum += selector(it) }</span>
+<span class="nc" id="L348">            return sum</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;sumOfPower&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.sumOfUnit(selector: (T) -&gt; Power): Power {
+<span class="nc" id="L355">            var sum: Power = Power.zero</span>
+<span class="nc" id="L356">            forEach { sum += selector(it) }</span>
+<span class="nc" id="L357">            return sum</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;sumOfTime&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.sumOfUnit(selector: (T) -&gt; TimeDelta): TimeDelta {
+<span class="nc" id="L364">            var sum: TimeDelta = TimeDelta.zero</span>
+<span class="nc" id="L365">            forEach { sum += selector(it) }</span>
+<span class="nc" id="L366">            return sum</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;sumOfFrequency&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.sumOfUnit(selector: (T) -&gt; Frequency): Frequency {
+<span class="nc" id="L373">            var sum: Frequency = Frequency.zero</span>
+<span class="nc" id="L374">            forEach { sum += selector(it) }</span>
+<span class="nc" id="L375">            return sum</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;sumOfPercentage&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.sumOfUnit(selector: (T) -&gt; Percentage): Percentage {
+<span class="nc" id="L382">            var sum: Percentage = Percentage.zero</span>
+<span class="nc" id="L383">            forEach { sum += selector(it) }</span>
+<span class="nc" id="L384">            return sum</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;averageOfDataRateOrNull&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.averageOfUnitOrNull(selector: (T) -&gt; DataRate): DataRate? {
+<span class="nc bnc" id="L391" title="All 2 branches missed.">            if (!iterator().hasNext()) return null</span>
+<span class="nc" id="L392">            var sum: DataRate = DataRate.zero</span>
+<span class="nc" id="L393">            var count = 0</span>
+<span class="nc" id="L394">            forEach {</span>
+<span class="nc" id="L395">                sum += selector(it)</span>
+<span class="nc" id="L396">                count++</span>
+<span class="nc" id="L397">            }</span>
+<span class="nc" id="L398">            return sum / count</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;averageOfDataSizeOrNull&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.averageOfUnitOrNull(selector: (T) -&gt; DataSize): DataSize? {
+<span class="nc bnc" id="L405" title="All 2 branches missed.">            if (!iterator().hasNext()) return null</span>
+<span class="nc" id="L406">            var sum: DataSize = DataSize.zero</span>
+<span class="nc" id="L407">            var count = 0</span>
+<span class="nc" id="L408">            forEach {</span>
+<span class="nc" id="L409">                sum += selector(it)</span>
+<span class="nc" id="L410">                count++</span>
+<span class="nc" id="L411">            }</span>
+<span class="nc" id="L412">            return sum / count</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;averageOfEnergyOrNull&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.averageOfUnitOrNull(selector: (T) -&gt; Energy): Energy? {
+<span class="nc bnc" id="L419" title="All 2 branches missed.">            if (!iterator().hasNext()) return null</span>
+<span class="nc" id="L420">            var sum: Energy = Energy.zero</span>
+<span class="nc" id="L421">            var count = 0</span>
+<span class="nc" id="L422">            forEach {</span>
+<span class="nc" id="L423">                sum += selector(it)</span>
+<span class="nc" id="L424">                count++</span>
+<span class="nc" id="L425">            }</span>
+<span class="nc" id="L426">            return sum / count</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;averageOfPowerOrNull&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.averageOfUnitOrNull(selector: (T) -&gt; Power): Power? {
+<span class="nc bnc" id="L433" title="All 2 branches missed.">            if (!iterator().hasNext()) return null</span>
+<span class="nc" id="L434">            var sum: Power = Power.zero</span>
+<span class="nc" id="L435">            var count = 0</span>
+<span class="nc" id="L436">            forEach {</span>
+<span class="nc" id="L437">                sum += selector(it)</span>
+<span class="nc" id="L438">                count++</span>
+<span class="nc" id="L439">            }</span>
+<span class="nc" id="L440">            return sum / count</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;averageOfTimeOrNull&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.averageOfUnitOrNull(selector: (T) -&gt; TimeDelta): TimeDelta? {
+<span class="nc bnc" id="L447" title="All 2 branches missed.">            if (!iterator().hasNext()) return null</span>
+<span class="nc" id="L448">            var sum: TimeDelta = TimeDelta.zero</span>
+<span class="nc" id="L449">            var count = 0</span>
+<span class="nc" id="L450">            forEach {</span>
+<span class="nc" id="L451">                sum += selector(it)</span>
+<span class="nc" id="L452">                count++</span>
+<span class="nc" id="L453">            }</span>
+<span class="nc" id="L454">            return sum / count</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;averageOfFrequencyOrNull&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.averageOfUnitOrNull(selector: (T) -&gt; Frequency): Frequency? {
+<span class="nc bnc" id="L461" title="All 2 branches missed.">            if (!iterator().hasNext()) return null</span>
+<span class="nc" id="L462">            var sum: Frequency = Frequency.zero</span>
+<span class="nc" id="L463">            var count = 0</span>
+<span class="nc" id="L464">            forEach {</span>
+<span class="nc" id="L465">                sum += selector(it)</span>
+<span class="nc" id="L466">                count++</span>
+<span class="nc" id="L467">            }</span>
+<span class="nc" id="L468">            return sum / count</span>
+        }
+
+        @OptIn(ExperimentalTypeInference::class)
+        @OverloadResolutionByLambdaReturnType
+        @JvmName(&quot;averageOfPercentageOrNull&quot;)
+        public inline fun &lt;T&gt; Iterable&lt;T&gt;.averageOfUnitOrNull(selector: (T) -&gt; Percentage): Percentage? {
+<span class="nc bnc" id="L475" title="All 2 branches missed.">            if (!iterator().hasNext()) return null</span>
+<span class="nc" id="L476">            var sum: Percentage = Percentage.zero</span>
+<span class="nc" id="L477">            var count = 0</span>
+<span class="nc" id="L478">            forEach {</span>
+<span class="nc" id="L479">                sum += selector(it)</span>
+<span class="nc" id="L480">                count++</span>
+<span class="nc" id="L481">            }</span>
+<span class="nc" id="L482">            return sum / count</span>
+        }
+    }
+}
+
+@RequiresOptIn(
+    message =
+        &quot;Unit value class cannot be JVM inlined if this symbol is used &quot; +
+            &quot;(and if value class is used as generic type, but that holds for `double` as well)&quot;,
+    level = RequiresOptIn.Level.WARNING,
+)
+@Retention(AnnotationRetention.BINARY)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY, AnnotationTarget.CONSTRUCTOR)
+public annotation class NonInlinableUnit
+
+@RequiresOptIn(
+    message =
+        &quot;This operation is not intended for this unit, but it needs to be define. &quot; +
+            &quot;Invoking this method will result in an exception. &quot;,
+    level = RequiresOptIn.Level.WARNING,
+)
+@Retention(AnnotationRetention.BINARY)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY, AnnotationTarget.CONSTRUCTOR)
+public annotation class UnintendedOperation
+
+<span class="nc" id="L507">public class UnitOperationException(override val message: String? = null) : Exception()</span>
+
+public interface UnitId&lt;T : Unit&lt;T&gt;&gt; {
+    public val zero: T
+    public val max: T
+    public val min: T
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

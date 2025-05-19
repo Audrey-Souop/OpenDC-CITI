@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BatteryPolicy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.compute.power.batteries.policy</a> &gt; <span class="el_source">BatteryPolicy.java</span></div><h1>BatteryPolicy.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2025 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.compute.power.batteries.policy;
+
+import java.util.List;
+import java.util.Map;
+import org.opendc.simulator.compute.power.CarbonModel;
+import org.opendc.simulator.compute.power.CarbonReceiver;
+import org.opendc.simulator.compute.power.batteries.BatteryAggregator;
+import org.opendc.simulator.compute.power.batteries.BatteryState;
+import org.opendc.simulator.compute.power.batteries.PowerSourceType;
+import org.opendc.simulator.compute.power.batteries.SimBattery;
+import org.opendc.simulator.engine.engine.FlowEngine;
+import org.opendc.simulator.engine.graph.FlowEdge;
+import org.opendc.simulator.engine.graph.FlowNode;
+
+/**
+ * An abstract class representing a battery policy.
+ * A battery policy is used by a {@link SimBattery} to determine when to charge or discharge the battery.
+ */
+public abstract class BatteryPolicy extends FlowNode implements CarbonReceiver {
+
+    protected final SimBattery battery;
+    protected final BatteryAggregator aggregator;
+
+    protected double carbonIntensity; // The current carbon Intensity of the grid
+
+<span class="nc" id="L48">    protected BatteryState batteryState = BatteryState.IDLE;</span>
+
+    /**
+     * Construct a new {@link FlowNode} instance.
+     *
+     * @param engine The {@link FlowEngine} this node belongs to.
+     */
+    public BatteryPolicy(FlowEngine engine, SimBattery battery, BatteryAggregator aggregator) {
+<span class="nc" id="L56">        super(engine);</span>
+
+<span class="nc" id="L58">        this.battery = battery;</span>
+<span class="nc" id="L59">        this.battery.setBatteryPolicy(this);</span>
+
+<span class="nc" id="L61">        this.aggregator = aggregator;</span>
+<span class="nc" id="L62">    }</span>
+
+    public void close() {
+<span class="nc" id="L65">        this.closeNode();</span>
+<span class="nc" id="L66">    }</span>
+
+    @Override
+    public abstract long onUpdate(long now);
+
+    /**
+     * Set the battery state.
+     * Both the battery and the aggregator are updated based on the new state.
+     *
+     * @param newBatteryState The new battery state.
+     */
+    public void setBatteryState(BatteryState newBatteryState) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (newBatteryState == this.batteryState) {</span>
+<span class="nc" id="L79">            return;</span>
+        }
+
+<span class="nc" id="L82">        this.batteryState = newBatteryState;</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (newBatteryState == BatteryState.CHARGING) {</span>
+<span class="nc" id="L85">            this.battery.setBatteryState(BatteryState.CHARGING);</span>
+<span class="nc" id="L86">            this.aggregator.setPowerSourceType(PowerSourceType.PowerSource);</span>
+<span class="nc" id="L87">            return;</span>
+        }
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        if (newBatteryState == BatteryState.IDLE) {</span>
+<span class="nc" id="L91">            this.battery.setBatteryState(BatteryState.IDLE);</span>
+<span class="nc" id="L92">            this.aggregator.setPowerSourceType(PowerSourceType.PowerSource);</span>
+<span class="nc" id="L93">            return;</span>
+        }
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (newBatteryState == BatteryState.DISCHARGING) {</span>
+<span class="nc" id="L97">            this.battery.setBatteryState(BatteryState.DISCHARGING);</span>
+<span class="nc" id="L98">            this.aggregator.setPowerSourceType(PowerSourceType.Battery);</span>
+        }
+<span class="nc" id="L100">    }</span>
+
+    @Override
+    public void updateCarbonIntensity(double newCarbonIntensity) {
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (newCarbonIntensity == this.carbonIntensity) {</span>
+<span class="nc" id="L105">            return;</span>
+        }
+
+<span class="nc" id="L108">        this.carbonIntensity = newCarbonIntensity;</span>
+
+<span class="nc" id="L110">        this.invalidate();</span>
+<span class="nc" id="L111">    }</span>
+
+    @Override
+<span class="nc" id="L114">    public void setCarbonModel(CarbonModel carbonModel) {}</span>
+
+    @Override
+    public void removeCarbonModel(CarbonModel carbonModel) {
+<span class="nc" id="L118">        this.close();</span>
+<span class="nc" id="L119">    }</span>
+
+    @Override
+    public Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; getConnectedEdges() {
+<span class="nc" id="L123">        return Map.of(FlowEdge.NodeType.SUPPLYING, List.of());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

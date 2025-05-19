@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.simulator.TaskQueueTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:28" hostname="ece-d6200-audu" time="0.077">
+  <properties/>
+  <testcase name="testRemoveEntryMiddle()" classname="org.opendc.simulator.TaskQueueTest" time="0.011"/>
+  <testcase name="testRemoveUnknown()" classname="org.opendc.simulator.TaskQueueTest" time="0.004"/>
+  <testcase name="testMultipleEntriesDuplicate()" classname="org.opendc.simulator.TaskQueueTest" time="0.004"/>
+  <testcase name="testMultipleEntries()" classname="org.opendc.simulator.TaskQueueTest" time="0.005"/>
+  <testcase name="testPollEmpty()" classname="org.opendc.simulator.TaskQueueTest" time="0.006"/>
+  <testcase name="testRemoveEntryHead()" classname="org.opendc.simulator.TaskQueueTest" time="0.003"/>
+  <testcase name="testRemoveEntryTail()" classname="org.opendc.simulator.TaskQueueTest" time="0.006"/>
+  <testcase name="testResize()" classname="org.opendc.simulator.TaskQueueTest" time="0.005"/>
+  <testcase name="testSingleEntry()" classname="org.opendc.simulator.TaskQueueTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

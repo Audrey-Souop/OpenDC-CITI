@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FlowNode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.engine.graph</a> &gt; <span class="el_source">FlowNode.java</span></div><h1>FlowNode.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.engine.graph;
+
+import java.time.InstantSource;
+import java.util.List;
+import java.util.Map;
+import org.opendc.simulator.engine.engine.FlowEngine;
+import org.opendc.simulator.engine.engine.FlowEventQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * A {@link FlowNode} represents a node in the {@link FlowEngine}.
+ */
+public abstract class FlowNode {
+<span class="fc" id="L37">    private static final Logger LOGGER = LoggerFactory.getLogger(FlowNode.class);</span>
+
+<span class="fc" id="L39">    protected enum NodeState {</span>
+<span class="fc" id="L40">        PENDING, // Stage is active, but is not running any updates</span>
+<span class="fc" id="L41">        UPDATING, // Stage is active, and running an update</span>
+<span class="fc" id="L42">        INVALIDATED, // Stage is deemed invalid, and should run an update</span>
+<span class="fc" id="L43">        CLOSING, // Stage is being closed, final updates can still be run</span>
+<span class="fc" id="L44">        CLOSED // Stage is closed and should not run any updates</span>
+    }
+
+<span class="fc" id="L47">    protected NodeState nodeState = NodeState.PENDING;</span>
+
+    public NodeState getNodeState() {
+<span class="nc" id="L50">        return nodeState;</span>
+    }
+
+    public void setNodeState(NodeState nodeState) {
+<span class="nc" id="L54">        this.nodeState = nodeState;</span>
+<span class="nc" id="L55">    }</span>
+
+    public int getTimerIndex() {
+<span class="fc" id="L58">        return timerIndex;</span>
+    }
+
+    public void setTimerIndex(int index) {
+<span class="fc" id="L62">        this.timerIndex = index;</span>
+<span class="fc" id="L63">    }</span>
+
+    public Boolean getInCycleQueue() {
+<span class="fc" id="L66">        return inCycleQueue;</span>
+    }
+
+    public void setInCycleQueue(Boolean inCycleQueue) {
+<span class="fc" id="L70">        this.inCycleQueue = inCycleQueue;</span>
+<span class="fc" id="L71">    }</span>
+
+    public InstantSource getClock() {
+<span class="nc" id="L74">        return clock;</span>
+    }
+
+    public void setClock(InstantSource clock) {
+<span class="nc" id="L78">        this.clock = clock;</span>
+<span class="nc" id="L79">    }</span>
+
+    public FlowEngine getEngine() {
+<span class="fc" id="L82">        return engine;</span>
+    }
+
+    public void setEngine(FlowEngine engine) {
+<span class="nc" id="L86">        this.engine = engine;</span>
+<span class="nc" id="L87">    }</span>
+
+    /**
+     * Return the current deadline of the {@link FlowNode}'s timer (in milliseconds after epoch).
+     */
+    public long getDeadline() {
+<span class="fc" id="L93">        return deadline;</span>
+    }
+
+    public void setDeadline(long deadline) {
+<span class="nc" id="L97">        this.deadline = deadline;</span>
+<span class="nc" id="L98">    }</span>
+
+    /**
+     * The deadline of the stage after which an update should run.
+     */
+<span class="fc" id="L103">    private long deadline = Long.MAX_VALUE;</span>
+
+    /**
+     * The index of the timer in the {@link FlowEventQueue}.
+     */
+<span class="fc" id="L108">    private int timerIndex = -1;</span>
+
+<span class="fc" id="L110">    private Boolean inCycleQueue = false;</span>
+
+    protected InstantSource clock;
+    protected FlowEngine engine;
+
+    /**
+     * Construct a new {@link FlowNode} instance.
+     *
+     * @param engine The {@link FlowEngine} driving the simulation.
+     */
+<span class="fc" id="L120">    public FlowNode(FlowEngine engine) {</span>
+<span class="fc" id="L121">        this.engine = engine;</span>
+<span class="fc" id="L122">        this.clock = engine.getClock();</span>
+
+<span class="fc" id="L124">        this.invalidate();</span>
+<span class="fc" id="L125">    }</span>
+
+    public abstract Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; getConnectedEdges();
+
+    /**
+     * Invalidate the {@link FlowNode} forcing the stage to update.
+     *
+     * &lt;p&gt;
+     * This method is similar to {@link #invalidate()}, but allows the user to manually pass the current timestamp to
+     * prevent having to re-query the clock. This method should not be called during an update.
+     */
+    public void invalidate(long now) {
+        // If there is already an update running,
+        // notify the update, that a next update should be run after
+
+<span class="pc bpc" id="L140" title="1 of 4 branches missed.">        if (this.nodeState != NodeState.CLOSING &amp;&amp; this.nodeState != NodeState.CLOSED) {</span>
+<span class="fc" id="L141">            this.nodeState = NodeState.INVALIDATED;</span>
+<span class="fc" id="L142">            engine.scheduleImmediate(now, this);</span>
+        }
+<span class="fc" id="L144">    }</span>
+
+    /**
+     * Invalidate the {@link FlowNode} forcing the stage to update.
+     */
+    public void invalidate() {
+<span class="fc" id="L150">        invalidate(clock.millis());</span>
+<span class="fc" id="L151">    }</span>
+
+    /**
+     * Update the state of the stage.
+     */
+    public void update(long now) {
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        if (this.nodeState == NodeState.CLOSED) {</span>
+<span class="nc" id="L158">            this.deadline = Long.MAX_VALUE;</span>
+<span class="nc" id="L159">            return;</span>
+        }
+
+<span class="fc" id="L162">        this.nodeState = NodeState.UPDATING;</span>
+
+<span class="fc" id="L164">        long newDeadline = this.deadline;</span>
+
+        try {
+<span class="fc" id="L167">            newDeadline = this.onUpdate(now);</span>
+<span class="nc" id="L168">        } catch (Exception e) {</span>
+<span class="nc" id="L169">            doFail(e);</span>
+<span class="fc" id="L170">        }</span>
+
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">        if (this.nodeState == NodeState.CLOSING) {</span>
+<span class="nc" id="L173">            closeNode();</span>
+<span class="nc" id="L174">            return;</span>
+        }
+
+        // Check whether the stage is marked as closing.
+<span class="fc bfc" id="L178" title="All 4 branches covered.">        if ((this.nodeState == NodeState.INVALIDATED) || (this.nodeState == NodeState.CLOSED)) {</span>
+<span class="fc" id="L179">            return;</span>
+        }
+
+<span class="fc" id="L182">        this.deadline = newDeadline;</span>
+
+        // Update the timer queue with the new deadline
+<span class="fc" id="L185">        engine.scheduleDelayedInContext(this);</span>
+
+<span class="fc" id="L187">        this.nodeState = NodeState.PENDING;</span>
+<span class="fc" id="L188">    }</span>
+
+    /**
+     * This method is invoked when the one of the stage's InPorts or OutPorts is invalidated.
+     *
+     * @param now The virtual timestamp in milliseconds after epoch at which the update is occurring.
+     * @return The next deadline for the stage.
+     */
+    public abstract long onUpdate(long now);
+
+    /**
+     * This method is invoked when an uncaught exception is caught by the engine. When this happens, the
+     */
+    void doFail(Throwable cause) {
+<span class="nc" id="L202">        LOGGER.warn(&quot;Uncaught exception (closing stage)&quot;, cause);</span>
+
+<span class="nc" id="L204">        closeNode();</span>
+<span class="nc" id="L205">    }</span>
+
+    /**
+     * This method is invoked when the {@link FlowNode} exits successfully or due to failure.
+     */
+    public void closeNode() {
+<span class="fc bfc" id="L211" title="All 2 branches covered.">        if (this.nodeState == NodeState.CLOSED) {</span>
+<span class="fc" id="L212">            return;</span>
+        }
+
+        // Mark the stage as closed
+<span class="fc" id="L216">        this.nodeState = NodeState.CLOSED;</span>
+
+        // Get Connected Edges
+<span class="fc" id="L219">        Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; connectedEdges = getConnectedEdges();</span>
+
+        // Remove connected edges
+<span class="fc" id="L222">        List&lt;FlowEdge&gt; consumerEdges = connectedEdges.get(FlowEdge.NodeType.CONSUMING);</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        if (consumerEdges != null) {</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">            for (FlowEdge edge : consumerEdges) {</span>
+<span class="fc" id="L225">                edge.close(FlowEdge.NodeType.CONSUMING);</span>
+<span class="fc" id="L226">            }</span>
+        }
+
+        // Remove connected edges
+<span class="fc" id="L230">        List&lt;FlowEdge&gt; supplierEdges = connectedEdges.get(FlowEdge.NodeType.SUPPLYING);</span>
+
+<span class="fc bfc" id="L232" title="All 2 branches covered.">        if (supplierEdges != null) {</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">            for (FlowEdge edge : supplierEdges) {</span>
+<span class="fc" id="L234">                edge.close(FlowEdge.NodeType.SUPPLYING);</span>
+<span class="fc" id="L235">            }</span>
+        }
+
+        // Remove stage from the timer queue
+<span class="fc" id="L239">        this.deadline = Long.MAX_VALUE;</span>
+<span class="fc" id="L240">        this.engine.scheduleDelayedInContext(this);</span>
+<span class="fc" id="L241">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

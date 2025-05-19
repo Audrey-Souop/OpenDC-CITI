@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TraceTableModify.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.calcite</a> &gt; <span class="el_source">TraceTableModify.kt</span></div><h1>TraceTableModify.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.calcite
+
+import org.apache.calcite.adapter.enumerable.EnumerableRel
+import org.apache.calcite.adapter.enumerable.EnumerableRel.Prefer
+import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor
+import org.apache.calcite.adapter.enumerable.EnumerableTableScan
+import org.apache.calcite.adapter.enumerable.JavaRowFormat
+import org.apache.calcite.adapter.enumerable.PhysTypeImpl
+import org.apache.calcite.adapter.java.JavaTypeFactory
+import org.apache.calcite.linq4j.Enumerable
+import org.apache.calcite.linq4j.tree.BlockBuilder
+import org.apache.calcite.linq4j.tree.Expressions
+import org.apache.calcite.linq4j.tree.Types
+import org.apache.calcite.plan.RelOptCluster
+import org.apache.calcite.plan.RelOptCost
+import org.apache.calcite.plan.RelOptPlanner
+import org.apache.calcite.plan.RelOptTable
+import org.apache.calcite.plan.RelTraitSet
+import org.apache.calcite.prepare.Prepare
+import org.apache.calcite.rel.RelNode
+import org.apache.calcite.rel.core.TableModify
+import org.apache.calcite.rel.metadata.RelMetadataQuery
+import org.apache.calcite.rex.RexNode
+import org.apache.calcite.schema.ModifiableTable
+import org.apache.calcite.util.BuiltInMethod
+import java.lang.reflect.Method
+
+/**
+ * A [TableModify] expression that modifies a workload trace.
+ */
+<span class="nc" id="L53">internal class TraceTableModify(</span>
+    cluster: RelOptCluster,
+    traitSet: RelTraitSet,
+    table: RelOptTable,
+    schema: Prepare.CatalogReader,
+    input: RelNode,
+    operation: Operation,
+    updateColumnList: List&lt;String&gt;?,
+    sourceExpressionList: List&lt;RexNode&gt;?,
+    flattened: Boolean,
+<span class="nc" id="L63">) : TableModify(cluster, traitSet, table, schema, input, operation, updateColumnList, sourceExpressionList, flattened),</span>
+    EnumerableRel {
+<span class="nc" id="L65">    init {</span>
+        // Make sure the table is modifiable
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        table.unwrap(ModifiableTable::class.java) ?: throw AssertionError() // TODO: user error in validator</span>
+<span class="nc" id="L68">    }</span>
+
+    override fun copy(
+        traitSet: RelTraitSet,
+        inputs: List&lt;RelNode&gt;?,
+    ): RelNode {
+<span class="nc" id="L74">        return TraceTableModify(</span>
+<span class="nc" id="L75">            cluster,</span>
+<span class="nc" id="L76">            traitSet,</span>
+<span class="nc" id="L77">            table,</span>
+<span class="nc" id="L78">            getCatalogReader(),</span>
+<span class="nc" id="L79">            sole(inputs),</span>
+<span class="nc" id="L80">            operation,</span>
+<span class="nc" id="L81">            updateColumnList,</span>
+<span class="nc" id="L82">            sourceExpressionList,</span>
+<span class="nc" id="L83">            isFlattened,</span>
+        )
+    }
+
+    override fun computeSelfCost(
+        planner: RelOptPlanner,
+        mq: RelMetadataQuery?,
+    ): RelOptCost {
+        // Prefer this plan compared to the standard EnumerableTableModify.
+<span class="nc" id="L92">        return super.computeSelfCost(planner, mq)!!.multiplyBy(.1)</span>
+    }
+
+    override fun implement(
+        implementor: EnumerableRelImplementor,
+        pref: Prefer,
+    ): EnumerableRel.Result {
+<span class="nc" id="L99">        val builder = BlockBuilder()</span>
+<span class="nc" id="L100">        val result = implementor.visitChild(this, 0, getInput() as EnumerableRel, pref)</span>
+<span class="nc" id="L101">        val childExp = builder.append(&quot;child&quot;, result.block)</span>
+<span class="nc" id="L102">        val convertedChildExpr =</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">            if (getInput().rowType != rowType) {</span>
+<span class="nc" id="L104">                val typeFactory = cluster.typeFactory as JavaTypeFactory</span>
+<span class="nc" id="L105">                val format = EnumerableTableScan.deduceFormat(table)</span>
+<span class="nc" id="L106">                val physType = PhysTypeImpl.of(typeFactory, table.rowType, format)</span>
+<span class="nc" id="L107">                val childPhysType = result.physType</span>
+<span class="nc" id="L108">                val o = Expressions.parameter(childPhysType.javaRowType, &quot;o&quot;)</span>
+<span class="nc" id="L109">                val expressionList =</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                    List(childPhysType.rowType.fieldCount) { i -&gt;</span>
+<span class="nc" id="L111">                        childPhysType.fieldReference(o, i, physType.getJavaFieldType(i))</span>
+                    }
+
+<span class="nc" id="L114">                builder.append(</span>
+<span class="nc" id="L115">                    &quot;convertedChild&quot;,</span>
+<span class="nc" id="L116">                    Expressions.call(</span>
+<span class="nc" id="L117">                        childExp,</span>
+<span class="nc" id="L118">                        BuiltInMethod.SELECT.method,</span>
+<span class="nc" id="L119">                        Expressions.lambda&lt;org.apache.calcite.linq4j.function.Function&lt;*&gt;&gt;(physType.record(expressionList), o),</span>
+                    ),
+                )
+            } else {
+<span class="nc" id="L123">                childExp</span>
+            }
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (!isInsert) {</span>
+<span class="nc" id="L127">            throw UnsupportedOperationException(&quot;Deletion and update not supported&quot;)</span>
+        }
+
+<span class="nc" id="L130">        val expression = table.getExpression(InsertableTable::class.java)</span>
+<span class="nc" id="L131">        builder.add(</span>
+<span class="nc" id="L132">            Expressions.return_(</span>
+<span class="nc" id="L133">                null,</span>
+<span class="nc" id="L134">                Expressions.call(</span>
+<span class="nc" id="L135">                    BuiltInMethod.SINGLETON_ENUMERABLE.method,</span>
+<span class="nc" id="L136">                    Expressions.call(</span>
+                        Long::class.java,
+<span class="nc" id="L138">                        expression,</span>
+<span class="nc" id="L139">                        INSERT_METHOD,</span>
+<span class="nc" id="L140">                        convertedChildExpr,</span>
+                    ),
+                ),
+            ),
+        )
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        val rowFormat = if (pref === Prefer.ARRAY) JavaRowFormat.ARRAY else JavaRowFormat.SCALAR</span>
+<span class="nc" id="L147">        val physType = PhysTypeImpl.of(implementor.typeFactory, getRowType(), rowFormat)</span>
+<span class="nc" id="L148">        return implementor.result(physType, builder.toBlock())</span>
+    }
+
+    private companion object {
+        /**
+         * Reference to [InsertableTable.insert] method.
+         */
+<span class="nc" id="L155">        val INSERT_METHOD: Method = Types.lookupMethod(InsertableTable::class.java, &quot;insert&quot;, Enumerable::class.java)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

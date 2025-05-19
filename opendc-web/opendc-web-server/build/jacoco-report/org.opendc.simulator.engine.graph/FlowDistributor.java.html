@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FlowDistributor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.engine.graph</a> &gt; <span class="el_source">FlowDistributor.java</span></div><h1>FlowDistributor.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.engine.graph;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import org.opendc.simulator.engine.engine.FlowEngine;
+
+public class FlowDistributor extends FlowNode implements FlowSupplier, FlowConsumer {
+<span class="nc" id="L35">    private final ArrayList&lt;FlowEdge&gt; consumerEdges = new ArrayList&lt;&gt;();</span>
+    private FlowEdge supplierEdge;
+
+<span class="nc" id="L38">    private final ArrayList&lt;Double&gt; incomingDemands = new ArrayList&lt;&gt;(); // What is demanded by the consumers</span>
+<span class="nc" id="L39">    private final ArrayList&lt;Double&gt; outgoingSupplies = new ArrayList&lt;&gt;(); // What is supplied to the consumers</span>
+
+    private double totalIncomingDemand; // The total demand of all the consumers
+    private double currentIncomingSupply; // The current supply provided by the supplier
+
+<span class="nc" id="L44">    private boolean outgoingDemandUpdateNeeded = false;</span>
+<span class="nc" id="L45">    private Set&lt;Integer&gt; updatedDemands = new HashSet&lt;&gt;(); // Array of consumers that updated their demand in this cycle</span>
+
+<span class="nc" id="L47">    private boolean overloaded = false;</span>
+
+    private double capacity; // What is the max capacity. Can probably be removed
+
+    public FlowDistributor(FlowEngine engine) {
+<span class="nc" id="L52">        super(engine);</span>
+<span class="nc" id="L53">    }</span>
+
+    public double getTotalIncomingDemand() {
+<span class="nc" id="L56">        return totalIncomingDemand;</span>
+    }
+
+    public double getCurrentIncomingSupply() {
+<span class="nc" id="L60">        return currentIncomingSupply;</span>
+    }
+
+    public double getCapacity() {
+<span class="nc" id="L64">        return capacity;</span>
+    }
+
+    public long onUpdate(long now) {
+
+        // Check if current supply is different from total demand
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (this.outgoingDemandUpdateNeeded) {</span>
+<span class="nc" id="L71">            this.updateOutgoingDemand();</span>
+
+<span class="nc" id="L73">            return Long.MAX_VALUE;</span>
+        }
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (!this.outgoingSupplies.isEmpty()) {</span>
+<span class="nc" id="L77">            this.updateOutgoingSupplies();</span>
+        }
+
+<span class="nc" id="L80">        return Long.MAX_VALUE;</span>
+    }
+
+    private void updateOutgoingDemand() {
+<span class="nc" id="L84">        this.pushOutgoingDemand(this.supplierEdge, this.totalIncomingDemand);</span>
+
+<span class="nc" id="L86">        this.outgoingDemandUpdateNeeded = false;</span>
+
+<span class="nc" id="L88">        this.invalidate();</span>
+<span class="nc" id="L89">    }</span>
+
+    private void updateOutgoingSupplies() {
+
+        // If the demand is higher than the current supply, the system is overloaded.
+        // The available supply is distributed based on the current distribution function.
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (this.totalIncomingDemand &gt; this.currentIncomingSupply) {</span>
+<span class="nc" id="L96">            this.overloaded = true;</span>
+
+<span class="nc" id="L98">            double[] supplies = distributeSupply(this.incomingDemands, this.currentIncomingSupply);</span>
+
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            for (int idx = 0; idx &lt; this.consumerEdges.size(); idx++) {</span>
+<span class="nc" id="L101">                this.pushOutgoingSupply(this.consumerEdges.get(idx), supplies[idx]);</span>
+            }
+
+<span class="nc" id="L104">        } else {</span>
+
+            // If the distributor was overloaded before, but is not anymore:
+            //      provide all consumers with their demand
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            if (this.overloaded) {</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                for (int idx = 0; idx &lt; this.consumerEdges.size(); idx++) {</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                    if (!Objects.equals(this.outgoingSupplies.get(idx), this.incomingDemands.get(idx))) {</span>
+<span class="nc" id="L111">                        this.pushOutgoingSupply(this.consumerEdges.get(idx), this.incomingDemands.get(idx));</span>
+                    }
+                }
+<span class="nc" id="L114">                this.overloaded = false;</span>
+            }
+
+            // Update the supplies of the consumers that changed their demand in the current cycle
+            else {
+<span class="nc bnc" id="L119" title="All 2 branches missed.">                for (int idx : this.updatedDemands) {</span>
+<span class="nc" id="L120">                    this.pushOutgoingSupply(this.consumerEdges.get(idx), this.incomingDemands.get(idx));</span>
+<span class="nc" id="L121">                }</span>
+            }
+        }
+
+<span class="nc" id="L125">        this.updatedDemands.clear();</span>
+<span class="nc" id="L126">    }</span>
+
+<span class="nc" id="L128">    private record Demand(int idx, double value) {}</span>
+
+    /**
+     * Distributed the available supply over the different demands.
+     * The supply is distributed using MaxMin Fairness.
+     */
+    private static double[] distributeSupply(ArrayList&lt;Double&gt; demands, double currentSupply) {
+<span class="nc" id="L135">        int inputSize = demands.size();</span>
+
+<span class="nc" id="L137">        final double[] supplies = new double[inputSize];</span>
+<span class="nc" id="L138">        final Demand[] tempDemands = new Demand[inputSize];</span>
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        for (int i = 0; i &lt; inputSize; i++) {</span>
+<span class="nc" id="L141">            tempDemands[i] = new Demand(i, demands.get(i));</span>
+        }
+
+<span class="nc" id="L144">        Arrays.sort(tempDemands, (o1, o2) -&gt; {</span>
+<span class="nc" id="L145">            Double i1 = o1.value;</span>
+<span class="nc" id="L146">            Double i2 = o2.value;</span>
+<span class="nc" id="L147">            return i1.compareTo(i2);</span>
+        });
+
+<span class="nc" id="L150">        double availableCapacity = currentSupply; // totalSupply</span>
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        for (int i = 0; i &lt; inputSize; i++) {</span>
+<span class="nc" id="L153">            double d = tempDemands[i].value;</span>
+
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            if (d == 0.0) {</span>
+<span class="nc" id="L156">                continue;</span>
+            }
+
+<span class="nc" id="L159">            double availableShare = availableCapacity / (inputSize - i);</span>
+<span class="nc" id="L160">            double r = Math.min(d, availableShare);</span>
+
+<span class="nc" id="L162">            int idx = tempDemands[i].idx;</span>
+<span class="nc" id="L163">            supplies[idx] = r; // Update the rates</span>
+<span class="nc" id="L164">            availableCapacity -= r;</span>
+        }
+
+<span class="nc" id="L167">        return supplies;</span>
+    }
+
+    /**
+     * Add a new consumer.
+     * Set its demand and supply to 0.0
+     */
+    @Override
+    public void addConsumerEdge(FlowEdge consumerEdge) {
+<span class="nc" id="L176">        consumerEdge.setConsumerIndex(this.consumerEdges.size());</span>
+
+<span class="nc" id="L178">        this.consumerEdges.add(consumerEdge);</span>
+<span class="nc" id="L179">        this.incomingDemands.add(0.0);</span>
+<span class="nc" id="L180">        this.outgoingSupplies.add(0.0);</span>
+<span class="nc" id="L181">    }</span>
+
+    @Override
+    public void addSupplierEdge(FlowEdge supplierEdge) {
+<span class="nc" id="L185">        this.supplierEdge = supplierEdge;</span>
+<span class="nc" id="L186">        this.capacity = supplierEdge.getCapacity();</span>
+<span class="nc" id="L187">        this.currentIncomingSupply = 0;</span>
+<span class="nc" id="L188">    }</span>
+
+    @Override
+    public void removeConsumerEdge(FlowEdge consumerEdge) {
+<span class="nc" id="L192">        int idx = consumerEdge.getConsumerIndex();</span>
+
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (idx == -1) {</span>
+<span class="nc" id="L195">            return;</span>
+        }
+
+<span class="nc" id="L198">        this.totalIncomingDemand -= consumerEdge.getDemand();</span>
+
+        // Remove idx from consumers that updated their demands
+<span class="nc" id="L201">        this.updatedDemands.remove(idx);</span>
+
+<span class="nc" id="L203">        this.consumerEdges.remove(idx);</span>
+<span class="nc" id="L204">        this.incomingDemands.remove(idx);</span>
+<span class="nc" id="L205">        this.outgoingSupplies.remove(idx);</span>
+
+        // update the consumer index for all consumerEdges higher than this.
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        for (int i = idx; i &lt; this.consumerEdges.size(); i++) {</span>
+<span class="nc" id="L209">            FlowEdge other = this.consumerEdges.get(i);</span>
+
+<span class="nc" id="L211">            other.setConsumerIndex(other.getConsumerIndex() - 1);</span>
+        }
+
+<span class="nc" id="L214">        HashSet&lt;Integer&gt; newUpdatedDemands = new HashSet&lt;&gt;();</span>
+
+<span class="nc bnc" id="L216" title="All 2 branches missed.">        for (int idx_other : this.updatedDemands) {</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">            if (idx_other &gt; idx) {</span>
+<span class="nc" id="L218">                newUpdatedDemands.add(idx_other - 1);</span>
+            } else {
+<span class="nc" id="L220">                newUpdatedDemands.add(idx_other);</span>
+            }
+<span class="nc" id="L222">        }</span>
+
+<span class="nc" id="L224">        this.updatedDemands = newUpdatedDemands;</span>
+
+<span class="nc" id="L226">        this.outgoingDemandUpdateNeeded = true;</span>
+<span class="nc" id="L227">        this.invalidate();</span>
+<span class="nc" id="L228">    }</span>
+
+    @Override
+    public void removeSupplierEdge(FlowEdge supplierEdge) {
+<span class="nc" id="L232">        this.supplierEdge = null;</span>
+<span class="nc" id="L233">        this.capacity = 0;</span>
+<span class="nc" id="L234">        this.currentIncomingSupply = 0;</span>
+
+<span class="nc" id="L236">        this.updatedDemands.clear();</span>
+
+<span class="nc" id="L238">        this.closeNode();</span>
+<span class="nc" id="L239">    }</span>
+
+    @Override
+    public void handleIncomingDemand(FlowEdge consumerEdge, double newDemand) {
+<span class="nc" id="L243">        int idx = consumerEdge.getConsumerIndex();</span>
+
+<span class="nc bnc" id="L245" title="All 2 branches missed.">        if (idx == -1) {</span>
+<span class="nc" id="L246">            System.out.println(&quot;Error (FlowDistributor): Demand pushed by an unknown consumer&quot;);</span>
+<span class="nc" id="L247">            return;</span>
+        }
+
+        // Update the total demand (This is cheaper than summing over all demands)
+<span class="nc" id="L251">        double prevDemand = incomingDemands.get(idx);</span>
+
+<span class="nc" id="L253">        incomingDemands.set(idx, newDemand);</span>
+<span class="nc" id="L254">        this.totalIncomingDemand += (newDemand - prevDemand);</span>
+
+<span class="nc" id="L256">        this.updatedDemands.add(idx);</span>
+
+<span class="nc" id="L258">        this.outgoingDemandUpdateNeeded = true;</span>
+<span class="nc" id="L259">        this.invalidate();</span>
+<span class="nc" id="L260">    }</span>
+
+    @Override
+    public void handleIncomingSupply(FlowEdge supplierEdge, double newSupply) {
+<span class="nc" id="L264">        this.currentIncomingSupply = newSupply;</span>
+
+<span class="nc" id="L266">        this.invalidate();</span>
+<span class="nc" id="L267">    }</span>
+
+    @Override
+    public void pushOutgoingDemand(FlowEdge supplierEdge, double newDemand) {
+<span class="nc" id="L271">        this.supplierEdge.pushDemand(newDemand);</span>
+<span class="nc" id="L272">    }</span>
+
+    @Override
+    public void pushOutgoingSupply(FlowEdge consumerEdge, double newSupply) {
+<span class="nc" id="L276">        int idx = consumerEdge.getConsumerIndex();</span>
+
+<span class="nc bnc" id="L278" title="All 2 branches missed.">        if (idx == -1) {</span>
+<span class="nc" id="L279">            System.out.println(&quot;Error (FlowDistributor): pushing supply to an unknown consumer&quot;);</span>
+        }
+
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        if (outgoingSupplies.get(idx) == newSupply) {</span>
+<span class="nc" id="L283">            return;</span>
+        }
+
+<span class="nc" id="L286">        outgoingSupplies.set(idx, newSupply);</span>
+<span class="nc" id="L287">        consumerEdge.pushSupply(newSupply);</span>
+<span class="nc" id="L288">    }</span>
+
+    @Override
+    public Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; getConnectedEdges() {
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        List&lt;FlowEdge&gt; supplyingEdges = (this.supplierEdge != null) ? List.of(this.supplierEdge) : List.of();</span>
+
+<span class="nc" id="L294">        return Map.of(FlowEdge.NodeType.CONSUMING, supplyingEdges, FlowEdge.NodeType.SUPPLYING, this.consumerEdges);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

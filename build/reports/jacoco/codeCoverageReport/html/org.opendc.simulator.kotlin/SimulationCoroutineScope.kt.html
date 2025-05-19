@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimulationCoroutineScope.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.kotlin</a> &gt; <span class="el_source">SimulationCoroutineScope.kt</span></div><h1>SimulationCoroutineScope.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.kotlin
+
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import org.opendc.common.asCoroutineDispatcher
+import org.opendc.simulator.SimulationDispatcher
+import kotlin.coroutines.ContinuationInterceptor
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+
+/**
+ * A scope which provides detailed control over the execution of coroutines for simulations.
+ */
+public interface SimulationCoroutineScope : CoroutineScope, SimulationController
+
+/**
+ * A scope which provides detailed control over the execution of coroutines for simulations.
+ *
+ * If the provided context does not provide a [ContinuationInterceptor] (Dispatcher) or [CoroutineExceptionHandler], the
+ * scope adds a dispatcher automatically.
+ */
+<span class="fc" id="L44">public fun SimulationCoroutineScope(</span>
+<span class="nc" id="L45">    context: CoroutineContext = EmptyCoroutineContext,</span>
+<span class="fc" id="L46">    scheduler: SimulationDispatcher = SimulationDispatcher(),</span>
+): SimulationCoroutineScope {
+<span class="fc" id="L48">    var safeContext = context</span>
+<span class="fc" id="L49">    val simulationDispatcher: SimulationDispatcher</span>
+<span class="fc" id="L50">    val interceptor = context[ContinuationInterceptor]</span>
+
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">    if (interceptor != null) {</span>
+<span class="fc" id="L53">        simulationDispatcher = interceptor.asSimulationDispatcher()</span>
+    } else {
+<span class="nc" id="L55">        simulationDispatcher = scheduler</span>
+<span class="nc" id="L56">        safeContext += scheduler.asCoroutineDispatcher()</span>
+    }
+
+<span class="fc" id="L59">    return object : SimulationCoroutineScope, SimulationController by simulationDispatcher.asController() {</span>
+<span class="fc" id="L60">        override val coroutineContext: CoroutineContext = safeContext</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

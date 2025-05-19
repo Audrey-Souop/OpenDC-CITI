@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Provisioner.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.provisioner</a> &gt; <span class="el_source">Provisioner.kt</span></div><h1>Provisioner.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.provisioner
+
+import org.opendc.common.Dispatcher
+import org.opendc.compute.simulator.ServiceRegistry
+import org.opendc.compute.simulator.telemetry.ComputeMetricReader
+import java.util.ArrayDeque
+import java.util.SplittableRandom
+
+/**
+ * A helper class to set up the experimental environment in a reproducible manner.
+ *
+ * With this class, users describe the environment using multiple [ProvisioningStep]s. These re-usable
+ * [ProvisioningStep]s are executed sequentially and ensure that the necessary infrastructure is configured and teared
+ * down after the simulation completes.
+ *
+ * @param dispatcher The [Dispatcher] implementation for scheduling future tasks.
+ * @param seed A seed for initializing the randomness of the environment.
+ */
+<span class="fc" id="L41">public class Provisioner(dispatcher: Dispatcher, seed: Long) : AutoCloseable {</span>
+    /**
+     * Implementation of [ProvisioningContext].
+     */
+    private val context =
+<span class="fc" id="L46">        object : ProvisioningContext {</span>
+<span class="fc" id="L47">            override val dispatcher: Dispatcher = dispatcher</span>
+<span class="pc" id="L48">            override val seeder: SplittableRandom = SplittableRandom(seed)</span>
+<span class="fc" id="L49">            override val registry: ServiceRegistry = ServiceRegistry()</span>
+
+<span class="nc" id="L51">            override fun toString(): String = &quot;Provisioner.ProvisioningContext&quot;</span>
+        }
+
+    /**
+     * The stack of handles to run during the clean-up process.
+     */
+<span class="fc" id="L57">    private val stack = ArrayDeque&lt;AutoCloseable&gt;()</span>
+
+    /**
+     * The [ServiceRegistry] containing the services registered in this environment.
+     */
+    public val registry: ServiceRegistry
+<span class="fc" id="L63">        get() = context.registry</span>
+
+    public fun getMonitor(): ComputeMetricReader? {
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        for (element in stack) {</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            if (element is ComputeMetricReader) {</span>
+<span class="fc" id="L68">                return element</span>
+            }
+        }
+
+<span class="nc" id="L72">        return null</span>
+    }
+
+    /**
+     * Run a single [ProvisioningStep] for this environment.
+     *
+     * @param step The step to apply to the environment.
+     */
+    public fun runStep(step: ProvisioningStep) {
+<span class="nc" id="L81">        val handle = step.apply(context)</span>
+<span class="nc" id="L82">        stack.push(handle)</span>
+<span class="nc" id="L83">    }</span>
+
+    /**
+     * Run multiple [ProvisioningStep]s for this environment.
+     *
+     * @param steps The steps to apply to the environment.
+     */
+    public fun runSteps(vararg steps: ProvisioningStep) {
+<span class="fc" id="L91">        val ctx = context</span>
+<span class="fc" id="L92">        val stack = stack</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        for (step in steps) {</span>
+<span class="fc" id="L94">            val handle = step.apply(ctx)</span>
+<span class="fc" id="L95">            stack.push(handle)</span>
+        }
+<span class="fc" id="L97">    }</span>
+
+    /**
+     * Clean-up the environment.
+     */
+    override fun close() {
+<span class="fc" id="L103">        val stack = stack</span>
+<span class="fc bfc" id="L104" title="All 4 branches covered.">        while (stack.isNotEmpty()) {</span>
+<span class="fc" id="L105">            stack.pop().close()</span>
+        }
+<span class="fc" id="L107">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

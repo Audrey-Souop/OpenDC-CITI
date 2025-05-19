@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JobResource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.rest.runner</a> &gt; <span class="el_source">JobResource.java</span></div><h1>JobResource.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2023 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.rest.runner;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import java.util.List;
+import org.opendc.web.proto.JobState;
+import org.opendc.web.server.model.Job;
+import org.opendc.web.server.service.JobService;
+
+/**
+ * A resource representing the available simulation jobs.
+ */
+@Produces(&quot;application/json&quot;)
+@Path(&quot;/jobs&quot;)
+@RolesAllowed(&quot;runner&quot;)
+public final class JobResource {
+    /**
+     * The {@link JobService} for helping manage the job lifecycle.
+     */
+    private final JobService jobService;
+
+    /**
+     * Construct a {@link JobResource} instance.
+     *
+     * @param jobService The {@link JobService} for managing the job lifecycle.
+     */
+<span class="fc" id="L57">    public JobResource(JobService jobService) {</span>
+<span class="fc" id="L58">        this.jobService = jobService;</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * Obtain all pending simulation jobs.
+     */
+    @GET
+    public List&lt;org.opendc.web.proto.runner.Job&gt; queryPending() {
+<span class="fc" id="L66">        return Job.findByState(JobState.PENDING).list().stream()</span>
+<span class="fc" id="L67">                .map(RunnerProtocol::toDto)</span>
+<span class="fc" id="L68">                .toList();</span>
+    }
+
+    /**
+     * Get a job by identifier.
+     */
+    @GET
+    @Path(&quot;{job}&quot;)
+    public org.opendc.web.proto.runner.Job get(@PathParam(&quot;job&quot;) long id) {
+<span class="fc" id="L77">        Job job = Job.findById(id);</span>
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (job == null) {</span>
+<span class="fc" id="L80">            throw new WebApplicationException(&quot;Job not found&quot;, 404);</span>
+        }
+
+<span class="fc" id="L83">        return RunnerProtocol.toDto(job);</span>
+    }
+
+    /**
+     * Atomically update the state of a job.
+     */
+    @POST
+    @Path(&quot;{job}&quot;)
+    @Consumes(&quot;application/json&quot;)
+    @Transactional
+    public org.opendc.web.proto.runner.Job update(
+            @PathParam(&quot;job&quot;) long id, @Valid org.opendc.web.proto.runner.Job.Update update) {
+<span class="fc" id="L95">        Job job = Job.findById(id);</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (job == null) {</span>
+<span class="fc" id="L97">            throw new WebApplicationException(&quot;Job not found&quot;, 404);</span>
+        }
+
+        try {
+<span class="fc" id="L101">            jobService.updateJob(job, update.getState(), update.getRuntime(), update.getResults());</span>
+<span class="nc" id="L102">        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L103">            throw new WebApplicationException(e, 400);</span>
+<span class="nc" id="L104">        } catch (IllegalStateException e) {</span>
+<span class="nc" id="L105">            throw new WebApplicationException(e, 409);</span>
+<span class="fc" id="L106">        }</span>
+
+<span class="fc" id="L108">        return RunnerProtocol.toDto(job);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

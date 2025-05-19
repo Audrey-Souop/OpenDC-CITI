@@ -1,0 +1,2 @@
+	ˆ[9000.0, 9000.0, 9000.0, 9000.0, 9000.0, 6000.0, 6000.0, 6000.0, 6000.0, 6000.0, 9000.0, 9000.0, 9000.0, 9000.0, 9000.0, 9000.0, 750.0]
+Ð20:17:21.822 [[33mWARN [m] org.opendc.compute.simulator.service.ComputeService - task Task[uid=00000000-0000-0000-6e78-9e6aa1b965f4,name=0,state=PROVISIONING] has been terminated because it failed 10 times

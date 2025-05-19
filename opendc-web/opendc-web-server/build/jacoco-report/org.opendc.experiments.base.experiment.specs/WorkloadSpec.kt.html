@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkloadSpec.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.experiments.base.experiment.specs</a> &gt; <span class="el_source">WorkloadSpec.kt</span></div><h1>WorkloadSpec.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.experiments.base.experiment.specs
+
+import kotlinx.serialization.Serializable
+import org.opendc.compute.workload.ComputeWorkloadLoader
+import org.opendc.compute.workload.WorkloadLoader
+import org.opendc.simulator.compute.workload.trace.scaling.NoDelayScaling
+import org.opendc.simulator.compute.workload.trace.scaling.PerfectScaling
+import org.opendc.simulator.compute.workload.trace.scaling.ScalingPolicy
+import java.io.File
+
+/**
+ * specification describing a workload
+ *
+ * @property pathToFile
+ * @property type
+ * @property sampleFraction
+ * @property submissionTime
+ */
+<span class="nc bnc" id="L41" title="All 13 branches missed.">@Serializable</span>
+<span class="nc" id="L42">public data class WorkloadSpec(</span>
+<span class="nc" id="L43">    val pathToFile: String,</span>
+<span class="nc" id="L44">    val type: WorkloadTypes,</span>
+<span class="nc" id="L45">    val sampleFraction: Double = 1.0,</span>
+<span class="nc" id="L46">    val submissionTime: String? = null,</span>
+<span class="nc" id="L47">    val deferAll: Boolean = false,</span>
+<span class="nc" id="L48">    val scalingPolicy: ScalingPolicyEnum = ScalingPolicyEnum.NoDelay,</span>
+) {
+<span class="nc" id="L50">    public val name: String = File(pathToFile).nameWithoutExtension</span>
+
+<span class="nc" id="L52">    init {</span>
+<span class="nc bnc" id="L53" title="All 4 branches missed.">        require(sampleFraction &gt; 0) { &quot;The fraction of the tasks can not be 0.0 or lower&quot; }</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        require(File(pathToFile).exists()) { &quot;The provided path to the workload: $pathToFile does not exist &quot; }</span>
+<span class="nc" id="L55">    }</span>
+<span class="nc" id="L56">}</span>
+
+/**
+ * specification describing a workload type
+ *
+ * @constructor Create empty Workload types
+ */
+public enum class WorkloadTypes {
+<span class="nc" id="L64">    ComputeWorkload,</span>
+}
+
+/**
+ * Create a workload loader for the given workload
+ */
+public fun getWorkloadLoader(
+    type: WorkloadTypes,
+    pathToFile: File,
+    submissionTime: String?,
+    checkpointInterval: Long,
+    checkpointDuration: Long,
+    checkpointIntervalScaling: Double,
+    scalingPolicy: ScalingPolicy,
+    deferAll: Boolean,
+): WorkloadLoader {
+<span class="nc" id="L80">    return when (type) {</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        WorkloadTypes.ComputeWorkload -&gt;</span>
+<span class="nc" id="L82">            ComputeWorkloadLoader(</span>
+<span class="nc" id="L83">                pathToFile,</span>
+<span class="nc" id="L84">                submissionTime,</span>
+<span class="nc" id="L85">                checkpointInterval,</span>
+<span class="nc" id="L86">                checkpointDuration,</span>
+<span class="nc" id="L87">                checkpointIntervalScaling,</span>
+<span class="nc" id="L88">                scalingPolicy,</span>
+<span class="nc" id="L89">                deferAll,</span>
+            )
+    }
+}
+
+public enum class ScalingPolicyEnum {
+<span class="nc" id="L95">    NoDelay,</span>
+<span class="nc" id="L96">    Perfect,</span>
+}
+
+public fun getScalingPolicy(scalingPolicyEnum: ScalingPolicyEnum): ScalingPolicy {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">    return when (scalingPolicyEnum) {</span>
+<span class="nc" id="L101">        ScalingPolicyEnum.NoDelay -&gt; NoDelayScaling()</span>
+<span class="nc" id="L102">        ScalingPolicyEnum.Perfect -&gt; PerfectScaling()</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

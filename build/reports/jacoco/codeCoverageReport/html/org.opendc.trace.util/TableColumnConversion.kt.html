@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TableColumnConversion.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.util</a> &gt; <span class="el_source">TableColumnConversion.kt</span></div><h1>TableColumnConversion.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+@file:JvmName(&quot;TableColumnConversions&quot;)
+
+package org.opendc.trace.util
+
+import org.opendc.trace.TableColumnType
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
+
+/**
+ * Helper method to convert a [List] into a [List] with elements of [targetElementType].
+ */
+public fun &lt;T&gt; TableColumnType.List.convertTo(
+    value: List&lt;*&gt;?,
+    targetElementType: Class&lt;T&gt;,
+): List&lt;T&gt;? {
+<span class="nc bnc" id="L39" title="All 2 branches missed.">    require(elementType.isCompatible(targetElementType)) { &quot;Target element type is not compatible with $elementType&quot; }</span>
+    @Suppress(&quot;UNCHECKED_CAST&quot;)
+<span class="nc" id="L41">    return value as List&lt;T&gt;?</span>
+}
+
+/**
+ * Helper method to convert a [Set] into a [Set] with elements of [targetElementType].
+ */
+public fun &lt;T&gt; TableColumnType.Set.convertTo(
+    value: Set&lt;*&gt;?,
+    targetElementType: Class&lt;T&gt;,
+): Set&lt;T&gt;? {
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">    require(elementType.isCompatible(targetElementType)) { &quot;Target element type is not compatible with $elementType&quot; }</span>
+    @Suppress(&quot;UNCHECKED_CAST&quot;)
+<span class="fc" id="L53">    return value as Set&lt;T&gt;?</span>
+}
+
+/**
+ * Helper method to convert a [Map] into a [Map] with [targetKeyType] keys and [targetValueType] values.
+ */
+public fun &lt;K, V&gt; TableColumnType.Map.convertTo(
+    value: Map&lt;*, *&gt;?,
+    targetKeyType: Class&lt;K&gt;,
+    targetValueType: Class&lt;V&gt;,
+): Map&lt;K, V&gt;? {
+<span class="nc bnc" id="L64" title="All 2 branches missed.">    require(keyType.isCompatible(targetKeyType)) { &quot;Target key type $targetKeyType is not compatible with $keyType&quot; }</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">    require(valueType.isCompatible(targetValueType)) { &quot;Target value type $targetValueType is not compatible with $valueType&quot; }</span>
+    @Suppress(&quot;UNCHECKED_CAST&quot;)
+<span class="nc" id="L67">    return value as Map&lt;K, V&gt;?</span>
+}
+
+/**
+ * Helper method to determine [javaType] is compatible with this [TableColumnType].
+ */
+private fun TableColumnType.isCompatible(javaType: Class&lt;*&gt;): Boolean {
+<span class="fc" id="L74">    return when (this) {</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        is TableColumnType.Boolean -&gt; javaType.isAssignableFrom(Boolean::class.java)</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        is TableColumnType.Int -&gt; javaType.isAssignableFrom(Int::class.java)</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        is TableColumnType.Long -&gt; javaType.isAssignableFrom(Long::class.java)</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        is TableColumnType.Float -&gt; javaType.isAssignableFrom(Float::class.java)</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">        is TableColumnType.Double -&gt; javaType.isAssignableFrom(Double::class.java)</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        is TableColumnType.String -&gt; javaType.isAssignableFrom(String::class.java)</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        is TableColumnType.UUID -&gt; javaType.isAssignableFrom(UUID::class.java)</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        is TableColumnType.Instant -&gt; javaType.isAssignableFrom(Instant::class.java)</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        is TableColumnType.Duration -&gt; javaType.isAssignableFrom(Duration::class.java)</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        is TableColumnType.List -&gt; javaType.isAssignableFrom(List::class.java)</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        is TableColumnType.Set -&gt; javaType.isAssignableFrom(Set::class.java)</span>
+<span class="nc" id="L86">        is TableColumnType.Map -&gt; javaType.isAssignableFrom(Map::class.java)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

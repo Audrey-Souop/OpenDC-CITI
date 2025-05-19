@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExperimentSpec.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.experiments.base.experiment.specs</a> &gt; <span class="el_source">ExperimentSpec.kt</span></div><h1>ExperimentSpec.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.experiments.base.experiment.specs
+
+import kotlinx.serialization.Serializable
+import org.opendc.common.logger.infoNewLine
+import org.opendc.common.logger.logger
+import org.opendc.compute.simulator.scheduler.ComputeSchedulerEnum
+import org.opendc.compute.simulator.telemetry.parquet.ComputeExportConfig
+import org.opendc.experiments.base.experiment.specs.allocation.AllocationPolicySpec
+import org.opendc.experiments.base.experiment.specs.allocation.PrefabAllocationPolicySpec
+import java.util.UUID
+
+/**
+ * specification describing a scenario
+ *
+ * @property topologies
+ * @property workloads
+ * @property allocationPolicies
+ * @property failureModels
+ * @property exportModels
+ * @property outputFolder
+ * @property initialSeed
+ * @property runs
+ * @property computeExportConfig configures which parquet columns are to
+ * be included in the output files.
+ */
+
+<span class="nc bnc" id="L49" title="All 19 branches missed.">@Serializable</span>
+<span class="nc" id="L50">public data class ExperimentSpec(</span>
+<span class="nc" id="L51">    var id: Int = -1,</span>
+<span class="nc" id="L52">    var name: String = &quot;&quot;,</span>
+<span class="nc" id="L53">    val outputFolder: String = &quot;output&quot;,</span>
+<span class="nc" id="L54">    val initialSeed: Int = 0,</span>
+<span class="nc" id="L55">    val runs: Int = 1,</span>
+<span class="nc" id="L56">    val exportModels: Set&lt;ExportModelSpec&gt; = setOf(ExportModelSpec()),</span>
+<span class="nc" id="L57">    val computeExportConfig: ComputeExportConfig = ComputeExportConfig.ALL_COLUMNS,</span>
+<span class="nc" id="L58">    val maxNumFailures: Set&lt;Int&gt; = setOf(10),</span>
+<span class="nc" id="L59">    val topologies: Set&lt;ScenarioTopologySpec&gt;,</span>
+<span class="nc" id="L60">    val workloads: Set&lt;WorkloadSpec&gt;,</span>
+<span class="nc" id="L61">    val allocationPolicies: Set&lt;AllocationPolicySpec&gt; = setOf(PrefabAllocationPolicySpec(ComputeSchedulerEnum.Mem)),</span>
+<span class="nc" id="L62">    val failureModels: Set&lt;FailureModelSpec?&gt; = setOf(null),</span>
+<span class="nc" id="L63">    val checkpointModels: Set&lt;CheckpointModelSpec?&gt; = setOf(null),</span>
+) {
+<span class="nc" id="L65">    init {</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">        require(runs &gt; 0) { &quot;The number of runs should always be positive&quot; }</span>
+
+        // generate name if not provided
+        // TODO: improve this
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (name == &quot;&quot;) {</span>
+<span class="nc" id="L71">            name = &quot;unnamed-simulation-${UUID.randomUUID().toString().substring(0, 4)}&quot;</span>
+//                &quot;workload=${workloads[0].name}_topology=${topologies[0].name}_allocationPolicy=${allocationPolicies[0].name}&quot;
+        }
+
+<span class="nc" id="L75">        LOG.infoNewLine(computeExportConfig.fmt())</span>
+<span class="nc" id="L76">    }</span>
+
+    public fun getCartesian(): Sequence&lt;ScenarioSpec&gt; {
+<span class="nc" id="L79">        return sequence {</span>
+<span class="nc" id="L80">            val checkpointDiv = maxNumFailures.size</span>
+<span class="nc" id="L81">            val failureDiv = checkpointDiv * checkpointModels.size</span>
+<span class="nc" id="L82">            val exportDiv = failureDiv * failureModels.size</span>
+<span class="nc" id="L83">            val allocationDiv = exportDiv * exportModels.size</span>
+<span class="nc" id="L84">            val workloadDiv = allocationDiv * allocationPolicies.size</span>
+<span class="nc" id="L85">            val topologyDiv = workloadDiv * workloads.size</span>
+<span class="nc" id="L86">            val numScenarios = topologyDiv * topologies.size</span>
+
+<span class="nc" id="L88">            val topologyList = topologies.toList()</span>
+<span class="nc" id="L89">            val workloadList = workloads.toList()</span>
+<span class="nc" id="L90">            val allocationPolicyList = allocationPolicies.toList()</span>
+<span class="nc" id="L91">            val exportModelList = exportModels.toList()</span>
+<span class="nc" id="L92">            val failureModelList = failureModels.toList()</span>
+<span class="nc" id="L93">            val checkpointModelList = checkpointModels.toList()</span>
+<span class="nc" id="L94">            val maxNumFailuresList = maxNumFailures.toList()</span>
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">            for (i in 0 until numScenarios) {</span>
+<span class="nc" id="L97">                yield(</span>
+<span class="nc" id="L98">                    ScenarioSpec(</span>
+<span class="nc" id="L99">                        id,</span>
+<span class="nc" id="L100">                        name,</span>
+<span class="nc" id="L101">                        outputFolder,</span>
+<span class="nc" id="L102">                        topologyList[(i / topologyDiv) % topologyList.size],</span>
+<span class="nc" id="L103">                        workloadList[(i / workloadDiv) % workloadList.size],</span>
+<span class="nc" id="L104">                        allocationPolicyList[(i / allocationDiv) % allocationPolicyList.size],</span>
+<span class="nc" id="L105">                        exportModelList[(i / exportDiv) % exportModelList.size],</span>
+<span class="nc" id="L106">                        failureModelList[(i / failureDiv) % failureModelList.size],</span>
+<span class="nc" id="L107">                        checkpointModelList[(i / checkpointDiv) % checkpointModelList.size],</span>
+<span class="nc" id="L108">                        maxNumFailuresList[i % maxNumFailuresList.size],</span>
+                    ),
+                )
+            }
+<span class="nc" id="L112">        }</span>
+    }
+
+<span class="nc" id="L115">    internal companion object {</span>
+<span class="nc" id="L116">        private val LOG by logger()</span>
+    }
+<span class="nc" id="L118">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

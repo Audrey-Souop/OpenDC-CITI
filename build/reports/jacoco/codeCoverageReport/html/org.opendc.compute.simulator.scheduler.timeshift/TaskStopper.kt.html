@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskStopper.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.scheduler.timeshift</a> &gt; <span class="el_source">TaskStopper.kt</span></div><h1>TaskStopper.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2025 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.scheduler.timeshift
+
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import org.opendc.compute.simulator.service.ComputeService
+import org.opendc.simulator.compute.power.CarbonModel
+import org.opendc.simulator.compute.power.CarbonReceiver
+import java.time.InstantSource
+import java.util.LinkedList
+import kotlin.coroutines.CoroutineContext
+import kotlin.math.roundToInt
+
+<span class="nc" id="L36">public class TaskStopper(</span>
+<span class="nc" id="L37">    private val clock: InstantSource,</span>
+    context: CoroutineContext,
+<span class="nc" id="L39">    private val forecast: Boolean = true,</span>
+<span class="nc" id="L40">    private val forecastThreshold: Double = 0.6,</span>
+<span class="nc" id="L41">    private val forecastSize: Int = 24,</span>
+<span class="nc" id="L42">    private val windowSize: Int = 168,</span>
+) : CarbonReceiver {
+<span class="nc" id="L44">    private val scope: CoroutineScope = CoroutineScope(context + Job())</span>
+
+<span class="nc" id="L46">    private val pastCarbonIntensities = LinkedList&lt;Double&gt;()</span>
+    private var carbonRunningSum = 0.0
+    private var isHighCarbon = false
+    private var carbonModel: CarbonModel? = null
+
+    private var service: ComputeService? = null
+    private var client: ComputeService.ComputeClient? = null
+
+    public fun setService(service: ComputeService) {
+<span class="nc" id="L55">        this.service = service</span>
+<span class="nc" id="L56">        this.client = service.newClient()</span>
+<span class="nc" id="L57">    }</span>
+
+    private fun pauseTasks() {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        for (host in service!!.hosts) {</span>
+<span class="nc" id="L61">            val guests = host.getGuests()</span>
+
+<span class="nc" id="L63">            val snapshots =</span>
+<span class="nc" id="L64">                guests.map {</span>
+<span class="nc" id="L65">                    it.virtualMachine!!.makeSnapshot(clock.millis())</span>
+<span class="nc" id="L66">                    it.virtualMachine!!.snapshot</span>
+                }
+<span class="nc" id="L68">            val tasks = guests.map { it.task }</span>
+<span class="nc" id="L69">            host.pauseAllTasks()</span>
+
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            for ((task, snapshot) in tasks.zip(snapshots)) {</span>
+<span class="nc" id="L72">                client!!.rescheduleTask(task, snapshot)</span>
+            }
+        }
+<span class="nc" id="L75">    }</span>
+
+    override fun updateCarbonIntensity(newCarbonIntensity: Double) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (!forecast) {</span>
+<span class="nc" id="L79">            isHighCarbon = noForecastUpdateCarbonIntensity(newCarbonIntensity)</span>
+        } else {
+<span class="nc" id="L81">            val forecast = carbonModel!!.getForecast(forecastSize)</span>
+
+<span class="nc" id="L83">            val localForecastSize = forecast.size</span>
+<span class="nc" id="L84">            val quantileIndex = (localForecastSize * forecastThreshold).roundToInt()</span>
+<span class="nc" id="L85">            val thresholdCarbonIntensity = forecast.sorted()[quantileIndex]</span>
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">            isHighCarbon = newCarbonIntensity &gt; thresholdCarbonIntensity</span>
+        }
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        if (isHighCarbon) {</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">            scope.launch {</span>
+<span class="nc" id="L92">                pauseTasks()</span>
+<span class="nc" id="L93">            }</span>
+        }
+<span class="nc" id="L95">    }</span>
+
+    private fun noForecastUpdateCarbonIntensity(newCarbonIntensity: Double): Boolean {
+<span class="nc" id="L98">        this.pastCarbonIntensities.addLast(newCarbonIntensity)</span>
+<span class="nc" id="L99">        this.carbonRunningSum += newCarbonIntensity</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (this.pastCarbonIntensities.size &gt; this.windowSize) {</span>
+<span class="nc" id="L101">            this.carbonRunningSum -= this.pastCarbonIntensities.removeFirst()</span>
+        }
+
+<span class="nc" id="L104">        val thresholdCarbonIntensity = this.carbonRunningSum / this.pastCarbonIntensities.size</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        isHighCarbon = (newCarbonIntensity &gt; thresholdCarbonIntensity)</span>
+<span class="nc" id="L107">        return isHighCarbon</span>
+    }
+
+    override fun setCarbonModel(carbonModel: CarbonModel?) {
+<span class="nc" id="L111">        this.carbonModel = carbonModel</span>
+<span class="nc" id="L112">    }</span>
+
+<span class="nc" id="L114">    override fun removeCarbonModel(carbonModel: CarbonModel?) {}</span>
+<span class="nc" id="L115">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

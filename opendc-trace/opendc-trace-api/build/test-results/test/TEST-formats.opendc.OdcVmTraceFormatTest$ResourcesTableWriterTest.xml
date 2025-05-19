@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="TableWriter for Resources" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:37" hostname="ece-d6200-audu" time="0.047">
+  <properties/>
+  <testcase name="testWriteWithoutRow()" classname="formats.opendc.OdcVmTraceFormatTest$ResourcesTableWriterTest" time="0.013"/>
+  <testcase name="testWriteNonExistentColumns()" classname="formats.opendc.OdcVmTraceFormatTest$ResourcesTableWriterTest" time="0.006"/>
+  <testcase name="testEndRowWithoutStart()" classname="formats.opendc.OdcVmTraceFormatTest$ResourcesTableWriterTest" time="0.009"/>
+  <testcase name="testResolve()" classname="formats.opendc.OdcVmTraceFormatTest$ResourcesTableWriterTest" time="0.006"/>
+  <testcase name="testResolveEmpty()" classname="formats.opendc.OdcVmTraceFormatTest$ResourcesTableWriterTest" time="0.012"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

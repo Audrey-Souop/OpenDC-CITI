@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TraceTable.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.calcite</a> &gt; <span class="el_source">TraceTable.kt</span></div><h1>TraceTable.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.calcite
+
+import org.apache.calcite.DataContext
+import org.apache.calcite.adapter.java.AbstractQueryableTable
+import org.apache.calcite.adapter.java.JavaTypeFactory
+import org.apache.calcite.linq4j.AbstractEnumerable
+import org.apache.calcite.linq4j.Enumerable
+import org.apache.calcite.linq4j.Enumerator
+import org.apache.calcite.linq4j.QueryProvider
+import org.apache.calcite.linq4j.Queryable
+import org.apache.calcite.plan.RelOptCluster
+import org.apache.calcite.plan.RelOptTable
+import org.apache.calcite.prepare.Prepare.CatalogReader
+import org.apache.calcite.rel.RelNode
+import org.apache.calcite.rel.core.TableModify
+import org.apache.calcite.rel.logical.LogicalTableModify
+import org.apache.calcite.rel.type.RelDataType
+import org.apache.calcite.rel.type.RelDataTypeFactory
+import org.apache.calcite.rex.RexNode
+import org.apache.calcite.schema.ModifiableTable
+import org.apache.calcite.schema.ProjectableFilterableTable
+import org.apache.calcite.schema.SchemaPlus
+import org.apache.calcite.schema.impl.AbstractTableQueryable
+import org.apache.calcite.sql.type.SqlTypeName
+import org.opendc.trace.TableColumnType
+import java.nio.ByteBuffer
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
+
+/**
+ * A Calcite [Table] that exposes an OpenDC [org.opendc.trace.Table] as SQL table.
+ */
+<span class="fc" id="L57">internal class TraceTable(private val table: org.opendc.trace.Table) :</span>
+<span class="fc" id="L58">    AbstractQueryableTable(Array&lt;Any?&gt;::class.java),</span>
+    ProjectableFilterableTable,
+    ModifiableTable,
+    InsertableTable {
+    private var rowType: RelDataType? = null
+
+    override fun getRowType(typeFactory: RelDataTypeFactory): RelDataType {
+<span class="fc" id="L65">        var rowType = rowType</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (rowType == null) {</span>
+<span class="fc" id="L67">            rowType = deduceRowType(typeFactory as JavaTypeFactory)</span>
+<span class="fc" id="L68">            this.rowType = rowType</span>
+        }
+
+<span class="fc" id="L71">        return rowType</span>
+    }
+
+    override fun scan(
+        root: DataContext,
+        filters: MutableList&lt;RexNode&gt;,
+        projects: IntArray?,
+    ): Enumerable&lt;Array&lt;Any?&gt;&gt; {
+        // Filters are currently not supported by the OpenDC trace API. By keeping the filters in the list, Calcite
+        // assumes that they are declined and will perform the filters itself.
+
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        val projection = projects?.map { table.columns[it] }</span>
+<span class="fc" id="L83">        val cancelFlag = DataContext.Variable.CANCEL_FLAG.get&lt;AtomicBoolean&gt;(root)</span>
+<span class="fc" id="L84">        return object : AbstractEnumerable&lt;Array&lt;Any?&gt;&gt;() {</span>
+            override fun enumerator(): Enumerator&lt;Array&lt;Any?&gt;&gt; =
+<span class="pc bpc" id="L86" title="2 of 4 branches missed.">                TraceReaderEnumerator(table.newReader(projection?.map { it.name }), projection ?: table.columns, cancelFlag)</span>
+        }
+    }
+
+    override fun insert(rows: Enumerable&lt;Array&lt;Any?&gt;&gt;): Long {
+<span class="nc" id="L91">        val table = table</span>
+<span class="nc" id="L92">        val columns = table.columns</span>
+<span class="nc" id="L93">        val writer = table.newWriter()</span>
+<span class="nc" id="L94">        val columnIndices = columns.map { writer.resolve(it.name) }.toIntArray()</span>
+<span class="nc" id="L95">        var rowCount = 0L</span>
+
+<span class="nc" id="L97">        try {</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            for (row in rows) {</span>
+<span class="nc" id="L99">                writer.startRow()</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                for ((index, value) in row.withIndex()) {</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                    if (value == null) {</span>
+<span class="nc" id="L103">                        continue</span>
+                    }
+<span class="nc" id="L105">                    val columnType = columns[index].type</span>
+<span class="nc" id="L106">                    val columnIndex = columnIndices[index]</span>
+<span class="nc" id="L107">                    when (columnType) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                        is TableColumnType.Boolean -&gt; writer.setBoolean(columnIndex, value as Boolean)</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                        is TableColumnType.Int -&gt; writer.setInt(columnIndex, value as Int)</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                        is TableColumnType.Long -&gt; writer.setLong(columnIndex, value as Long)</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                        is TableColumnType.Float -&gt; writer.setFloat(columnIndex, value as Float)</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                        is TableColumnType.Double -&gt; writer.setDouble(columnIndex, value as Double)</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">                        is TableColumnType.String -&gt; writer.setString(columnIndex, value as String)</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                        is TableColumnType.UUID -&gt; {</span>
+<span class="nc" id="L115">                            val bb = ByteBuffer.wrap(value as ByteArray)</span>
+<span class="nc" id="L116">                            writer.setUUID(columnIndex, UUID(bb.getLong(), bb.getLong()))</span>
+                        }
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                        is TableColumnType.Instant -&gt; writer.setInstant(columnIndex, Instant.ofEpochMilli(value as Long))</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">                        is TableColumnType.Duration -&gt; writer.setDuration(columnIndex, Duration.ofMillis(value as Long))</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                        is TableColumnType.List -&gt; writer.setList(columnIndex, value as List&lt;*&gt;)</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                        is TableColumnType.Set -&gt; writer.setSet(columnIndex, (value as List&lt;*&gt;).toSet())</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">                        is TableColumnType.Map -&gt; writer.setMap(columnIndex, value as Map&lt;*, *&gt;)</span>
+                    }
+                }
+
+<span class="nc" id="L126">                writer.endRow()</span>
+
+<span class="nc" id="L128">                rowCount++</span>
+            }
+        } finally {
+<span class="nc" id="L131">            writer.close()</span>
+        }
+
+<span class="nc" id="L134">        return rowCount</span>
+    }
+
+    override fun &lt;T&gt; asQueryable(
+        queryProvider: QueryProvider,
+        schema: SchemaPlus,
+        tableName: String,
+    ): Queryable&lt;T&gt; {
+<span class="fc" id="L142">        return object : AbstractTableQueryable&lt;T&gt;(queryProvider, schema, this@TraceTable, tableName) {</span>
+            override fun enumerator(): Enumerator&lt;T&gt; {
+<span class="fc" id="L144">                val cancelFlag = AtomicBoolean(false)</span>
+<span class="fc" id="L145">                return TraceReaderEnumerator(</span>
+<span class="fc" id="L146">                    this@TraceTable.table.newReader(),</span>
+<span class="fc" id="L147">                    this@TraceTable.table.columns,</span>
+<span class="fc" id="L148">                    cancelFlag,</span>
+                )
+            }
+
+<span class="nc" id="L152">            override fun toString(): String = &quot;TraceTableQueryable[table=$tableName]&quot;</span>
+        }
+    }
+
+<span class="nc" id="L156">    override fun getModifiableCollection(): MutableCollection&lt;Any?&gt;? = null</span>
+
+    override fun toModificationRel(
+        cluster: RelOptCluster,
+        table: RelOptTable,
+        catalogReader: CatalogReader,
+        child: RelNode,
+        operation: TableModify.Operation,
+        updateColumnList: MutableList&lt;String&gt;?,
+        sourceExpressionList: MutableList&lt;RexNode&gt;?,
+        flattened: Boolean,
+    ): TableModify {
+<span class="nc" id="L168">        cluster.planner.addRule(TraceTableModifyRule.DEFAULT.toRule())</span>
+
+<span class="nc" id="L170">        return LogicalTableModify.create(</span>
+<span class="nc" id="L171">            table,</span>
+<span class="nc" id="L172">            catalogReader,</span>
+<span class="nc" id="L173">            child,</span>
+<span class="nc" id="L174">            operation,</span>
+<span class="nc" id="L175">            updateColumnList,</span>
+<span class="nc" id="L176">            sourceExpressionList,</span>
+<span class="nc" id="L177">            flattened,</span>
+        )
+    }
+
+<span class="nc" id="L181">    override fun toString(): String = &quot;TraceTable&quot;</span>
+
+    private fun deduceRowType(typeFactory: JavaTypeFactory): RelDataType {
+<span class="fc" id="L184">        val types = mutableListOf&lt;RelDataType&gt;()</span>
+<span class="fc" id="L185">        val names = mutableListOf&lt;String&gt;()</span>
+
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        for (column in table.columns) {</span>
+<span class="fc" id="L188">            names.add(column.name)</span>
+<span class="fc" id="L189">            types.add(mapType(typeFactory, column.type))</span>
+        }
+
+<span class="fc" id="L192">        return typeFactory.createStructType(types, names)</span>
+    }
+
+    private fun mapType(
+        typeFactory: JavaTypeFactory,
+        type: TableColumnType,
+    ): RelDataType {
+<span class="fc" id="L199">        return when (type) {</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">            is TableColumnType.Boolean -&gt; typeFactory.createSqlType(SqlTypeName.BOOLEAN)</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">            is TableColumnType.Int -&gt; typeFactory.createSqlType(SqlTypeName.INTEGER)</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">            is TableColumnType.Long -&gt; typeFactory.createSqlType(SqlTypeName.BIGINT)</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">            is TableColumnType.Float -&gt; typeFactory.createSqlType(SqlTypeName.FLOAT)</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">            is TableColumnType.Double -&gt; typeFactory.createSqlType(SqlTypeName.DOUBLE)</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">            is TableColumnType.String -&gt; typeFactory.createSqlType(SqlTypeName.VARCHAR)</span>
+<span class="fc bfc" id="L206" title="All 2 branches covered.">            is TableColumnType.UUID -&gt; typeFactory.createSqlType(SqlTypeName.BINARY, 16)</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">            is TableColumnType.Instant -&gt; typeFactory.createSqlType(SqlTypeName.TIMESTAMP)</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">            is TableColumnType.Duration -&gt; typeFactory.createSqlType(SqlTypeName.BIGINT)</span>
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">            is TableColumnType.List -&gt; typeFactory.createArrayType(mapType(typeFactory, type.elementType), -1)</span>
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">            is TableColumnType.Set -&gt; typeFactory.createMultisetType(mapType(typeFactory, type.elementType), -1)</span>
+<span class="nc" id="L211">            is TableColumnType.Map -&gt; typeFactory.createMapType(mapType(typeFactory, type.keyType), mapType(typeFactory, type.valueType))</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

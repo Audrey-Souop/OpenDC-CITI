@@ -1,0 +1,951 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Topology,0,60,0,0,0,8,0,8,0,8
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,ProjectRole,0,25,0,0,0,3,0,1,0,1
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Scenario,0,87,0,0,0,11,0,11,0,11
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Portfolio,0,51,0,0,0,7,0,7,0,7
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Portfolio.Create,0,21,0,0,0,5,0,3,0,3
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Project.Create,0,12,0,0,0,3,0,2,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,UserAccounting,0,24,0,0,0,4,0,4,0,4
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Portfolio.Summary,0,33,0,0,0,6,0,5,0,5
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Topology.Summary,0,42,0,0,0,7,0,6,0,6
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Scenario.Create,0,45,0,0,0,8,0,6,0,6
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Topology.Create,0,21,0,0,0,5,0,3,0,3
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Scenario.Summary,0,69,0,0,0,10,0,9,0,9
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Project,0,45,0,0,0,6,0,6,0,6
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Topology.Update,0,12,0,0,0,2,0,2,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,Job,13,42,0,0,1,6,1,6,1,6
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.user,User,0,21,0,0,0,3,0,3,0,3
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf,WtfTaskTableReader,374,0,49,0,67,0,46,0,17,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf,WtfTraceFormat,227,0,4,0,25,0,9,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.spi,TableDetails,12,0,0,0,1,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.spi,TraceFormat.Companion,106,0,28,0,12,0,20,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.memory,Memory,13,0,0,0,6,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power.batteries,SimBattery,438,0,44,0,116,0,54,0,32,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power.batteries,PowerSourceType,15,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power.batteries,BatteryState,21,0,0,0,4,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power.batteries,BatteryAggregator,240,0,18,0,64,0,24,0,15,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology,TopologyReader,43,0,0,0,5,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology,TopologyFactories,317,0,8,0,66,0,12,0,8,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,HostFilterSpec,11,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,HostWeigherSpec.Companion.new Function0() {...},72,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,HostWeigherSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuWeigherSpec,10,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,RamHostFilterSpec,56,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,PrefabAllocationPolicySpec,51,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,InstanceCountHostFilterSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,ComputeFilterSpec,40,0,0,0,4,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuHostFilterSpec..serializer,165,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,InstanceCountHostFilterSpec,51,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,PrefabAllocationPolicySpec..serializer,165,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,TaskStopperSpec,54,0,0,0,7,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuCapacityWeigherSpec..serializer,117,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,RamHostFilterSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,TimeShiftAllocationPolicySpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,RamWeigherSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,DifferentHostFilterSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuCapacityHostFilterSpec..serializer,135,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuHostFilterSpec,56,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,SameHostHostFilterSpec,40,0,0,0,4,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,TimeShiftAllocationPolicySpec..serializer,429,0,16,0,2,0,18,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,InstanceCountWeigherSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,FilterAllocationPolicySpec..serializer,209,0,9,0,2,0,11,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,RamWeigherSpec..serializer,117,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,HostFilterSpecKt,70,0,12,0,8,0,7,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuCapacityWeigherSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,RamWeigherSpec,10,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,InstanceCountHostFilterSpec..serializer,165,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,CpuUtilizationWeigherSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,CpuUtilizationWeigherSpec..serializer,117,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,FilterAllocationPolicySpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,CoreRamWeigherSpec..serializer,117,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,CoreRamWeigherSpec,10,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,CoreRamWeigherSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,HostFilterSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,HostFilterEnum,55,0,0,0,8,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuWeigherSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuHostFilterSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,TaskStopperSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,AllocationPolicySpecKt,205,0,10,0,36,0,7,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,HostWeigherSpecKt,74,0,10,0,7,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,SameHostHostFilterSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuWeigherSpec..serializer,117,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,CpuUtilizationAllocationPolicySpec..serializer,209,0,9,0,2,0,11,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,InstanceCountWeigherSpec,10,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,DifferentHostFilterSpec..serializer,135,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,HostFilterSpec.Companion.new Function0() {...},81,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,ComputeFilterSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,CpuUtilizationAllocationPolicySpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuCapacityHostFilterSpec,40,0,0,0,4,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,DifferentHostFilterSpec,40,0,0,0,4,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,TaskStopperSpec..serializer,207,0,10,0,2,0,12,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,TimeShiftAllocationPolicySpec,181,0,0,0,13,0,13,0,13,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuCapacityWeigherSpec,10,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,CpuUtilizationWeigherSpec,10,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,ComputeFilterSpec..serializer,135,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,FilterAllocationPolicySpec,69,0,0,0,6,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,HostWeigherSpec,11,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,CpuUtilizationAllocationPolicySpec,69,0,0,0,6,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,RamHostFilterSpec..serializer,165,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,AllocationPolicySpec.Companion,54,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,InstanceCountWeigherSpec..serializer,117,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,PrefabAllocationPolicySpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,VCpuCapacityHostFilterSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs.allocation,SameHostHostFilterSpec..serializer,135,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.utils,DoubleUtilsKt,285,0,30,0,44,0,34,0,19,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.battery,BatteryInfo,36,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.battery,BatteryTableReaderImpl,232,0,0,0,54,0,15,0,15,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.model,Job,10,107,9,9,1,26,7,8,0,5
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.model,UserAccounting,4,102,2,6,0,23,2,9,0,7
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.model,Topology,0,44,0,0,0,13,0,4,0,4
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.model,Trace,12,3,0,0,5,1,1,1,1,1
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.model,Scenario,0,71,0,0,0,18,0,5,0,5
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.model,Workload,0,12,0,0,0,5,0,2,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.model,ProjectAuthorization.Key,43,17,9,1,4,6,6,3,1,3
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.model,Portfolio,0,48,0,0,0,12,0,4,0,4
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.model,ProjectAuthorization,0,53,0,4,0,12,0,8,0,6
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.model,Project,30,163,6,6,6,28,6,5,0,5
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.carbon,CarbonTableReader,200,0,20,0,35,0,27,0,17,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.carbon,CarbonTraceFormat,120,0,4,0,17,0,9,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wfformat,WfFormatTaskTableReader,554,0,81,0,114,0,70,0,23,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wfformat,WfFormatTraceFormat,175,0,4,0,20,0,9,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wfformat,WfFormatTaskTableReader.ParserLevel,31,0,0,0,4,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningMeanPlusPolicyJSONSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,PowerModelSpec.Companion,5,0,0,0,2,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,MemoryJSONSpec..serializer,254,0,11,0,2,0,13,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,ClusterJSONSpec,125,0,0,0,9,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningMedianPolicyJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningMeanPlusPolicyJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,DoubleBatteryPolicyJSONSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,DoubleBatteryPolicyJSONSpec,15,0,0,0,4,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,ClusterJSONSpec..serializer,303,0,12,0,2,0,14,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,CPUJSONSpec..serializer,276,0,12,0,2,0,14,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,MemoryJSONSpec,141,0,10,0,8,0,13,0,8,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningMedianPolicyJSONSpec,15,0,0,0,4,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningQuartilesPolicyJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningQuartilesPolicyJSONSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,SingleBatteryPolicyJSONSpec,9,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,DoubleBatteryPolicyJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,TopologySpecsKt,85,0,8,0,29,0,5,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,PowerSourceJSONSpec..serializer,277,0,12,0,2,0,14,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,BatteryJSONSpec,205,0,0,0,10,0,14,0,14,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,ClusterJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningMeanPolicyJSONSpec,15,0,0,0,4,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,TopologySpec,51,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,SingleBatteryPolicyJSONSpec..serializer,117,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,PowerSourceJSONSpec.Companion,5,0,0,0,2,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningMeanPolicyJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,PowerModelSpec..serializer,272,0,11,0,2,0,13,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,PowerSourceSpec,60,0,0,0,6,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,ClusterSpec,48,0,0,0,6,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningMeanPolicyJSONSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,HostJSONSpec,69,0,0,0,8,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,BatterySpec,71,0,0,0,9,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningMeanPlusPolicyJSONSpec,15,0,0,0,4,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,CPUJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,HostSpec,70,0,0,0,8,0,8,0,8,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,PowerSourceJSONSpec,108,0,0,0,11,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,SingleBatteryPolicyJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,CPUJSONSpec,142,0,10,0,9,0,14,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,BatteryJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,BatteryPolicyJSONSpec.Companion,72,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,PowerModelSpec,177,0,14,0,16,0,16,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,MemoryJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningQuartilesPolicyJSONSpec,15,0,0,0,4,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,HostJSONSpec..serializer,261,0,11,0,2,0,13,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,HostJSONSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,TopologySpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,TopologySpec..serializer,165,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,RunningMedianPolicyJSONSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.topology.specs,BatteryJSONSpec..serializer,315,0,13,0,2,0,15,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.user,UserProtocol,0,160,0,0,0,27,0,8,0,8
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.user,UserResource,0,25,0,0,0,7,0,2,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.user,TopologyResource,6,211,1,21,1,58,1,17,0,7
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.user,PortfolioResource,2,155,1,15,1,41,1,13,0,6
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.user,ScenarioResource,0,107,0,12,0,29,0,11,0,5
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.user,PortfolioScenarioResource,3,163,1,13,1,41,1,10,0,4
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.user,ProjectResource,0,102,0,6,0,29,0,8,0,5
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute,CoroutinesKt,22,0,0,0,5,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute,CoroutinesKt.runWorkload.2.new Function1() {...},4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.RelationConverter.listConverter.new GroupConverter() {...},27,0,4,0,5,0,6,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.RelationConverter.entryConverter.new PrimitiveConverter() {...},23,0,0,0,5,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.root.new GroupConverter() {...},146,0,13,0,27,0,15,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskReadSupport.Companion,2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},12,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},12,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},12,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},12,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},12,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},12,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer,81,0,0,0,22,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,Task,84,0,0,0,11,0,11,0,11,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskReadSupport,293,0,6,0,60,0,7,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.wtf.parquet,TaskRecordMaterializer.RelationConverter,41,0,4,0,7,0,6,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.util,DevSecurityOverrideFilter,10,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.util,QuarkusObjectMapperSupplier,0,11,0,0,0,2,0,2,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.util,DevSecurityOverrideFilter.new SecurityContext() {...},13,0,0,0,5,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.util,KotlinModuleCustomizer,0,11,0,0,0,3,0,2,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.api,InsufficientTaskCapacityException,19,0,0,0,3,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.api,TaskState,55,0,0,0,8,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util,TableColumnConversions,175,0,30,0,20,0,19,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util,CompositeTableReader,335,0,44,0,47,0,41,0,19,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.util,TimerScheduler.Invocation,13,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.util,Pacer,72,0,6,0,22,0,8,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.util,TimerScheduler.Timer,22,0,0,0,8,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.util,TimerScheduler,236,0,26,0,61,0,23,0,10,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.hostfault,StartStopHostFault,112,0,6,0,16,0,6,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.hostfault,HostFault,9,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.engine.graph,FlowDistributor,506,0,38,0,119,0,37,0,18,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.engine.graph,FlowDistributor.Demand,9,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.engine.graph,FlowNode,212,0,22,0,72,0,30,0,19,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.engine.graph,FlowEdge,170,0,20,0,56,0,26,0,16,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.engine.graph,FlowNode.NodeState,33,0,0,0,6,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.engine.graph,FlowEdge.NodeType,15,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator,ServiceRegistry.register.services.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator,TaskWatcher,7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator,ServiceRegistry,168,0,6,0,19,0,12,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.timeshift,Timeshifter,146,0,16,0,28,0,12,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.timeshift,TimeshiftScheduler,436,0,36,0,71,0,39,0,21,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.timeshift,TaskStopper.updateCarbonIntensity.new Function2() {...},17,0,2,0,3,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.timeshift,TimeshiftScheduler.select..inlined.sortedByDescending.new Comparator() {...},17,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.timeshift,TaskStopper,279,0,14,0,43,0,15,0,8,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.timeshift,MemorizingTimeshift,611,0,50,0,105,0,47,0,22,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.timeshift,TimeshiftScheduler.select.subset.new Function1() {...},6,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ProjectResource,81,0,6,0,5,0,8,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,PortfolioResource.delete..inlined.delete.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ScenarioResource.create..inlined.post.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,SchedulerResource.getAll..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,TraceResource.getAll..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,TopologyResource.update..inlined.put.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ProjectResource.get..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,PortfolioResource.create..inlined.post.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,PortfolioResource,80,0,6,0,5,0,8,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,PortfolioResource.getAll..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,TopologyResource.delete..inlined.delete.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ProjectResource.getAll..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ScenarioResource.delete..inlined.delete.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ScenarioResource.get..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,TopologyResource.get..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,OpenDCClient,85,0,0,0,8,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,TopologyResource,93,0,6,0,6,0,9,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,TraceResource,31,0,2,0,3,0,4,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ScenarioResource.getAll..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ScenarioResource.getAll..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,SchedulerResource,22,0,2,0,2,0,3,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,TraceResource.get..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ScenarioResource,96,0,8,0,6,0,10,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ProjectResource.delete..inlined.delete.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,TopologyResource.create..inlined.post.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,ProjectResource.create..inlined.post.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,PortfolioResource.get..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client,TopologyResource.getAll..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler,ComputeSchedulers,566,0,13,0,51,0,14,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler,FilterScheduler.select..inlined.sortedByDescending.new Comparator() {...},17,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler,SchedulingResultType,25,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler,SchedulingResult,40,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler,FilterScheduler.select.subset.new Function1() {...},6,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler,SchedulingRequest,32,0,0,0,5,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler,FilterScheduler,283,0,22,0,48,0,17,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler,ComputeSchedulerEnum,85,0,0,0,13,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler,MemorizingScheduler,458,0,38,0,84,0,25,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns.POWER_DRAW.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns,453,0,0,0,82,0,26,0,26,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.TASK_STATE.new Function1() {...},13,0,2,0,1,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfigKt.toFieldList.lambda.0..inlined.columnSerializer.1.new Function2() {...},72,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.CPU_COUNT.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.10.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns.HOSTS_UP.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns.CLUSTER_NAME.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfigKt.toFieldList..inlined.getAllLoadedColumns.new Function2() {...},35,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns.TASKS_PENDING.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.CPU_USAGE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns.CAPACITY.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns.TASKS_COMPLETED.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.NAME.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ParquetComputeMonitor.Companion,266,0,20,0,54,0,13,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.TIMESTAMP_ABS.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns.ATTEMPTS_SUCCESS.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns.TIMESTAMP_ABS.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.NUM_PAUSES.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns.TIMESTAMP.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns.TASKS_FAILED.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.SCHEDULE_TIME.new Function1() {...},13,0,2,0,1,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns.ENERGY_USAGE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ParquetComputeMonitor,114,0,20,0,22,0,17,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.TIMESTAMP.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.DOWN_TIME.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ParquetComputeMonitor.Companion.invoke..inlined.getAllLoadedColumns.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ParquetComputeMonitor.Companion.invoke..inlined.getAllLoadedColumns.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ParquetComputeMonitor.Companion.invoke..inlined.getAllLoadedColumns.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ParquetComputeMonitor.Companion.invoke..inlined.getAllLoadedColumns.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ParquetComputeMonitor.Companion.invoke..inlined.getAllLoadedColumns.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.TASK_NAME.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfigKt.toFieldList.lambda.1..inlined.getAllLoadedColumns.new Function2() {...},35,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.POWER_DRAW.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.CPU_USAGE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.1.invoke..inlined.columnSerializer.2.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.GUESTS_RUNNING.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns.BATTERY_STATE.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.NUM_FAILURES.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns.NAME.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.1.invoke..inlined.columnSerializer.4.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.CPU_TIME_ACTIVE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.1.invoke..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.1.invoke..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.1.invoke..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.1.invoke..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.1.invoke..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.CLUSTER_NAME.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.new Function1() {...},59,0,0,0,16,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.MEM_CAPACITY.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltPowerSourceExportColumns.ENERGY_USAGE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.DOWN_TIME.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.4.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.serialize.lambda.1..inlined.columnSerializer.3.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.GUESTS_TERMINATED.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.CPU_DEMAND.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.CPU_DEMAND.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion,26,0,0,0,9,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.CPU_COUNT.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.serialize.lambda.1..inlined.columnSerializer.5.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.EMBODIED_CARBON.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.13.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ALL_COLUMNS.2.invoke..inlined.getAllLoadedColumns.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ALL_COLUMNS.2.invoke..inlined.getAllLoadedColumns.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.BOOT_TIME.new Function1() {...},13,0,2,0,1,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ALL_COLUMNS.2.invoke..inlined.getAllLoadedColumns.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ALL_COLUMNS.2.invoke..inlined.getAllLoadedColumns.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ALL_COLUMNS.2.invoke..inlined.getAllLoadedColumns.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfigKt.json.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns.CHARGE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.CPU_TIME_LOST.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.SUBMISSION_TIME.new Function1() {...},13,0,2,0,1,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltPowerSourceExportColumns.CLUSTER_NAME.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.serialize.lambda.1..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.serialize.lambda.1..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.serialize.lambda.1..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.serialize.lambda.1..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.serialize.lambda.1..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.ENERGY_USAGE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.CPU_TIME_STEAL.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.GUESTS_INVALID.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.serialize.lambda.1..inlined.columnSerializer.1.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.CPU_LIMIT.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltPowerSourceExportColumns.TIMESTAMP_ABS.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer,200,0,4,0,46,0,6,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns.EMBODIED_CARBON.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns,195,0,0,0,34,0,12,0,12,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.CPU_TIME_STEAL.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltPowerSourceExportColumns.NAME.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns.TIMESTAMP_ABS.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns.ATTEMPTS_FAILURE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltPowerSourceExportColumns.CARBON_INTENSITY.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltPowerSourceExportColumns.TIMESTAMP.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.UP_TIME.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns.TASKS_TOTAL.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.TASK_ID.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.1.invoke..inlined.columnSerializer.1.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns.TIMESTAMP.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.7.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.CPU_TIME_IDLE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.CPU_TIME_IDLE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.FINISH_TIME.new Function1() {...},13,0,2,0,1,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns,406,0,0,0,75,0,23,0,23,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.CPU_LIMIT.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.TIMESTAMP.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.CPU_UTILIZATION.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.1.invoke..inlined.columnSerializer.3.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfigKt.toFieldList.lambda.0..inlined.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.UP_TIME.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltBatteryExportColumns,219,0,0,0,42,0,12,0,12,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.new Function2() {...},31,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.descriptor.1.invoke..inlined.columnSerializer.5.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.GUESTS_ERROR.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ALL_COLUMNS.new Function0() {...},26,0,0,0,7,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.serialize.lambda.1..inlined.columnSerializer.2.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltPowerSourceExportColumns,181,0,0,0,34,0,10,0,10,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.CPU_TIME_ACTIVE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig,250,0,0,0,22,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.MEM_CAPACITY.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.deserialize..inlined.toFieldList.1.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltTaskExportColumns.CPU_TIME_LOST.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfig.Companion.ComputeExportConfigSerializer.serialize.lambda.1..inlined.columnSerializer.4.new Function2() {...},67,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltServiceExportColumns.TASKS_ACTIVE.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltHostExportColumns.TIMESTAMP_ABS.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltPowerSourceExportColumns.POWER_DRAW.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,DfltPowerSourceExportColumns.CARBON_EMISSION.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.parquet,ComputeExportConfigKt,8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.powerSource,PowerSourceInfo,36,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.powerSource,PowerSourceTableReaderImpl,204,0,0,0,49,0,14,0,14,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ExportColumn.Companion.addField.new Function2() {...},14,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ExportColumn.Companion.getAllLoadedColumns.new Function2() {...},19,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ExportColumn.Companion.matchingColOrNull.new Function2() {...},56,0,10,0,9,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,Exporter.Companion.writeSuppFor.new WriteSupport() {...},208,0,19,0,34,0,17,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ExportColumn.Companion,68,0,0,0,12,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ColListSerializer.Companion,6,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ExportColumn.name.new Function0() {...},5,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ExportColumn,109,0,0,0,15,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,Exporter,12,0,0,0,5,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,Exporter.Companion,109,0,8,0,20,0,7,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,Exportable.Companion.getAllLoadedColumns..inlined.getAllLoadedColumns.new Function2() {...},35,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ExportColumnSerializerKt.columnSerializer.new KSerializer() {...},50,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ExportColumn.primitiveTypeName.new Function0() {...},6,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ExportColumnSerializerKt.columnSerializer.1.deserialize..inlined.matchingColOrNull.new Function2() {...},72,0,10,0,10,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet.exporter,ColListSerializer,116,0,8,0,16,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.models,FailureModel,117,0,2,0,15,0,11,0,10,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.models,TraceBasedFailureModel,207,0,8,0,29,0,8,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.models,FailureModel.start.new Function2() {...},15,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.models,SampleBasedFailureModel,110,0,2,0,18,0,3,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.models,Failure,81,0,14,0,9,0,11,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.failure.parquet,FailureRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.failure.parquet,FailureRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.failure.parquet,FailureRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.failure.parquet,FailureReadSupport,162,0,6,0,28,0,7,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.failure.parquet,FailureRecordMaterializer,27,0,0,0,8,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.failure.parquet,FailureFragment,21,0,0,0,4,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.failure.parquet,FailureRecordMaterializer.root.new GroupConverter() {...},88,0,12,0,13,0,11,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.failure.parquet,FailureReadSupport.Companion,2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.models,MemoryUnit,108,0,14,0,18,0,15,0,8,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.models,CpuModel,172,0,18,0,29,0,21,0,12,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.models,MachineModel,110,0,10,0,20,0,12,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.logger,LoggerKt.logger.new Function0() {...},46,0,6,0,5,0,4,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.logger,LoggerKt,75,0,0,0,12,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.failure,FailureTableReader,224,0,28,0,38,0,32,0,17,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.failure,FailureTraceFormat,132,0,4,0,18,0,9,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.internal,OAuthTokenRequest.RefreshToken,31,0,0,0,8,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.internal,OAuthTokenResponse,60,0,0,0,11,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.internal,OpenIdConfiguration,57,0,0,0,12,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.internal,ClientUtilsKt.delete.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.internal,ClientUtilsKt.post.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.internal,ClientUtilsKt.put.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.internal,ClientUtilsKt.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.internal,OAuthTokenRequest.ClientCredentials,31,0,0,0,7,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,Table,9,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumn,38,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableReader,133,0,0,0,13,0,13,0,13,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,Trace.Companion,91,0,4,0,7,0,6,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.Double,4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.Duration,4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.Map,22,0,0,0,1,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.Boolean,4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.Long,4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.Instant,4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.Set,13,0,0,0,1,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.Float,4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.String,4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.Int,4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.List,13,0,0,0,1,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableColumnType.UUID,4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace,TableWriter,141,0,0,0,12,0,12,0,12,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsExResourceStateTableReader,720,0,120,0,135,0,78,0,18,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsExResourceStateTableReader.State,25,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsTraceFormat.newReader.vms.new Function1() {...},2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsExTraceFormat.newResourceStateReader.new CompositeTableReader() {...},53,0,2,0,6,0,4,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsTraceFormat.newReader.vms.new Function1() {...},17,0,4,0,1,0,3,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsTraceFormat.newReader.vms.new Function1() {...},5,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsResourceStateTableReader.TimestampType,25,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsExTraceFormat.newResourceStateReader.partitions.new Function1() {...},17,0,4,0,1,0,3,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsExTraceFormat.newResourceStateReader.partitions.new Function1() {...},5,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsExTraceFormat.newResourceStateReader.partitions.new Function1() {...},2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsResourceTableReader,226,0,20,0,44,0,28,0,18,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsTraceFormat.newResourceStateReader.new CompositeTableReader() {...},47,0,2,0,6,0,4,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsTraceFormat,391,0,8,0,46,0,18,0,14,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsExTraceFormat,284,0,4,0,32,0,13,0,11,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsResourceStateTableReader,686,0,95,0,155,0,75,0,22,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsResourceTableReader.State,25,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsTraceFormat.newResourceStateReader.partitions.new Function1() {...},5,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsTraceFormat.newResourceStateReader.partitions.new Function1() {...},17,0,4,0,1,0,3,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.bitbrains,BitbrainsTraceFormat.newResourceStateReader.partitions.new Function1() {...},2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.runner,JobResource.update..inlined.post.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.runner,JobResource,43,0,2,0,4,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.runner,JobResource.queryPending..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.runner,OpenDCRunnerClient,58,0,0,0,5,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.runner,JobResource.get..inlined.get.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator,SimulationDispatcher.SimulationClock,19,0,0,0,6,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator,SimulationDispatcher,192,0,18,0,58,0,21,0,12,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator,TaskQueue,390,0,36,0,99,0,28,0,10,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.host,SimHost.guestListener.new GuestListener() {...},48,0,0,0,5,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.host,HostModel,12,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.host,SimHost.spawn.new Function1() {...},6,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.host,HostListener,2,0,0,0,2,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.host,SimHost,761,0,51,0,156,0,59,0,32,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.host,HostState,21,0,0,0,4,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.internal,TableImpl,98,0,6,0,8,0,12,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.internal,TraceImpl.new Function1() {...},10,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.internal,TraceImpl,123,0,8,0,11,0,13,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.error,MissingKotlinParameterExceptionMapper,0,19,0,0,0,7,0,2,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.error,WebApplicationExceptionMapper,2,24,1,1,1,8,1,2,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.workload.trace,TraceWorkload.Builder,52,0,0,0,11,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.workload.trace,TraceFragment,18,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.workload.trace,TraceWorkload,99,0,2,0,33,0,15,0,14,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.workload.trace,SimTraceWorkload,334,0,24,0,91,0,29,0,17,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,PrefabFailureModelSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ScenarioTopologySpec,42,0,2,0,7,0,4,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ExponentialDistributionSpec..serializer,117,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ScenarioTopologySpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,LogNormalDistributionSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ExperimentSpec,469,0,6,0,25,0,22,0,19,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ExperimentSpec.getCartesian.new Function2() {...},235,0,2,0,29,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,GammaDistributionSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,CheckpointModelSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ScalingPolicyEnum,19,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,PrefabFailureModelSpec..serializer,165,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ExportModelSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,WeibullDistributionSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,TraceBasedFailureModelSpec,111,0,10,0,12,0,12,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ExportModelSpec,180,0,6,0,13,0,13,0,10,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,LogNormalDistributionSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,GammaDistributionSpec,15,0,0,0,4,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,NormalDistributionSpec,15,0,0,0,4,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,TraceBasedFailureModelSpec..serializer,207,0,10,0,2,0,12,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,NoFailureModel,28,0,0,0,4,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,FailureModelSpecKt,273,0,20,0,21,0,15,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,WorkloadSpec,169,0,6,0,14,0,13,0,10,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,PowerModelSpec..serializer,177,0,9,0,2,0,11,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,WorkloadSpecKt,53,0,4,0,13,0,4,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ScenarioSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ExperimentSpec..serializer,587,0,19,0,2,0,21,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,PowerModelSpec,45,0,0,0,6,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,PrefabFailureModelSpec,49,0,0,0,4,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,CustomFailureModelSpec..serializer,253,0,10,0,2,0,12,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,FailureModelSpec.Companion,54,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,PowerModelSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,NormalDistributionSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,LogNormalDistributionSpec,15,0,0,0,4,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ParetoDistributionSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ScenarioSpec,327,0,0,0,14,0,16,0,16,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,WorkloadSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ExponentialDistributionSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ConstantDistributionSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ScenarioSpec..serializer,494,0,17,0,2,0,19,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,UniformDistributionSpec,35,0,4,0,7,0,5,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ConstantDistributionSpec,28,0,4,0,6,0,4,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,DistributionSpec.Companion,90,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,CustomFailureModelSpec,331,0,0,0,6,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ParetoDistributionSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ExperimentSpec.Companion,9,0,0,0,2,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,NoFailureModel.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ExponentialDistributionSpec,9,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,CustomFailureModelSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,WeibullDistributionSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ScenarioTopologySpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,CheckpointModelSpec,42,0,0,0,6,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,WorkloadSpec..serializer,339,0,13,0,2,0,15,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,UniformDistributionSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,GammaDistributionSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ConstantDistributionSpec..serializer,117,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,NormalDistributionSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,WeibullDistributionSpec,15,0,0,0,4,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ParetoDistributionSpec,15,0,0,0,4,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,NoFailureModel..serializer,117,0,7,0,2,0,9,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,ExportModelSpec..serializer,287,0,11,0,2,0,13,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,CheckpointModelSpec..serializer,177,0,9,0,2,0,11,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,WorkloadTypes,13,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,UniformDistributionSpec..serializer,147,0,8,0,2,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment.specs,TraceBasedFailureModelSpec.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ScenarioHelpers,98,0,6,0,14,0,5,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ScenarioHelpers.replay.new Function2() {...},129,0,10,0,19,0,6,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ScenarioRunnerKt,187,0,2,0,40,0,8,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ScenarioHelpers.replay.2.invokeSuspend..inlined.sortedBy.new Comparator() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ExperimentCommand.special..inlined.defaultLazy.default.new Function2() {...},14,0,2,0,1,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ScenarioHelpers.replay.2.new Function2() {...},90,0,2,0,18,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ExperimentCli,9,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ScenarioRunnerKt.runScenario.new Function2() {...},275,0,18,0,51,0,10,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ExperimentCommand,88,0,0,0,8,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ScenarioRunnerKt.runScenario.2.1.new Function1() {...},28,0,0,0,7,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,ExperimentRunnerKt,115,0,6,0,19,0,4,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.runner,RunningTaskWatcher,45,0,2,0,10,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.service,UserAccountingService,0,110,0,16,0,29,0,13,0,5
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.service,JobService,0,65,0,8,0,14,0,6,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment,ExperimentFactoriesKt,148,0,2,0,34,0,6,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment,Scenario,156,0,0,0,14,0,15,0,15,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment,ExperimentReader,46,0,0,0,6,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment,ExperimentWriter.json.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.experiments.base.experiment,ExperimentWriter,69,0,0,0,14,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power.batteries.policy,RunningMeanPlusBatteryPolicy,150,0,20,0,31,0,14,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power.batteries.policy,DoubleThresholdBatteryPolicy,63,0,12,0,12,0,8,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power.batteries.policy,BatteryPolicy,84,0,10,0,32,0,12,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power.batteries.policy,SingleThresholdBatteryPolicy,60,0,12,0,11,0,8,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power.batteries.policy,RunningMeanBatteryPolicy,118,0,14,0,24,0,11,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common,DispatchersKt,9,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common,DispatcherCoroutineDispatcher.scheduleResumeAfterDelay.new Function1() {...},10,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common,DispatcherCoroutineDispatcher,77,0,0,0,12,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common,Dispatcher,5,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common,DispatcherCoroutineDispatcher.CancellableContinuationRunnable,22,0,0,0,4,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.host,HostInfo,48,0,0,0,7,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.host,HostTableReaderImpl,415,0,0,0,102,0,27,0,27,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,ComputeMetricReader.job.new Function2() {...},43,0,4,0,9,0,3,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,ComputeMetricReader.logger.new Function0() {...},1,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,ComputeMetricReader,553,0,24,0,76,0,20,0,8,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,ComputeMonitor,20,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,OutputFiles,47,0,0,0,7,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,OutputFiles.Companion.new Function0() {...},54,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,GuestSystemStats,12,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,OutputFiles.Companion,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,HostSystemStats,33,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,GuestCpuStats,27,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,ComputeMetricReader.loggState.new Function0() {...},4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,ComputeMetricReader.loggState.new Function0() {...},2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,ComputeMetricReader.loggState.reader.new Function1() {...},11,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,ComputeMetricReader.loggState.reader.new Function1() {...},11,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,ComputeMetricReader.loggState.reader.new Function1() {...},14,0,0,0,4,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,ComputeMetricReader.loggState.reader.new Function1() {...},11,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,SchedulerStats,30,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry,HostCpuStats,27,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.carbon,CarbonTraceLoader,92,0,4,0,21,0,6,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.carbon,CarbonTraceLoader.CarbonFragmentNewBuilder.fixReportTimes..inlined.sortBy.new Comparator() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.carbon,ComputeWorkloadsNew,27,0,4,0,6,0,4,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.carbon,CarbonTraceLoader.CarbonFragmentNewBuilder,70,0,4,0,13,0,6,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.azure,AzureTraceFormat.newResourceStateReader.new CompositeTableReader() {...},55,0,2,0,7,0,4,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.azure,AzureResourceTableReader,404,0,56,0,91,0,51,0,21,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.azure,AzureResourceStateTableReader,328,0,50,0,69,0,47,0,21,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.azure,AzureTraceFormat,317,0,8,0,37,0,15,0,11,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.azure,AzureTraceFormat.newResourceStateReader.partitions.new Function1() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.azure,AzureTraceFormat.newResourceStateReader.partitions.new Function1() {...},20,0,4,0,1,0,3,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.azure,AzureTraceFormat.newResourceStateReader.partitions.new Function1() {...},2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.weights,VCpuCapacityWeigher,60,0,4,0,6,0,7,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.weights,CoreRamWeigher,39,0,0,0,4,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.weights,HostWeigher.Result,30,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.weights,CpuUtilizationWeigher,36,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.weights,RamWeigher,30,0,0,0,4,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.weights,InstanceCountWeigher,30,0,0,0,4,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.weights,HostWeigher,73,0,2,0,11,0,3,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.weights,VCpuWeigher,56,0,4,0,7,0,7,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,UnitSerializer.Companion,96,0,0,0,29,0,25,0,25,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Frequency,552,0,38,0,55,0,83,0,64,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Energy.Companion.EnergySerializer.new Function1() {...},15,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Energy.Companion.EnergySerializer.new Function2() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Energy.Companion.EnergySerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Energy.Companion.EnergySerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Energy.Companion.EnergySerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Energy.Companion.EnergySerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer,365,0,0,0,21,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function2() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,UnitSerializer.Companion.ifNoExc.new Function1() {...},15,0,0,0,4,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function2() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion.DataSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Percentage.Companion,55,0,0,0,9,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Power.Companion.PowerSerializer,58,0,0,0,5,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Percentage.Companion.PercentageSerializer,31,0,0,0,4,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate,676,0,38,0,63,0,92,0,73,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Frequency.Companion,59,0,0,0,9,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta,470,0,20,0,52,0,78,0,68,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,UnitSerializerKt,11,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.toTimeDelta.new Function0() {...},9,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.toTimeDelta.new Function0() {...},9,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.toTimeDelta.new Function0() {...},9,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.toTimeDelta.new Function0() {...},9,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.toTimeDelta.new Function0() {...},9,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Unit,133,0,0,0,19,0,8,0,8,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Timestamp.Companion,99,0,0,0,13,0,13,0,13,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Energy,464,0,22,0,53,0,75,0,64,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,UnitSerializer,128,0,0,0,24,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Timestamp.Companion.TimeStampSerializer,25,0,0,0,5,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,UnitOperationException,18,0,0,0,1,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Timestamp,500,0,22,0,58,0,81,0,70,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Frequency.Companion.FrequencySerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Frequency.Companion.FrequencySerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Frequency.Companion.FrequencySerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Frequency.Companion.FrequencySerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Frequency.Companion.FrequencySerializer.new Function1() {...},14,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Frequency.Companion.FrequencySerializer.new Function2() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion,189,0,0,0,19,0,19,0,19,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Percentage.Companion.PercentageSerializer.new Function1() {...},17,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Percentage.Companion.PercentageSerializer.new Function2() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Percentage.Companion.PercentageSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer.new Function1() {...},18,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Percentage,423,0,20,0,45,0,70,0,60,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Timestamp.Companion.TimeStampSerializer.new Function1() {...},22,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Timestamp.Companion.TimeStampSerializer.new Function1() {...},12,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Timestamp.Companion.TimeStampSerializer.new Function2() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Timestamp.Companion.TimeStampSerializer.new Function1() {...},14,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Unit.Companion,558,0,14,0,82,0,26,0,19,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataRate.Companion.DataRateSerializer,369,0,0,0,17,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,UnitSerializer.new KSerializer() {...},76,0,2,0,12,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion,163,0,10,0,24,0,19,0,14,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Frequency.Companion.FrequencySerializer,100,0,0,0,7,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize.Companion,236,0,0,0,23,0,23,0,23,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Power,447,0,22,0,50,0,73,0,62,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Energy.Companion.EnergySerializer,113,0,0,0,7,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,OnlyString,24,0,0,0,2,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Power.Companion,32,0,0,0,7,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,UnitSerializer.Companion.ifMatches.new Function1() {...},18,0,2,0,1,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,UnitSerializer.Companion.ifMatches.new Function1() {...},24,0,2,0,1,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,DataSize,641,0,38,0,69,0,98,0,79,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer,156,0,0,0,11,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Power.Companion.PowerSerializer.new Function1() {...},15,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Power.Companion.PowerSerializer.new Function2() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Power.Companion.PowerSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Power.Companion.PowerSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,Energy.Companion,61,0,0,0,9,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer.new Function1() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer.new Function1() {...},15,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer.new Function2() {...},8,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.common.units,TimeDelta.Companion.TimeDeltaSerializer.new Function1() {...},12,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.kotlin,SimulationCoroutineScopeKt.SimulationCoroutineScope.new SimulationCoroutineScope() {...},15,0,0,0,2,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.kotlin,SimulationBuildersKt.runSimulation.deferred.new Function2() {...},12,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.kotlin,SimulationBuildersKt.activeJobs.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.kotlin,SimulationController,4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.kotlin,SimulationBuildersKt,212,0,18,0,26,0,16,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.kotlin,SimulationCoroutineScopeKt,63,0,2,0,11,0,3,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.kotlin,SimulationBuildersKt.asController.new SimulationController() {...},29,0,0,0,9,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power,CarbonModel,213,0,14,0,47,0,18,0,11,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power,SimPsu,170,0,10,0,51,0,23,0,18,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power,SimPowerSource,185,0,10,0,58,0,27,0,22,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.power,CarbonFragment,33,0,0,0,14,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.workload,VirtualMachine,374,0,26,0,106,0,38,0,25,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.workload,ChainWorkload,39,0,2,0,7,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.workload,CheckpointModel,83,0,4,0,23,0,7,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.workload,SimWorkload,4,0,0,0,2,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.convertTopology.machines.new Function1() {...},31,0,4,0,3,0,3,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.JobAction.compute.new Function0() {...},6,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,JobManager.Companion,9,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.logger.new Function0() {...},1,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.SimulationTask,68,0,0,0,15,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.RunnerThreadFactory.newThread.new ForkJoinWorkerThread() {...},10,0,0,0,4,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner,331,0,8,0,64,0,8,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.SimulationTask.runSimulation.1.1.new Function1() {...},18,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.SimulationTask.runSimulation.1.1.new Function0() {...},14,0,0,0,5,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.JobAction,516,0,4,0,55,0,6,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.RunnerThreadFactory,19,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.SimulationTask.runSimulation.new Function2() {...},225,0,8,0,27,0,5,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.JobAction.compute.new Function0() {...},12,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.JobAction.compute.new Function0() {...},4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.JobAction.compute.new Function0() {...},2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.run.new Function0() {...},2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner,OpenDCRunner.run.new Function0() {...},4,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner.internal,WebComputeMonitor.HostMetrics,27,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner.internal,WebComputeMonitor,344,0,10,0,37,0,10,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner.internal,JobManagerImpl,99,0,4,0,13,0,8,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner.internal,WebComputeMonitor.record.new Function2() {...},50,0,8,0,5,0,5,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner.internal,WebComputeMonitor.AggregateHostMetrics,90,0,0,0,9,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner.internal,WebComputeMonitor.Results,93,0,0,0,16,0,16,0,16,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.workload,ComputeWorkloadLoader.logger.new Function0() {...},1,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.workload,WorkloadLoader,206,0,20,0,28,0,14,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.workload,Task,86,0,0,0,12,0,14,0,14,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.workload,ComputeWorkloadLoader.parseMeta..inlined.sortBy.new Comparator() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.workload,WorkloadLoader.sampleByLoad..inlined.sortedBy.new Comparator() {...},15,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.workload,WorkloadLoader.logger.new Function0() {...},1,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.workload,WorkloadLoader.sampleByLoad.new Function0() {...},10,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.workload,ComputeWorkloadLoader.parseFragments.builder.new Function1() {...},21,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.workload,ComputeWorkloadLoader.Builder,48,0,0,0,11,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.workload,ComputeWorkloadLoader,384,0,12,0,85,0,13,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.util.runner,QuarkusJobManager,69,0,4,0,20,0,9,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,Machine,95,0,0,0,11,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,JobState,0,37,0,0,0,5,0,1,0,1
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,Rack,42,0,0,0,6,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,ProtocolError,0,18,0,0,0,1,0,3,0,3
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,Trace,0,30,0,0,0,4,0,4,0,4
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,RoomTile,54,0,0,0,7,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,OperationalPhenomena,0,15,0,0,0,3,0,3,0,3
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,Workload.Spec,0,18,0,0,0,4,0,3,0,3
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,Workload,0,18,0,0,0,1,0,3,0,3
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,ProcessingUnit,39,0,0,0,6,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,Room,48,0,0,0,6,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,Targets,10,18,0,0,1,4,1,3,1,3
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto,MemoryUnit,39,0,0,0,6,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.auth,OpenIdAuthController,251,0,8,0,51,0,13,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.auth,OpenIdAuthController.requestToken..inlined.readValue.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.auth,OpenIdAuthController.requestConfig..inlined.readValue.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.auth,OpenIdAuthController.refreshToken..inlined.readValue.new TypeReference() {...},3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.gwf,GwfTraceFormat,187,0,4,0,23,0,9,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.gwf,GwfTaskTableReader,481,0,64,0,108,0,60,0,22,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.provisioner,ComputeMonitorProvisioningStep,149,0,2,0,28,0,4,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.provisioner,HostsProvisioningStep,336,0,18,0,68,0,13,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.provisioner,Provisioner,104,0,10,0,21,0,11,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.provisioner,ComputeSteps,163,0,0,0,18,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.provisioner,ComputeServiceProvisioningStep,58,0,0,0,12,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.provisioner,Provisioner.context.new ProvisioningContext() {...},31,0,0,0,5,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.provisioner,ProvisioningStep.Provider,12,0,0,0,1,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.client.transport,HttpTransportClient,433,0,56,0,76,0,35,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.swf,SwfTraceFormat,231,0,4,0,23,0,9,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.swf,SwfTaskTableReader.State,25,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.swf,SwfTaskTableReader,517,0,83,0,90,0,63,0,17,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.checkpoints,CheckpointModel,30,0,0,0,4,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.victimselector,StochasticVictimSelector,104,0,6,0,21,0,10,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner.runtime,OpenDCRunnerRuntimeConfig,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.runner.runtime,OpenDCRunnerRecorder,86,0,6,0,17,0,7,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalParquetWriter.Companion,16,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,ParquetDataWriter.writerThread.new Function0() {...},98,0,6,0,26,0,4,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalInputFile.newStream.new SeekableInputStream() {...},110,0,10,0,26,0,15,0,10,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalParquetWriter,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,ParquetDataWriter,90,0,2,0,19,0,6,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalOutputFile,83,0,0,0,9,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalParquetWriter.Builder,21,0,0,0,5,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalInputFile,47,0,0,0,7,0,5,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalOutputFile.NioPositionOutputStream,70,0,0,0,16,0,8,0,8,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,ParquetDataWriter.writerThread.1.new Function0() {...},2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalParquetReader.filesIterator.new Function1() {...},7,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalParquetReader.filesIterator.new Function1() {...},16,0,2,0,1,0,2,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,ParquetDataWriter.logger.new Function0() {...},1,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalParquetReader,181,0,14,0,37,0,16,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.util.parquet,LocalParquetReader.createReader.new ParquetReader.Builder() {...},11,0,0,0,2,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.service,ServiceTableReaderImpl,197,0,0,0,47,0,16,0,16,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.service,ServiceDataKt,23,0,0,0,9,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.service,ServiceData,54,0,0,0,9,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.carbon.parquet,CarbonIntensityReadSupport.Companion,2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.carbon.parquet,CarbonIntensityRecordMaterializer.root.new GroupConverter() {...},70,0,4,0,13,0,6,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.carbon.parquet,CarbonIntensityRecordMaterializer,31,0,0,0,8,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.carbon.parquet,CarbonIntensityReadSupport,155,0,6,0,26,0,7,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.carbon.parquet,CarbonIntensityFragment,18,0,0,0,3,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.carbon.parquet,CarbonIntensityRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.carbon.parquet,CarbonIntensityRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},15,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,Pl05Kt,190,0,0,0,36,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,G5k06Kt,190,0,0,0,36,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,Microsoft99Kt,190,0,0,0,36,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,FailurePrefab,223,0,0,0,36,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,Skype06Kt,190,0,0,0,36,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,FailureModels,244,0,37,0,38,0,37,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,Lanl05Kt,190,0,0,0,36,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,Nd07cpuKt,190,0,0,0,36,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,Websites02Kt,190,0,0,0,36,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,Overnet03Kt,190,0,0,0,36,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.failure.prefab,Ldns04Kt,190,0,0,0,36,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.task,TaskTableReaderKt,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.task,TaskTableReaderImpl,481,0,32,0,98,0,42,0,26,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.telemetry.table.task,TaskInfo,51,0,0,0,7,0,7,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest,TraceResource,0,35,0,2,0,8,0,5,0,4
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest,BaseProtocol,0,19,0,0,0,2,0,2,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest,SchedulerResource,0,14,0,0,0,2,0,2,0,2
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.runner,Job.Update,11,24,0,0,0,2,1,4,1,4
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.runner,Topology,0,51,0,0,0,8,0,7,0,7
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.runner,Scenario,0,69,0,0,0,10,0,9,0,9
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.runner,Portfolio,0,33,0,0,0,6,0,5,0,5
+SchedulerResourceTest (QuarkusTest),org.opendc.web.proto.runner,Job,15,57,0,0,1,9,1,8,1,8
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc,OdcVmInterferenceJsonTableReader,372,0,50,0,74,0,48,0,21,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc,OdcVmInterferenceJsonTableWriter,276,0,18,0,55,0,28,0,18,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc,OdcVmResourceTableReader,392,0,60,0,64,0,48,0,18,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc,OdcVmTraceFormat,518,0,16,0,68,0,18,0,7,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc,OdcVmResourceStateTableReader,307,0,38,0,51,0,37,0,18,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc,OdcVmResourceTableWriter,407,0,44,0,84,0,40,0,18,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc,OdcVmResourceStateTableWriter,373,0,38,0,66,0,37,0,18,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.engine.engine,FlowEventQueue,331,0,36,0,86,0,29,0,11,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.engine.engine,FlowCycleQueue,162,0,18,0,36,0,14,0,5,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.engine.engine,InvocationStack,92,0,10,0,24,0,9,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.engine.engine,FlowEngine,155,0,16,0,49,0,18,0,10,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.service,TaskNature,6,0,0,0,3,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.service,ComputeService.new HostListener() {...},178,0,26,0,34,0,16,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.service,ComputeService.Builder,38,0,0,0,11,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.service,HostView,43,0,0,0,13,0,8,0,8,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.service,ServiceFlavor,97,0,10,0,22,0,16,0,11,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.service,ServiceImage,88,0,10,0,19,0,14,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.service,ServiceTask,355,0,37,0,94,0,48,0,27,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.service,ComputeService,631,0,34,0,160,0,49,0,32,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.service,ComputeService.ComputeClient,194,0,2,0,45,0,15,0,14,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.internal,Guest.Companion.LOGGER.new Function0() {...},1,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.internal,Guest.start.new Function0() {...},6,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.internal,Guest.start.new Function0() {...},2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.internal,Guest,400,0,40,0,90,0,42,0,21,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.conv,ResourceColumns,21,0,0,0,10,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.conv,ResourceStateColumns,25,0,0,0,12,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceState,42,0,0,0,6,0,6,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceRecordMaterializer.root.new GroupConverter() {...},124,0,11,0,23,0,13,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},12,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},4,0,0,0,2,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},18,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},12,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,Resource,78,0,0,0,10,0,10,0,10,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateRecordMaterializer,46,0,0,0,7,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateReadSupport.Companion,6,0,0,0,3,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateRecordMaterializer.root.new GroupConverter() {...},99,0,9,0,18,0,11,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceReadSupport.Companion,6,0,0,0,3,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceReadSupport,336,0,8,0,73,0,8,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateWriteSupport,168,0,2,0,40,0,7,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateReadSupport,275,0,8,0,57,0,8,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceWriteSupport.Companion,2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},17,0,0,0,5,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},15,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},18,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},12,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceRecordMaterializer.root.1.converters.1.new PrimitiveConverter() {...},11,0,0,0,3,0,2,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceRecordMaterializer,49,0,0,0,16,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceWriteSupport,246,0,6,0,59,0,9,0,6,0
+SchedulerResourceTest (QuarkusTest),org.opendc.trace.formats.opendc.parquet,ResourceStateWriteSupport.Companion,2,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.machine,PerformanceCounters,94,0,0,0,35,0,18,0,18,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.machine,SimMachine,139,0,0,0,36,0,15,0,15,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.filters,ComputeFilter,22,0,2,0,4,0,4,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.filters,RamFilter,56,0,4,0,11,0,4,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.filters,VCpuCapacityFilter,50,0,6,0,7,0,5,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.filters,InstanceCountFilter,25,0,2,0,3,0,4,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.filters,DifferentHostFilter,39,0,4,0,3,0,4,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.filters,SameHostFilter,39,0,4,0,3,0,4,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.compute.simulator.scheduler.filters,VCpuFilter,47,0,4,0,8,0,4,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.runner,RunnerProtocol,0,74,0,0,0,11,0,4,0,4
+SchedulerResourceTest (QuarkusTest),org.opendc.web.server.rest.runner,JobResource,14,57,0,4,4,16,0,6,0,4
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.workload.trace.scaling,NoDelayScaling,12,0,0,0,4,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.workload.trace.scaling,PerfectScaling,18,0,0,0,4,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels,56,0,0,0,9,0,9,0,9,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CPUPowerModel,37,0,0,0,5,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels.MaxIdlePowerModel,24,0,0,0,6,0,3,0,3,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModel,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels.SquarePowerModel,32,0,0,0,7,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels.ConstantPowerModel,15,0,0,0,6,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels.MsePowerModel,42,0,0,0,7,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels.InterpolationPowerModel,74,0,2,0,15,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels.CubicPowerModel,32,0,0,0,7,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CPUPowerModelsFactoryKt,98,0,12,0,14,0,12,0,2,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,SimCpu,278,0,4,0,79,0,24,0,22,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels.AsymptoticPowerModel,81,0,2,0,12,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels.SqrtPowerModel,31,0,0,0,7,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels.ZeroIdlePowerDecorator,24,0,2,0,8,0,5,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.simulator.compute.cpu,CpuPowerModels.LinearPowerModel,30,0,0,0,7,0,4,0,4,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.ui.runtime,OpenDCUiRuntimeConfig,3,0,0,0,1,0,1,0,1,0
+SchedulerResourceTest (QuarkusTest),org.opendc.web.ui.runtime,OpenDCUiRecorder,106,0,10,0,26,0,12,0,7,0

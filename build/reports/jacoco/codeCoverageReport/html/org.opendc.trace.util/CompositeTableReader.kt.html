@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CompositeTableReader.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.util</a> &gt; <span class="el_source">CompositeTableReader.kt</span></div><h1>CompositeTableReader.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.util
+
+import org.opendc.trace.TableReader
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
+
+/**
+ * A helper class to chain multiple [TableReader]s.
+ */
+<span class="fc" id="L33">public abstract class CompositeTableReader : TableReader {</span>
+    /**
+     * A flag to indicate that the reader has starting, meaning the user called [nextRow] at least once
+     * (and in turn [nextReader]).
+     */
+    private var hasStarted = false
+
+    /**
+     * The active [TableReader] instance.
+     */
+    private var delegate: TableReader? = null
+
+    /**
+     * Obtain the next [TableReader] instance to read from or `null` if there are no more readers to read from.
+     */
+    protected abstract fun nextReader(): TableReader?
+
+    override fun nextRow(): Boolean {
+<span class="fc" id="L51">        tryStart()</span>
+
+<span class="fc" id="L53">        var delegate = delegate</span>
+
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        while (delegate != null) {</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">            if (delegate.nextRow()) {</span>
+<span class="fc" id="L57">                break</span>
+            }
+
+<span class="fc" id="L60">            delegate.close()</span>
+<span class="fc" id="L61">            delegate = nextReader()</span>
+<span class="fc" id="L62">            this.delegate = delegate</span>
+        }
+
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        return delegate != null</span>
+    }
+
+    override fun resolve(name: String): Int {
+<span class="fc" id="L69">        tryStart()</span>
+
+<span class="fc" id="L71">        val delegate = delegate</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        return delegate?.resolve(name) ?: -1</span>
+    }
+
+    override fun isNull(index: Int): Boolean {
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="fc" id="L77">        return delegate.isNull(index)</span>
+    }
+
+    override fun getBoolean(index: Int): Boolean {
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="nc" id="L82">        return delegate.getBoolean(index)</span>
+    }
+
+    override fun getInt(index: Int): Int {
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="fc" id="L87">        return delegate.getInt(index)</span>
+    }
+
+    override fun getLong(index: Int): Long {
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="nc" id="L92">        return delegate.getLong(index)</span>
+    }
+
+    override fun getFloat(index: Int): Float {
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="nc" id="L97">        return delegate.getFloat(index)</span>
+    }
+
+    override fun getDouble(index: Int): Double {
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="fc" id="L102">        return delegate.getDouble(index)</span>
+    }
+
+    override fun getString(index: Int): String? {
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="fc" id="L107">        return delegate.getString(index)</span>
+    }
+
+    override fun getUUID(index: Int): UUID? {
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="nc" id="L112">        return delegate.getUUID(index)</span>
+    }
+
+    override fun getInstant(index: Int): Instant? {
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="fc" id="L117">        return delegate.getInstant(index)</span>
+    }
+
+    override fun getDuration(index: Int): Duration? {
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="nc" id="L122">        return delegate.getDuration(index)</span>
+    }
+
+    override fun &lt;T&gt; getList(
+        index: Int,
+        elementType: Class&lt;T&gt;,
+    ): List&lt;T&gt;? {
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="nc" id="L130">        return delegate.getList(index, elementType)</span>
+    }
+
+    override fun &lt;T&gt; getSet(
+        index: Int,
+        elementType: Class&lt;T&gt;,
+    ): Set&lt;T&gt;? {
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="nc" id="L138">        return delegate.getSet(index, elementType)</span>
+    }
+
+    override fun &lt;K, V&gt; getMap(
+        index: Int,
+        keyType: Class&lt;K&gt;,
+        valueType: Class&lt;V&gt;,
+    ): Map&lt;K, V&gt;? {
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        val delegate = checkNotNull(delegate) { &quot;Invalid reader state&quot; }</span>
+<span class="nc" id="L147">        return delegate.getMap(index, keyType, valueType)</span>
+    }
+
+    override fun close() {
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        delegate?.close()</span>
+<span class="fc" id="L152">    }</span>
+
+<span class="nc" id="L154">    override fun toString(): String = &quot;CompositeTableReader&quot;</span>
+
+    /**
+     * Try to obtain the initial delegate.
+     */
+    private fun tryStart() {
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        if (!hasStarted) {</span>
+<span class="pc bpc" id="L161" title="3 of 6 branches missed.">            assert(delegate == null) { &quot;Duplicate initialization&quot; }</span>
+<span class="fc" id="L162">            delegate = nextReader()</span>
+<span class="fc" id="L163">            hasStarted = true</span>
+        }
+<span class="fc" id="L165">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

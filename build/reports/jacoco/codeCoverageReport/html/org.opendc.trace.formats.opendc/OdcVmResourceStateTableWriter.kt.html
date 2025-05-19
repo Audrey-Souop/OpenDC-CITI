@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OdcVmResourceStateTableWriter.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.formats.opendc</a> &gt; <span class="el_source">OdcVmResourceStateTableWriter.kt</span></div><h1>OdcVmResourceStateTableWriter.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.formats.opendc
+
+import org.apache.parquet.hadoop.ParquetWriter
+import org.opendc.trace.TableWriter
+import org.opendc.trace.conv.resourceCpuCount
+import org.opendc.trace.conv.resourceID
+import org.opendc.trace.conv.resourceStateCpuUsage
+import org.opendc.trace.conv.resourceStateDuration
+import org.opendc.trace.conv.resourceStateTimestamp
+import org.opendc.trace.formats.opendc.parquet.ResourceState
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
+
+/**
+ * A [TableWriter] implementation for the OpenDC virtual machine trace format.
+ */
+<span class="fc" id="L40">internal class OdcVmResourceStateTableWriter(private val writer: ParquetWriter&lt;ResourceState&gt;) : TableWriter {</span>
+    /**
+     * The current state for the record that is being written.
+     */
+    private var localIsActive = false
+<span class="fc" id="L45">    private var localID: String = &quot;&quot;</span>
+<span class="fc" id="L46">    private var localTimestamp: Instant = Instant.MIN</span>
+<span class="fc" id="L47">    private var localDuration: Duration = Duration.ZERO</span>
+    private var localCpuCount: Int = 0
+<span class="fc" id="L49">    private var localCpuUsage: Double = Double.NaN</span>
+
+    override fun startRow() {
+<span class="fc" id="L52">        localIsActive = true</span>
+<span class="fc" id="L53">        localID = &quot;&quot;</span>
+<span class="fc" id="L54">        localTimestamp = Instant.MIN</span>
+<span class="fc" id="L55">        localDuration = Duration.ZERO</span>
+<span class="fc" id="L56">        localCpuCount = 0</span>
+<span class="fc" id="L57">        localCpuUsage = Double.NaN</span>
+<span class="fc" id="L58">    }</span>
+
+    override fun endRow() {
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        check(localIsActive) { &quot;No active row&quot; }</span>
+<span class="fc" id="L62">        localIsActive = false</span>
+
+<span class="pc bpc" id="L64" title="4 of 6 branches missed.">        check(lastId != localID || localTimestamp &gt;= lastTimestamp) { &quot;Records need to be ordered by (id, timestamp)&quot; }</span>
+
+<span class="fc" id="L66">        writer.write(ResourceState(localID, localTimestamp, localDuration, localCpuCount, localCpuUsage))</span>
+
+<span class="fc" id="L68">        lastId = localID</span>
+<span class="fc" id="L69">        lastTimestamp = localTimestamp</span>
+<span class="fc" id="L70">    }</span>
+
+    override fun resolve(name: String): Int {
+<span class="fc" id="L73">        return when (name) {</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">            resourceID -&gt; colID</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            resourceStateTimestamp -&gt; colTimestamp</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            resourceStateDuration -&gt; colDuration</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">            resourceCpuCount -&gt; colCpuCount</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            resourceStateCpuUsage -&gt; colCpuUsage</span>
+<span class="fc" id="L79">            else -&gt; -1</span>
+        }
+    }
+
+    override fun setBoolean(
+        index: Int,
+        value: Boolean,
+    ) {
+<span class="fc" id="L87">        throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+    }
+
+    override fun setInt(
+        index: Int,
+        value: Int,
+    ) {
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        check(localIsActive) { &quot;No active row&quot; }</span>
+<span class="fc" id="L95">        when (index) {</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            colCpuCount -&gt; localCpuCount = value</span>
+<span class="fc" id="L97">            else -&gt; throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+        }
+<span class="fc" id="L99">    }</span>
+
+    override fun setLong(
+        index: Int,
+        value: Long,
+    ) {
+<span class="fc" id="L105">        throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+    }
+
+    override fun setFloat(
+        index: Int,
+        value: Float,
+    ) {
+<span class="fc" id="L112">        throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+    }
+
+    override fun setDouble(
+        index: Int,
+        value: Double,
+    ) {
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        check(localIsActive) { &quot;No active row&quot; }</span>
+<span class="fc" id="L120">        when (index) {</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">            colCpuUsage -&gt; localCpuUsage = value</span>
+<span class="fc" id="L122">            else -&gt; throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+        }
+<span class="fc" id="L124">    }</span>
+
+    override fun setString(
+        index: Int,
+        value: String,
+    ) {
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        check(localIsActive) { &quot;No active row&quot; }</span>
+
+<span class="fc" id="L132">        when (index) {</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">            colID -&gt; localID = value</span>
+<span class="fc" id="L134">            else -&gt; throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+        }
+<span class="fc" id="L136">    }</span>
+
+    override fun setUUID(
+        index: Int,
+        value: UUID,
+    ) {
+<span class="fc" id="L142">        throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+    }
+
+    override fun setInstant(
+        index: Int,
+        value: Instant,
+    ) {
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        check(localIsActive) { &quot;No active row&quot; }</span>
+
+<span class="fc" id="L151">        when (index) {</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            colTimestamp -&gt; localTimestamp = value</span>
+<span class="fc" id="L153">            else -&gt; throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+        }
+<span class="fc" id="L155">    }</span>
+
+    override fun setDuration(
+        index: Int,
+        value: Duration,
+    ) {
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        check(localIsActive) { &quot;No active row&quot; }</span>
+
+<span class="fc" id="L163">        when (index) {</span>
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">            colDuration -&gt; localDuration = value</span>
+<span class="fc" id="L165">            else -&gt; throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+        }
+<span class="nc" id="L167">    }</span>
+
+    override fun &lt;T&gt; setList(
+        index: Int,
+        value: List&lt;T&gt;,
+    ) {
+<span class="fc" id="L173">        throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+    }
+
+    override fun &lt;T&gt; setSet(
+        index: Int,
+        value: Set&lt;T&gt;,
+    ) {
+<span class="fc" id="L180">        throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+    }
+
+    override fun &lt;K, V&gt; setMap(
+        index: Int,
+        value: Map&lt;K, V&gt;,
+    ) {
+<span class="fc" id="L187">        throw IllegalArgumentException(&quot;Invalid column or type [index $index]&quot;)</span>
+    }
+
+    override fun flush() {
+        // Not available
+<span class="nc" id="L192">    }</span>
+
+    override fun close() {
+<span class="fc" id="L195">        writer.close()</span>
+<span class="fc" id="L196">    }</span>
+
+    /**
+     * Last column values that are used to check for correct partitioning.
+     */
+    private var lastId: String? = null
+<span class="fc" id="L202">    private var lastTimestamp: Instant = Instant.MAX</span>
+
+    private val colID = 0
+<span class="fc" id="L205">    private val colTimestamp = 1</span>
+<span class="fc" id="L206">    private val colDuration = 2</span>
+<span class="fc" id="L207">    private val colCpuCount = 3</span>
+<span class="fc" id="L208">    private val colCpuUsage = 4</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

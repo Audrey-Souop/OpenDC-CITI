@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataRate.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.common.units</a> &gt; <span class="el_source">DataRate.kt</span></div><h1>DataRate.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+@file:OptIn(InternalUse::class, NonInlinableUnit::class)
+
+package org.opendc.common.units
+
+import kotlinx.serialization.Serializable
+import org.opendc.common.annotations.InternalUse
+import org.opendc.common.units.TimeDelta.Companion.toTimeDelta
+import org.opendc.common.utils.DFLT_MIN_EPS
+import org.opendc.common.utils.approx
+import org.opendc.common.utils.approxLarger
+import org.opendc.common.utils.approxLargerOrEq
+import org.opendc.common.utils.approxSmaller
+import org.opendc.common.utils.approxSmallerOrEq
+import org.opendc.common.utils.ifNeg0thenPos0
+import java.time.Duration
+
+/**
+ * Represents data-rate values.
+ * @see[Unit]
+ */
+@JvmInline
+@Serializable(with = DataRate.Companion.DataRateSerializer::class)
+public value class DataRate private constructor(
+    // In bits/s.
+<span class="nc" id="L47">    override val value: Double,</span>
+) : Unit&lt;DataRate&gt; {
+<span class="nc" id="L49">    override fun toString(): String = fmtValue()</span>
+
+<span class="nc" id="L51">    public override fun fmtValue(fmt: String): String =</span>
+<span class="nc" id="L52">        when (abs()) {</span>
+<span class="nc bnc" id="L53" title="All 6 branches missed.">            in zero..ofBps(100) -&gt; &quot;${String.format(fmt, tobps())} bps&quot;</span>
+<span class="nc bnc" id="L54" title="All 6 branches missed.">            in ofbps(100)..ofKbps(100) -&gt; &quot;${String.format(fmt, toKbps())} Kbps&quot;</span>
+<span class="nc bnc" id="L55" title="All 6 branches missed.">            in ofKbps(100)..ofMbps(100) -&gt; &quot;${String.format(fmt, toMbps())} Mbps&quot;</span>
+<span class="nc" id="L56">            else -&gt; &quot;${String.format(fmt, toGbps())} Gbps&quot;</span>
+<span class="nc" id="L57">        }</span>
+
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Conversions to Double
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+<span class="nc" id="L63">    public fun tobps(): Double = value</span>
+
+<span class="nc" id="L65">    public fun toKibps(): Double = value / 1024</span>
+
+<span class="nc" id="L67">    public fun toKbps(): Double = value / 1e3</span>
+
+<span class="nc" id="L69">    public fun toKiBps(): Double = toKibps() / 8</span>
+
+<span class="nc" id="L71">    public fun toKBps(): Double = toKbps() / 8</span>
+
+<span class="nc" id="L73">    public fun toMibps(): Double = toKibps() / 1024</span>
+
+<span class="nc" id="L75">    public fun toMbps(): Double = toKbps() / 1e3</span>
+
+<span class="nc" id="L77">    public fun toMiBps(): Double = toMibps() / 8</span>
+
+<span class="nc" id="L79">    public fun toMBps(): Double = toMbps() / 8</span>
+
+<span class="nc" id="L81">    public fun toGibps(): Double = toMibps() / 1024</span>
+
+<span class="nc" id="L83">    public fun toGbps(): Double = toMbps() / 1e3</span>
+
+<span class="nc" id="L85">    public fun toGiBps(): Double = toGibps() / 8</span>
+
+<span class="nc" id="L87">    public fun toGBps(): Double = toGbps() / 8</span>
+
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Operation Override (to avoid boxing of value classes in byte code)
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+<span class="nc" id="L93">    public override fun ifNeg0ThenPos0(): DataRate = DataRate(value.ifNeg0thenPos0())</span>
+
+<span class="nc" id="L95">    public override operator fun plus(other: DataRate): DataRate = DataRate(value + other.value)</span>
+
+<span class="nc" id="L97">    public override operator fun minus(other: DataRate): DataRate = DataRate(value - other.value)</span>
+
+<span class="nc" id="L99">    public override operator fun div(scalar: Number): DataRate = DataRate(value / scalar.toDouble())</span>
+
+<span class="nc" id="L101">    public override operator fun div(other: DataRate): Percentage = Percentage.ofRatio(value / other.value)</span>
+
+<span class="nc" id="L103">    public override operator fun times(scalar: Number): DataRate = DataRate(value * scalar.toDouble())</span>
+
+<span class="nc" id="L105">    public override operator fun times(percentage: Percentage): DataRate = DataRate(value * percentage.value)</span>
+
+<span class="nc" id="L107">    public override operator fun unaryMinus(): DataRate = DataRate(-value)</span>
+
+<span class="nc" id="L109">    public override operator fun compareTo(other: DataRate): Int = this.value.compareTo(other.value)</span>
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">    public override fun isZero(): Boolean = value == .0</span>
+
+<span class="nc" id="L113">    public override fun approxZero(epsilon: Double): Boolean = value.approx(.0, epsilon = epsilon)</span>
+
+<span class="nc" id="L115">    public override fun approx(</span>
+        other: DataRate,
+        minEpsilon: Double,
+        epsilon: Double,
+<span class="nc bnc" id="L119" title="All 4 branches missed.">    ): Boolean = this == other || this.value.approx(other.value, minEpsilon, epsilon)</span>
+
+<span class="nc" id="L121">    public override infix fun approx(other: DataRate): Boolean = approx(other, minEpsilon = DFLT_MIN_EPS)</span>
+
+<span class="nc" id="L123">    public override fun approxLarger(</span>
+        other: DataRate,
+        minEpsilon: Double,
+        epsilon: Double,
+<span class="nc" id="L127">    ): Boolean = this.value.approxLarger(other.value, minEpsilon, epsilon)</span>
+
+<span class="nc" id="L129">    public override infix fun approxLarger(other: DataRate): Boolean = approxLarger(other, minEpsilon = DFLT_MIN_EPS)</span>
+
+<span class="nc" id="L131">    public override fun approxLargerOrEq(</span>
+        other: DataRate,
+        minEpsilon: Double,
+        epsilon: Double,
+<span class="nc" id="L135">    ): Boolean = this.value.approxLargerOrEq(other.value, minEpsilon, epsilon)</span>
+
+<span class="nc" id="L137">    public override infix fun approxLargerOrEq(other: DataRate): Boolean = approxLargerOrEq(other, minEpsilon = DFLT_MIN_EPS)</span>
+
+<span class="nc" id="L139">    public override fun approxSmaller(</span>
+        other: DataRate,
+        minEpsilon: Double,
+        epsilon: Double,
+<span class="nc" id="L143">    ): Boolean = this.value.approxSmaller(other.value, minEpsilon, epsilon)</span>
+
+<span class="nc" id="L145">    public override infix fun approxSmaller(other: DataRate): Boolean = approxSmaller(other, minEpsilon = DFLT_MIN_EPS)</span>
+
+<span class="nc" id="L147">    public override fun approxSmallerOrEq(</span>
+        other: DataRate,
+        minEpsilon: Double,
+        epsilon: Double,
+<span class="nc" id="L151">    ): Boolean = this.value.approxSmallerOrEq(other.value, minEpsilon, epsilon)</span>
+
+<span class="nc" id="L153">    public override infix fun approxSmallerOrEq(other: DataRate): Boolean = approxSmallerOrEq(other, minEpsilon = DFLT_MIN_EPS)</span>
+
+<span class="nc bnc" id="L155" title="All 2 branches missed.">    public override infix fun max(other: DataRate): DataRate = if (this.value &gt; other.value) this else other</span>
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">    public override infix fun min(other: DataRate): DataRate = if (this.value &lt; other.value) this else other</span>
+
+<span class="nc" id="L159">    public override fun abs(): DataRate = DataRate(kotlin.math.abs(value))</span>
+
+<span class="nc" id="L161">    public override fun roundToIfWithinEpsilon(</span>
+        to: DataRate,
+        epsilon: Double,
+    ): DataRate =
+<span class="nc bnc" id="L165" title="All 6 branches missed.">        if (this.value in (to.value - epsilon)..(to.value + epsilon)) {</span>
+<span class="nc" id="L166">            to</span>
+        } else {
+<span class="nc" id="L168">            this</span>
+<span class="nc" id="L169">        }</span>
+
+    public fun max(
+        a: DataRate,
+        b: DataRate,
+<span class="nc bnc" id="L174" title="All 2 branches missed.">    ): DataRate = if (a.value &gt; b.value) a else b</span>
+
+    public fun min(
+        a: DataRate,
+        b: DataRate,
+<span class="nc bnc" id="L179" title="All 2 branches missed.">    ): DataRate = if (a.value &lt; b.value) a else b</span>
+
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Unit Specific Operations
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+<span class="nc" id="L185">    public operator fun times(timeDelta: TimeDelta): DataSize = DataSize.ofKiB(toKiBps() * timeDelta.toSec())</span>
+
+<span class="nc" id="L187">    public operator fun times(duration: Duration): DataSize = this * duration.toTimeDelta()</span>
+
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Companion
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+<span class="nc" id="L193">    public companion object : UnitId&lt;DataRate&gt; {</span>
+<span class="nc" id="L194">        @JvmStatic override val zero: DataRate = DataRate(.0)</span>
+
+<span class="nc" id="L196">        @JvmStatic override val max: DataRate = DataRate(Double.MAX_VALUE)</span>
+
+<span class="nc" id="L198">        @JvmStatic override val min: DataRate = DataRate(Double.MIN_VALUE)</span>
+
+<span class="nc" id="L200">        public operator fun Number.times(unit: DataRate): DataRate = unit * this</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofbps&quot;)
+<span class="nc" id="L204">        public fun ofbps(bps: Number): DataRate = DataRate(bps.toDouble())</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofBps&quot;)
+<span class="nc" id="L208">        public fun ofBps(Bps: Number): DataRate = ofbps(Bps.toDouble() * 8)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofKibps&quot;)
+<span class="nc" id="L212">        public fun ofKibps(kibps: Number): DataRate = ofbps(kibps.toDouble() * 1024)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofKbps&quot;)
+<span class="nc" id="L216">        public fun ofKbps(kbps: Number): DataRate = ofbps(kbps.toDouble() * 1e3)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofKiBps&quot;)
+<span class="nc" id="L220">        public fun ofKiBps(kiBps: Number): DataRate = ofKibps(kiBps.toDouble() * 8)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofKBps&quot;)
+<span class="nc" id="L224">        public fun ofKBps(kBps: Number): DataRate = ofKbps(kBps.toDouble() * 8)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofMibps&quot;)
+<span class="nc" id="L228">        public fun ofMibps(mibps: Number): DataRate = ofKibps(mibps.toDouble() * 1024)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofMbps&quot;)
+<span class="nc" id="L232">        public fun ofMbps(mbps: Number): DataRate = ofKbps(mbps.toDouble() * 1e3)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofMiBps&quot;)
+<span class="nc" id="L236">        public fun ofMiBps(miBps: Number): DataRate = ofMibps(miBps.toDouble() * 8)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofMBps&quot;)
+<span class="nc" id="L240">        public fun ofMBps(mBps: Number): DataRate = ofMbps(mBps.toDouble() * 8)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofGibps&quot;)
+<span class="nc" id="L244">        public fun ofGibps(gibps: Number): DataRate = ofMibps(gibps.toDouble() * 1024)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofGbps&quot;)
+<span class="nc" id="L248">        public fun ofGbps(gbps: Number): DataRate = ofMbps(gbps.toDouble() * 1e3)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofGiBps&quot;)
+<span class="nc" id="L252">        public fun ofGiBps(giBps: Number): DataRate = ofGibps(giBps.toDouble() * 8)</span>
+
+        @JvmStatic
+        @JvmName(&quot;ofGBps&quot;)
+<span class="nc" id="L256">        public fun ofGBps(gBps: Number): DataRate = ofGbps(gBps.toDouble() * 8)</span>
+
+        // //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Serializer
+        // //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /**
+         * Serializer for [DataRate] value class. It needs to be a compile
+         * time constant to be used as serializer automatically,
+         * hence `object :` instead of class instantiation.
+         *
+         * ```json
+         * // e.g.
+         * &quot;data-rate&quot;: &quot;1 Gbps&quot;
+         * &quot;data-rate&quot;: &quot;10KBps&quot;
+         * &quot;data-rate&quot;: &quot;   0.3    GBps  &quot;
+         * // etc.
+         * ```
+         */
+<span class="nc" id="L275">        internal object DataRateSerializer : UnitSerializer&lt;DataRate&gt;(</span>
+<span class="nc" id="L276">            ifNumber = {</span>
+<span class="nc" id="L277">                LOG.warn(</span>
+                    &quot;deserialization of number with no unit of measure, assuming it is in Kibps.&quot; +
+<span class="nc" id="L279">                        &quot;Keep in mind that you can also specify the value as '$it Kibps'&quot;,</span>
+                )
+<span class="nc" id="L281">                ofKibps(it.toDouble())</span>
+            },
+<span class="nc" id="L283">            serializerFun = { this.encodeString(it.toString()) },</span>
+<span class="nc" id="L284">            ifMatches(&quot;$NUM_GROUP$BITS$PER$SEC&quot;) { ofbps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L285">            ifMatches(&quot;$NUM_GROUP$BYTES$PER$SEC&quot;) { ofBps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L286">            ifMatches(&quot;$NUM_GROUP$KIBI$BITS$PER$SEC&quot;) { ofKibps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L287">            ifMatches(&quot;$NUM_GROUP$KILO$BITS$PER$SEC&quot;) { ofKbps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L288">            ifMatches(&quot;$NUM_GROUP$KIBI$BYTES$PER$SEC&quot;) { ofKiBps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L289">            ifMatches(&quot;$NUM_GROUP$KILO$BYTES$PER$SEC&quot;) { ofKBps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L290">            ifMatches(&quot;$NUM_GROUP$MEBI$BITS$PER$SEC&quot;) { ofMibps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L291">            ifMatches(&quot;$NUM_GROUP$MEGA$BITS$PER$SEC&quot;) { ofMbps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L292">            ifMatches(&quot;$NUM_GROUP$MEBI$BYTES$PER$SEC&quot;) { ofMiBps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L293">            ifMatches(&quot;$NUM_GROUP$MEGA$BYTES$PER$SEC&quot;) { ofMBps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L294">            ifMatches(&quot;$NUM_GROUP$GIBI$BITS$PER$SEC&quot;) { ofGibps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L295">            ifMatches(&quot;$NUM_GROUP$GIGA$BITS$PER$SEC&quot;) { ofGbps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L296">            ifMatches(&quot;$NUM_GROUP$GIBI$BYTES$PER$SEC&quot;) { ofGiBps(json.decNumFromStr(groupValues[1])) },</span>
+<span class="nc" id="L297">            ifMatches(&quot;$NUM_GROUP$GIGA$BYTES$PER$SEC&quot;) { ofGBps(json.decNumFromStr(groupValues[1])) },</span>
+        )
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

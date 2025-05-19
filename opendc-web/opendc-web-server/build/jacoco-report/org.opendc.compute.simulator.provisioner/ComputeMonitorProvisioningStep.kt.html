@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ComputeMonitorProvisioningStep.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.provisioner</a> &gt; <span class="el_source">ComputeMonitorProvisioningStep.kt</span></div><h1>ComputeMonitorProvisioningStep.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.provisioner
+
+import org.opendc.compute.simulator.service.ComputeService
+import org.opendc.compute.simulator.telemetry.ComputeMetricReader
+import org.opendc.compute.simulator.telemetry.ComputeMonitor
+import org.opendc.compute.simulator.telemetry.OutputFiles
+import java.time.Duration
+
+/**
+ * A [ProvisioningStep] that provisions a [ComputeMetricReader] to periodically collect the metrics of a [ComputeService]
+ * and report them to a [ComputeMonitor].
+ */
+<span class="nc" id="L35">public class ComputeMonitorProvisioningStep(</span>
+<span class="nc" id="L36">    private val serviceDomain: String,</span>
+<span class="nc" id="L37">    private val monitor: ComputeMonitor,</span>
+<span class="nc" id="L38">    private val exportInterval: Duration,</span>
+<span class="nc" id="L39">    private val startTime: Duration = Duration.ofMillis(0),</span>
+<span class="nc" id="L40">    private val filesToExport: Map&lt;OutputFiles, Boolean&gt; =</span>
+<span class="nc" id="L41">        mapOf(</span>
+<span class="nc" id="L42">            OutputFiles.HOST to true,</span>
+<span class="nc" id="L43">            OutputFiles.TASK to true,</span>
+<span class="nc" id="L44">            OutputFiles.SERVICE to true,</span>
+<span class="nc" id="L45">            OutputFiles.POWER_SOURCE to true,</span>
+<span class="nc" id="L46">            OutputFiles.BATTERY to true,</span>
+        ),
+<span class="nc" id="L48">    private val printFrequency: Int? = null,</span>
+) : ProvisioningStep {
+    override fun apply(ctx: ProvisioningContext): AutoCloseable {
+<span class="nc" id="L51">        val service =</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">            requireNotNull(</span>
+<span class="nc" id="L53">                ctx.registry.resolve(serviceDomain, ComputeService::class.java),</span>
+<span class="nc" id="L54">            ) { &quot;Compute service $serviceDomain does not exist&quot; }</span>
+<span class="nc" id="L55">        val metricReader =</span>
+<span class="nc" id="L56">            ComputeMetricReader(</span>
+<span class="nc" id="L57">                ctx.dispatcher,</span>
+<span class="nc" id="L58">                service,</span>
+<span class="nc" id="L59">                monitor,</span>
+<span class="nc" id="L60">                exportInterval,</span>
+<span class="nc" id="L61">                startTime,</span>
+<span class="nc" id="L62">                filesToExport,</span>
+<span class="nc" id="L63">                printFrequency,</span>
+            )
+<span class="nc" id="L65">        return metricReader</span>
+    }
+<span class="nc" id="L67">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

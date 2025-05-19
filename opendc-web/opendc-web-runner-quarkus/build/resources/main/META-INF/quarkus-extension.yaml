@@ -1,0 +1,10 @@
+---
+name: "OpenDC Web Runner"
+metadata:
+  status: "preview"
+  unlisted: true
+  built-with-quarkus-core: "3.8.0"
+  extension-dependencies:
+  - "io.quarkus:quarkus-core"
+artifact: "org.opendc.web:opendc-web-runner-quarkus::jar:unspecified"
+description: "Quarkus extension for the OpenDC experiment runner"

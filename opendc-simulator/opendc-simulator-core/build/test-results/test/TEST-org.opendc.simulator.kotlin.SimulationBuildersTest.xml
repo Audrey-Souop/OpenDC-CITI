@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.simulator.kotlin.SimulationBuildersTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:28" hostname="ece-d6200-audu" time="0.438">
+  <properties/>
+  <testcase name="testInvalidDispatcher()" classname="org.opendc.simulator.kotlin.SimulationBuildersTest" time="0.109"/>
+  <testcase name="testDelay()" classname="org.opendc.simulator.kotlin.SimulationBuildersTest" time="0.239"/>
+  <testcase name="testPropagateException()" classname="org.opendc.simulator.kotlin.SimulationBuildersTest" time="0.013"/>
+  <testcase name="testController()" classname="org.opendc.simulator.kotlin.SimulationBuildersTest" time="0.025"/>
+  <testcase name="testFailOnActiveJobs()" classname="org.opendc.simulator.kotlin.SimulationBuildersTest" time="0.009"/>
+  <testcase name="testExistingJob()" classname="org.opendc.simulator.kotlin.SimulationBuildersTest" time="0.014"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

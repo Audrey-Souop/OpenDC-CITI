@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Guest.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.internal</a> &gt; <span class="el_source">Guest.kt</span></div><h1>Guest.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.internal
+
+import mu.KotlinLogging
+import org.opendc.compute.api.TaskState
+import org.opendc.compute.simulator.host.SimHost
+import org.opendc.compute.simulator.service.ServiceTask
+import org.opendc.compute.simulator.telemetry.GuestCpuStats
+import org.opendc.compute.simulator.telemetry.GuestSystemStats
+import org.opendc.simulator.compute.machine.SimMachine
+import org.opendc.simulator.compute.workload.ChainWorkload
+import org.opendc.simulator.compute.workload.VirtualMachine
+import java.time.Duration
+import java.time.Instant
+import java.time.InstantSource
+
+/**
+ * A virtual machine instance that is managed by a [SimHost].
+ */
+<span class="fc" id="L41">public class Guest(</span>
+<span class="fc" id="L42">    private val clock: InstantSource,</span>
+<span class="pc" id="L43">    public val host: SimHost,</span>
+<span class="fc" id="L44">    private val listener: GuestListener,</span>
+<span class="fc" id="L45">    public val task: ServiceTask,</span>
+<span class="pc" id="L46">    public val simMachine: SimMachine,</span>
+) {
+    /**
+     * The state of the [Guest].
+     *
+     * [TaskState.PROVISIONING] is an invalid value for a guest, since it applies before the host is selected for
+     * a task.
+     */
+<span class="fc" id="L54">    public var state: TaskState = TaskState.CREATED</span>
+        private set
+
+    /**
+     * The [VirtualMachine] on which the task is currently running
+     */
+<span class="pc" id="L60">    public var virtualMachine: VirtualMachine? = null</span>
+
+    private var uptime = 0L
+    private var downtime = 0L
+<span class="fc" id="L64">    private var lastReport = clock.millis()</span>
+    private var bootTime: Instant? = null
+<span class="fc" id="L66">    private val cpuLimit = simMachine.cpu.cpuModel.totalCapacity</span>
+
+    /**
+     * Start the guest.
+     */
+    public fun start() {
+<span class="pc bpc" id="L72" title="3 of 4 branches missed.">        when (state) {</span>
+            TaskState.CREATED, TaskState.FAILED, TaskState.PAUSED -&gt; {
+<span class="pc" id="L74">                LOGGER.info { &quot;User requested to start task ${task.uid}&quot; }</span>
+<span class="fc" id="L75">                doStart()</span>
+            }
+<span class="nc" id="L77">            TaskState.RUNNING -&gt; return</span>
+            TaskState.COMPLETED, TaskState.TERMINATED -&gt; {
+<span class="nc" id="L79">                LOGGER.warn { &quot;User tried to start a finished task&quot; }</span>
+<span class="nc" id="L80">                throw IllegalArgumentException(&quot;Task is already finished&quot;)</span>
+            }
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            else -&gt; assert(false) { &quot;Invalid state transition&quot; }</span>
+        }
+<span class="fc" id="L84">    }</span>
+
+    /**
+     * Launch the guest on the simulated Virtual machine
+     */
+    private fun doStart() {
+<span class="pc bpc" id="L90" title="3 of 6 branches missed.">        assert(virtualMachine == null) { &quot;Concurrent job is already running&quot; }</span>
+
+<span class="fc" id="L92">        onStart()</span>
+
+        // TODO: This is not being used at the moment
+//        val bootworkload =
+//            TraceWorkload(s
+//                ArrayList(
+//                    listOf(
+//                        TraceFragment(
+//                            1000000L,
+//                            100000.0,
+//                            1,
+//                        ),
+//                    ),
+//                ),
+//                0,
+//                0,
+//                0.0,
+//                NoDelayScaling(),
+//            )
+
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (task.workload is ChainWorkload) {</span>
+<span class="fc" id="L113">            virtualMachine =</span>
+<span class="fc" id="L114">                simMachine.startWorkload(task.workload as ChainWorkload) { cause -&gt;</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">                    onStop(if (cause != null) TaskState.FAILED else TaskState.COMPLETED)</span>
+<span class="fc" id="L116">                }</span>
+        } else {
+<span class="fc" id="L118">            val newChainWorkload =</span>
+<span class="fc" id="L119">                ChainWorkload(</span>
+<span class="fc" id="L120">                    ArrayList(listOf(task.workload)),</span>
+<span class="fc" id="L121">                    task.workload.checkpointInterval(),</span>
+<span class="fc" id="L122">                    task.workload.checkpointDuration(),</span>
+<span class="fc" id="L123">                    task.workload.checkpointIntervalScaling(),</span>
+                )
+
+<span class="fc" id="L126">            virtualMachine =</span>
+<span class="fc" id="L127">                simMachine.startWorkload(newChainWorkload) { cause -&gt;</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">                    onStop(if (cause != null) TaskState.FAILED else TaskState.COMPLETED)</span>
+<span class="fc" id="L129">                }</span>
+        }
+<span class="fc" id="L131">    }</span>
+
+    /**
+     * This method is invoked when the guest was started on the host and has booted into a running state.
+     */
+    private fun onStart() {
+<span class="fc" id="L137">        bootTime = clock.instant()</span>
+<span class="fc" id="L138">        state = TaskState.RUNNING</span>
+<span class="fc" id="L139">        listener.onStart(this)</span>
+<span class="fc" id="L140">    }</span>
+
+//    /**
+//     * Stop the guest.
+//     */
+//    public fun stop() {
+//        when (state) {
+//            TaskState.RUNNING -&gt; doStop(TaskState.COMPLETED)
+//            TaskState.FAILED -&gt; state = TaskState.TERMINATED
+//            TaskState.COMPLETED, TaskState.PAUSED, TaskState.TERMINATED -&gt; return
+//            else -&gt; assert(false) { &quot;Invalid state transition&quot; }
+//        }
+//    }
+
+    /**
+     * Attempt to stop the task and put it into [target] state.
+     */
+    private fun doStop(target: TaskState) {
+<span class="pc bpc" id="L158" title="3 of 6 branches missed.">        assert(virtualMachine != null) { &quot;Invalid job state&quot; }</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        val virtualMachine = this.virtualMachine ?: return</span>
+<span class="fc" id="L160">        this.state = target</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (target == TaskState.FAILED) {</span>
+<span class="fc" id="L162">            virtualMachine.stopWorkload(Exception(&quot;Task has failed&quot;))</span>
+        } else {
+<span class="nc" id="L164">            virtualMachine.stopWorkload()</span>
+        }
+
+<span class="fc" id="L167">        this.virtualMachine = null</span>
+<span class="fc" id="L168">    }</span>
+
+    /**
+     * This method is invoked when the guest stopped.
+     */
+    private fun onStop(target: TaskState) {
+<span class="fc" id="L174">        updateUptime()</span>
+
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        if (state == TaskState.RUNNING) {</span>
+            // If state is not running, that means state has been changed already and the callback should be ignored
+<span class="fc" id="L178">            state = target</span>
+        }
+<span class="fc" id="L180">        listener.onStop(this)</span>
+<span class="fc" id="L181">    }</span>
+
+//    /**
+//     * Delete the guest.
+//     *
+//     * This operation will stop the guest if it is running on the host and remove all resources associated with the
+//     * guest.
+//     */
+//    public fun delete() {
+//        stop()
+//
+//        state = TaskState.FAILED
+//    }
+
+    /**
+     * Fail the guest if it is active.
+     *
+     * This operation forcibly stops the guest and puts the task into an error state.
+     */
+    public fun fail() {
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">        if (state != TaskState.RUNNING) {</span>
+<span class="nc" id="L202">            return</span>
+        }
+
+<span class="fc" id="L205">        doStop(TaskState.FAILED)</span>
+<span class="fc" id="L206">    }</span>
+
+    public fun pause() {
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (state != TaskState.RUNNING) {</span>
+<span class="nc" id="L210">            return</span>
+        }
+
+<span class="nc" id="L213">        doStop(TaskState.PAUSED)</span>
+<span class="nc" id="L214">    }</span>
+
+    /**
+     * Recover the guest if it is in an error state.
+     */
+    public fun recover() {
+<span class="nc bnc" id="L220" title="All 2 branches missed.">        if (state != TaskState.FAILED) {</span>
+<span class="nc" id="L221">            return</span>
+        }
+
+<span class="nc" id="L224">        doStart()</span>
+<span class="nc" id="L225">    }</span>
+
+    /**
+     * Obtain the system statistics of this guest.
+     */
+    public fun getSystemStats(): GuestSystemStats {
+<span class="fc" id="L231">        updateUptime()</span>
+
+<span class="fc" id="L233">        return GuestSystemStats(</span>
+<span class="fc" id="L234">            Duration.ofMillis(uptime),</span>
+<span class="fc" id="L235">            Duration.ofMillis(downtime),</span>
+<span class="fc" id="L236">            bootTime,</span>
+        )
+    }
+
+    /**
+     * Obtain the CPU statistics of this guest.
+     */
+    public fun getCpuStats(): GuestCpuStats {
+<span class="fc" id="L244">        virtualMachine!!.updateCounters(this.clock.millis())</span>
+<span class="fc" id="L245">        val counters = virtualMachine!!.performanceCounters</span>
+
+<span class="fc" id="L247">        return GuestCpuStats(</span>
+<span class="fc" id="L248">            counters.cpuActiveTime / 1000L,</span>
+<span class="fc" id="L249">            counters.cpuIdleTime / 1000L,</span>
+<span class="fc" id="L250">            counters.cpuStealTime / 1000L,</span>
+<span class="fc" id="L251">            counters.cpuLostTime / 1000L,</span>
+<span class="fc" id="L252">            counters.cpuCapacity,</span>
+<span class="fc" id="L253">            counters.cpuSupply,</span>
+<span class="fc" id="L254">            counters.cpuDemand,</span>
+<span class="fc" id="L255">            counters.cpuSupply / cpuLimit,</span>
+        )
+    }
+
+    /**
+     * Helper function to track the uptime and downtime of the guest.
+     */
+    public fun updateUptime() {
+<span class="fc" id="L263">        val now = clock.millis()</span>
+<span class="fc" id="L264">        val duration = now - lastReport</span>
+<span class="fc" id="L265">        lastReport = now</span>
+
+<span class="fc bfc" id="L267" title="All 2 branches covered.">        if (state == TaskState.RUNNING) {</span>
+<span class="fc" id="L268">            uptime += duration</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">        } else if (state == TaskState.FAILED) {</span>
+<span class="fc" id="L270">            downtime += duration</span>
+        }
+<span class="fc" id="L272">    }</span>
+
+    private companion object {
+        @JvmStatic
+<span class="pc" id="L276">        private val LOGGER = KotlinLogging.logger {}</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

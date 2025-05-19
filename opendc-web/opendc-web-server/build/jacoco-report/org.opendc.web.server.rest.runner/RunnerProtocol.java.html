@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RunnerProtocol.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.rest.runner</a> &gt; <span class="el_source">RunnerProtocol.java</span></div><h1>RunnerProtocol.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2023 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.rest.runner;
+
+import org.opendc.web.server.model.Job;
+import org.opendc.web.server.model.Portfolio;
+import org.opendc.web.server.model.Scenario;
+import org.opendc.web.server.model.Topology;
+import org.opendc.web.server.rest.BaseProtocol;
+
+/**
+ * DTO-conversions for the runner protocol.
+ */
+public final class RunnerProtocol {
+    /**
+     * Private constructor to prevent instantiation of class.
+     */
+    private RunnerProtocol() {}
+
+    /**
+     * Convert a {@link Job} into a runner-facing DTO.
+     */
+    public static org.opendc.web.proto.runner.Job toDto(Job job) {
+<span class="fc" id="L44">        return new org.opendc.web.proto.runner.Job(</span>
+<span class="fc" id="L45">                job.id, toDto(job.scenario), job.state, job.createdAt, job.updatedAt, job.runtime, job.results);</span>
+    }
+
+    /**
+     * Convert a {@link Scenario} into a runner-facing DTO.
+     */
+    public static org.opendc.web.proto.runner.Scenario toDto(Scenario scenario) {
+<span class="fc" id="L52">        return new org.opendc.web.proto.runner.Scenario(</span>
+<span class="fc" id="L53">                scenario.id,</span>
+                scenario.number,
+<span class="fc" id="L55">                toDto(scenario.portfolio),</span>
+                scenario.name,
+<span class="fc" id="L57">                BaseProtocol.toDto(scenario.workload),</span>
+<span class="fc" id="L58">                toDto(scenario.topology),</span>
+                scenario.phenomena,
+                scenario.schedulerName);
+    }
+
+    /**
+     * Convert a {@link Portfolio} into a runner-facing DTO.
+     */
+    public static org.opendc.web.proto.runner.Portfolio toDto(Portfolio portfolio) {
+<span class="fc" id="L67">        return new org.opendc.web.proto.runner.Portfolio(</span>
+<span class="fc" id="L68">                portfolio.id, portfolio.number, portfolio.name, portfolio.targets);</span>
+    }
+
+    /**
+     * Convert a {@link Topology} into a runner-facing DTO.
+     */
+    public static org.opendc.web.proto.runner.Topology toDto(Topology topology) {
+<span class="fc" id="L75">        return new org.opendc.web.proto.runner.Topology(</span>
+<span class="fc" id="L76">                topology.id, topology.number, topology.name, topology.rooms, topology.createdAt, topology.updatedAt);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

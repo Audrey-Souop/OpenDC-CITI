@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.experiments.base.FragmentScalingTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-05-17T00:17:23" hostname="ece-d6200-audu" time="0.038">
+  <properties/>
+  <testcase name="testScaling1()" classname="org.opendc.experiments.base.FragmentScalingTest" time="0.009"/>
+  <testcase name="testScaling2()" classname="org.opendc.experiments.base.FragmentScalingTest" time="0.007"/>
+  <testcase name="testScaling3()" classname="org.opendc.experiments.base.FragmentScalingTest" time="0.009"/>
+  <testcase name="testScaling4()" classname="org.opendc.experiments.base.FragmentScalingTest" time="0.007"/>
+  <testcase name="testScaling5()" classname="org.opendc.experiments.base.FragmentScalingTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="formats.bitbrains.BitbrainsTraceFormatTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:34" hostname="ece-d6200-audu" time="0.074">
+  <properties/>
+  <testcase name="testResources()" classname="formats.bitbrains.BitbrainsTraceFormatTest" time="0.053"/>
+  <testcase name="testSmoke()" classname="formats.bitbrains.BitbrainsTraceFormatTest" time="0.01"/>
+  <testcase name="testTableExists()" classname="formats.bitbrains.BitbrainsTraceFormatTest" time="0.002"/>
+  <testcase name="testTableDoesNotExist()" classname="formats.bitbrains.BitbrainsTraceFormatTest" time="0.002"/>
+  <testcase name="testTables()" classname="formats.bitbrains.BitbrainsTraceFormatTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

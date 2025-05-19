@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Pacer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.common.util</a> &gt; <span class="el_source">Pacer.java</span></div><h1>Pacer.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.common.util;
+
+import java.util.function.LongConsumer;
+import org.opendc.common.Dispatcher;
+import org.opendc.common.DispatcherHandle;
+
+/**
+ * Helper class to pace the incoming scheduling requests.
+ */
+public final class Pacer {
+    private final Dispatcher dispatcher;
+    private final long quantumMs;
+    private final LongConsumer process;
+
+    /**
+     * The current {@link DispatcherHandle} representing the pending scheduling cycle.
+     */
+    private DispatcherHandle handle;
+
+    /**
+     * Construct a {@link Pacer} instance.
+     *
+     * @param dispatcher The {@link Dispatcher} to schedule future invocations.
+     * @param quantumMs The scheduling quantum in milliseconds.
+     * @param process The process to invoke for the incoming requests.
+     */
+<span class="nc" id="L49">    public Pacer(Dispatcher dispatcher, long quantumMs, LongConsumer process) {</span>
+<span class="nc" id="L50">        this.dispatcher = dispatcher;</span>
+<span class="nc" id="L51">        this.quantumMs = quantumMs;</span>
+<span class="nc" id="L52">        this.process = process;</span>
+<span class="nc" id="L53">    }</span>
+
+    /**
+     * Determine whether a scheduling cycle is pending.
+     */
+    public boolean isPending() {
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        return handle != null;</span>
+    }
+
+    /**
+     * Enqueue a new scheduling cycle.
+     */
+    public void enqueue() {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (handle != null) {</span>
+<span class="nc" id="L67">            return;</span>
+        }
+
+<span class="nc" id="L70">        final Dispatcher dispatcher = this.dispatcher;</span>
+<span class="nc" id="L71">        long quantumMs = this.quantumMs;</span>
+<span class="nc" id="L72">        long now = dispatcher.getTimeSource().millis();</span>
+
+        // We assume that the scheduler runs at a fixed slot every time quantum (e.g t=0, t=60, t=120).
+        // We calculate here the delay until the next scheduling slot.
+<span class="nc" id="L76">        long timeUntilNextSlot = (quantumMs - (now % quantumMs)) % quantumMs;</span>
+
+<span class="nc" id="L78">        handle = dispatcher.scheduleCancellable(timeUntilNextSlot, () -&gt; {</span>
+<span class="nc" id="L79">            process.accept(now + timeUntilNextSlot);</span>
+<span class="nc" id="L80">            handle = null;</span>
+<span class="nc" id="L81">        });</span>
+<span class="nc" id="L82">    }</span>
+
+    /**
+     * Cancel the currently pending scheduling cycle.
+     */
+    public void cancel() {
+<span class="nc" id="L88">        final DispatcherHandle handle = this.handle;</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (handle != null) {</span>
+<span class="nc" id="L90">            this.handle = null;</span>
+<span class="nc" id="L91">            handle.cancel();</span>
+        }
+<span class="nc" id="L93">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

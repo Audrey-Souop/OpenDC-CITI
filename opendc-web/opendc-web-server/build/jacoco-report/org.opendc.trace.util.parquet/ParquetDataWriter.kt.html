@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ParquetDataWriter.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.util.parquet</a> &gt; <span class="el_source">ParquetDataWriter.kt</span></div><h1>ParquetDataWriter.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.util.parquet
+
+import mu.KotlinLogging
+import org.apache.parquet.column.ParquetProperties
+import org.apache.parquet.hadoop.ParquetFileWriter
+import org.apache.parquet.hadoop.ParquetWriter
+import org.apache.parquet.hadoop.api.WriteSupport
+import org.apache.parquet.hadoop.metadata.CompressionCodecName
+import java.io.File
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
+import kotlin.concurrent.thread
+
+/**
+ * A writer that writes data in Parquet format.
+ *
+ * @param path The path to the file to write the data to.
+ * @param writeSupport The [WriteSupport] implementation for converting the records to Parquet format.
+ */
+<span class="nc" id="L42">public abstract class ParquetDataWriter&lt;in T&gt;(</span>
+    path: File,
+<span class="nc" id="L44">    private val writeSupport: WriteSupport&lt;T&gt;,</span>
+<span class="nc" id="L45">    bufferSize: Int = 4096,</span>
+) : AutoCloseable {
+    /**
+     * The logging instance to use.
+     */
+<span class="nc" id="L50">    private val logger = KotlinLogging.logger {}</span>
+
+    /**
+     * The queue of records to process.
+     */
+<span class="nc" id="L55">    private val queue: BlockingQueue&lt;T&gt; = ArrayBlockingQueue(bufferSize)</span>
+
+    /**
+     * An exception to be propagated to the actual writer.
+     */
+    private var exception: Throwable? = null
+
+    /**
+     * The thread that is responsible for writing the Parquet records.
+     */
+    private val writerThread =
+<span class="nc" id="L66">        thread(start = false, name = this.toString()) {</span>
+<span class="nc" id="L67">            val writer =</span>
+<span class="nc" id="L68">                let {</span>
+<span class="nc" id="L69">                    val builder =</span>
+<span class="nc" id="L70">                        LocalParquetWriter.builder(path.toPath(), writeSupport)</span>
+<span class="nc" id="L71">                            .withWriterVersion(ParquetProperties.WriterVersion.PARQUET_2_0)</span>
+<span class="nc" id="L72">                            .withCompressionCodec(CompressionCodecName.ZSTD)</span>
+<span class="nc" id="L73">                            .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)</span>
+<span class="nc" id="L74">                    buildWriter(builder)</span>
+                }
+
+<span class="nc" id="L77">            val queue = queue</span>
+<span class="nc" id="L78">            val buf = mutableListOf&lt;T&gt;()</span>
+<span class="nc" id="L79">            var shouldStop = false</span>
+
+<span class="nc" id="L81">            try {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">                while (!shouldStop) {</span>
+<span class="nc" id="L83">                    try {</span>
+<span class="nc" id="L84">                        writer.write(queue.take())</span>
+<span class="nc" id="L85">                    } catch (e: InterruptedException) {</span>
+<span class="nc" id="L86">                        shouldStop = true</span>
+                    }
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">                    if (queue.drainTo(buf) &gt; 0) {</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                        for (data in buf) {</span>
+<span class="nc" id="L91">                            writer.write(data)</span>
+                        }
+<span class="nc" id="L93">                        buf.clear()</span>
+                    }
+                }
+<span class="nc" id="L96">            } catch (e: Throwable) {</span>
+<span class="nc" id="L97">                logger.error(e) { &quot;Failure in Parquet data writer&quot; }</span>
+<span class="nc" id="L98">                exception = e</span>
+            } finally {
+<span class="nc" id="L100">                writer.close()</span>
+            }
+<span class="nc" id="L102">        }</span>
+
+    /**
+     * Build the [ParquetWriter] used to write the Parquet files.
+     */
+    protected open fun buildWriter(builder: LocalParquetWriter.Builder&lt;@UnsafeVariance T&gt;): ParquetWriter&lt;@UnsafeVariance T&gt; {
+<span class="nc" id="L108">        return builder.build()</span>
+    }
+
+    /**
+     * Write the specified metrics to the database.
+     */
+    public fun write(data: T) {
+<span class="nc" id="L115">        val exception = exception</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (exception != null) {</span>
+<span class="nc" id="L117">            throw IllegalStateException(&quot;Writer thread failed&quot;, exception)</span>
+        }
+
+<span class="nc" id="L120">        queue.put(data)</span>
+<span class="nc" id="L121">    }</span>
+
+    /**
+     * Signal the writer to stop.
+     */
+    override fun close() {
+<span class="nc" id="L127">        writerThread.interrupt()</span>
+<span class="nc" id="L128">        writerThread.join()</span>
+<span class="nc" id="L129">    }</span>
+
+<span class="nc" id="L131">    init {</span>
+<span class="nc" id="L132">        writerThread.start()</span>
+<span class="nc" id="L133">    }</span>
+<span class="nc" id="L134">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

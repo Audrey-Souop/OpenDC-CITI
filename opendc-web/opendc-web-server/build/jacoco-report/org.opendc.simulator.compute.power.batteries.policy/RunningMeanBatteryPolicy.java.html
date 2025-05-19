@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RunningMeanBatteryPolicy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.compute.power.batteries.policy</a> &gt; <span class="el_source">RunningMeanBatteryPolicy.java</span></div><h1>RunningMeanBatteryPolicy.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2025 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.compute.power.batteries.policy;
+
+import java.util.LinkedList;
+import org.opendc.simulator.compute.power.batteries.BatteryAggregator;
+import org.opendc.simulator.compute.power.batteries.BatteryState;
+import org.opendc.simulator.compute.power.batteries.SimBattery;
+import org.opendc.simulator.engine.engine.FlowEngine;
+
+/**
+ * A battery policy that uses a running mean to determine if a battery should be charging or discharging.
+ * This policy is similar to {@link SingleThresholdBatteryPolicy}, but instead of using a predifined threshold,
+ * the threshold is updated dynamically based on the running mean of the carbon intensity.
+ * - If the Carbon Intensity is below the running mean,
+ *   the battery will start charging until full.
+ * - If the Carbon Intensity is above the running mean,
+ *   the battery will start discharging until empty.
+ */
+public class RunningMeanBatteryPolicy extends BatteryPolicy {
+    private final int windowSize;
+
+<span class="nc" id="L43">    private final LinkedList&lt;Double&gt; pastCarbonIntensities = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L44">    private double pastCarbonIntensitiesSum = 0.0;</span>
+<span class="nc" id="L45">    private double pastCarbonIntensitiesMean = 0.0;</span>
+
+    /**
+     *
+     * @param engine     The {@link FlowEngine} this node belongs to.
+     * @param battery        The {@link SimBattery} to control.
+     * @param aggregator    The {@link BatteryAggregator} to use.
+     */
+    public RunningMeanBatteryPolicy(
+            FlowEngine engine,
+            SimBattery battery,
+            BatteryAggregator aggregator,
+            double startingThreshold,
+            int windowSize) {
+<span class="nc" id="L59">        super(engine, battery, aggregator);</span>
+
+<span class="nc" id="L61">        this.windowSize = windowSize;</span>
+
+<span class="nc" id="L63">        this.updatePastCarbonIntensities(startingThreshold);</span>
+<span class="nc" id="L64">    }</span>
+
+    /**
+     * Update the past carbon intensities with the new carbon intensity.
+     *
+     * Update the current sum and mean.
+     * @param newCarbonIntensity
+     */
+    private void updatePastCarbonIntensities(double newCarbonIntensity) {
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (this.pastCarbonIntensities.size() == this.windowSize) {</span>
+<span class="nc" id="L74">            this.pastCarbonIntensitiesSum -= this.pastCarbonIntensities.removeFirst();</span>
+        }
+<span class="nc" id="L76">        this.pastCarbonIntensities.addLast(newCarbonIntensity);</span>
+<span class="nc" id="L77">        this.pastCarbonIntensitiesSum += newCarbonIntensity;</span>
+<span class="nc" id="L78">        this.pastCarbonIntensitiesMean = this.pastCarbonIntensitiesSum / this.pastCarbonIntensities.size();</span>
+<span class="nc" id="L79">    }</span>
+
+    @Override
+    public void updateCarbonIntensity(double newCarbonIntensity) {
+<span class="nc" id="L83">        this.updatePastCarbonIntensities(newCarbonIntensity);</span>
+
+<span class="nc" id="L85">        super.updateCarbonIntensity(newCarbonIntensity);</span>
+<span class="nc" id="L86">    }</span>
+
+    @Override
+    public long onUpdate(long now) {
+<span class="nc bnc" id="L90" title="All 6 branches missed.">        if (this.carbonIntensity &gt;= this.pastCarbonIntensitiesMean &amp; !this.battery.isEmpty()) {</span>
+<span class="nc" id="L91">            this.setBatteryState(BatteryState.DISCHARGING);</span>
+<span class="nc" id="L92">            return Long.MAX_VALUE;</span>
+        }
+
+<span class="nc bnc" id="L95" title="All 6 branches missed.">        if (this.carbonIntensity &lt; this.pastCarbonIntensitiesMean &amp; !this.battery.isFull()) {</span>
+<span class="nc" id="L96">            this.setBatteryState(BatteryState.CHARGING);</span>
+<span class="nc" id="L97">            return Long.MAX_VALUE;</span>
+        }
+
+<span class="nc" id="L100">        this.setBatteryState(BatteryState.IDLE);</span>
+<span class="nc" id="L101">        return Long.MAX_VALUE;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

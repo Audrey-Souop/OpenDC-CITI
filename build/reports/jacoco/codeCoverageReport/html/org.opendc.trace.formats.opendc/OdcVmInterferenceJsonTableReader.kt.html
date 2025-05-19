@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OdcVmInterferenceJsonTableReader.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.formats.opendc</a> &gt; <span class="el_source">OdcVmInterferenceJsonTableReader.kt</span></div><h1>OdcVmInterferenceJsonTableReader.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.formats.opendc
+
+import com.fasterxml.jackson.core.JsonParseException
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.JsonToken
+import org.opendc.trace.TableColumnType
+import org.opendc.trace.TableReader
+import org.opendc.trace.conv.INTERFERENCE_GROUP_MEMBERS
+import org.opendc.trace.conv.INTERFERENCE_GROUP_SCORE
+import org.opendc.trace.conv.INTERFERENCE_GROUP_TARGET
+import org.opendc.trace.util.convertTo
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
+
+/**
+ * A [TableReader] implementation for the OpenDC VM interference JSON format.
+ */
+<span class="fc" id="L41">internal class OdcVmInterferenceJsonTableReader(private val parser: JsonParser) : TableReader {</span>
+    /**
+     * A flag to indicate whether a single row has been read already.
+     */
+    private var isStarted = false
+
+    override fun nextRow(): Boolean {
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (!isStarted) {</span>
+<span class="fc" id="L49">            isStarted = true</span>
+
+<span class="fc" id="L51">            parser.nextToken()</span>
+
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">            if (!parser.isExpectedStartArrayToken) {</span>
+<span class="nc" id="L54">                throw JsonParseException(parser, &quot;Expected array at start, but got ${parser.currentToken()}&quot;)</span>
+            }
+        }
+
+<span class="fc bfc" id="L58" title="All 4 branches covered.">        return if (parser.isClosed || parser.nextToken() == JsonToken.END_ARRAY) {</span>
+<span class="fc" id="L59">            parser.close()</span>
+<span class="fc" id="L60">            reset()</span>
+<span class="fc" id="L61">            false</span>
+        } else {
+<span class="fc" id="L63">            parseGroup(parser)</span>
+<span class="fc" id="L64">            true</span>
+        }
+    }
+
+    private val colMembers = 0
+<span class="fc" id="L69">    private val colTarget = 1</span>
+<span class="fc" id="L70">    private val colScore = 2</span>
+
+<span class="fc" id="L72">    private val typeMembers = TableColumnType.Set(TableColumnType.String)</span>
+
+    override fun resolve(name: String): Int {
+<span class="fc bfc" id="L75" title="All 4 branches covered.">        return when (name) {</span>
+<span class="fc" id="L76">            INTERFERENCE_GROUP_MEMBERS -&gt; colMembers</span>
+<span class="fc" id="L77">            INTERFERENCE_GROUP_TARGET -&gt; colTarget</span>
+<span class="fc" id="L78">            INTERFERENCE_GROUP_SCORE -&gt; colScore</span>
+<span class="fc" id="L79">            else -&gt; -1</span>
+        }
+    }
+
+    override fun isNull(index: Int): Boolean {
+<span class="fc" id="L84">        return when (index) {</span>
+<span class="fc bfc" id="L85" title="All 10 branches covered.">            colMembers, colTarget, colScore -&gt; false</span>
+<span class="fc" id="L86">            else -&gt; throw IllegalArgumentException(&quot;Invalid column index $index&quot;)</span>
+        }
+    }
+
+    override fun getBoolean(index: Int): Boolean {
+<span class="fc" id="L91">        throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+    }
+
+    override fun getInt(index: Int): Int {
+<span class="fc" id="L95">        throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+    }
+
+    override fun getLong(index: Int): Long {
+<span class="fc" id="L99">        throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+    }
+
+    override fun getFloat(index: Int): Float {
+<span class="fc" id="L103">        throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+    }
+
+    override fun getDouble(index: Int): Double {
+<span class="fc" id="L107">        checkActive()</span>
+<span class="fc" id="L108">        return when (index) {</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">            colTarget -&gt; targetLoad</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">            colScore -&gt; score</span>
+<span class="fc" id="L111">            else -&gt; throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+        }
+    }
+
+    override fun getString(index: Int): String? {
+<span class="fc" id="L116">        throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+    }
+
+    override fun getUUID(index: Int): UUID? {
+<span class="fc" id="L120">        throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+    }
+
+    override fun getInstant(index: Int): Instant? {
+<span class="fc" id="L124">        throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+    }
+
+    override fun getDuration(index: Int): Duration? {
+<span class="fc" id="L128">        throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+    }
+
+    override fun &lt;T&gt; getList(
+        index: Int,
+        elementType: Class&lt;T&gt;,
+    ): List&lt;T&gt;? {
+<span class="fc" id="L135">        throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+    }
+
+    override fun &lt;T&gt; getSet(
+        index: Int,
+        elementType: Class&lt;T&gt;,
+    ): Set&lt;T&gt;? {
+<span class="fc" id="L142">        checkActive()</span>
+<span class="fc" id="L143">        return when (index) {</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">            colMembers -&gt; typeMembers.convertTo(members, elementType)</span>
+<span class="fc" id="L145">            else -&gt; throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+        }
+    }
+
+    override fun &lt;K, V&gt; getMap(
+        index: Int,
+        keyType: Class&lt;K&gt;,
+        valueType: Class&lt;V&gt;,
+    ): Map&lt;K, V&gt;? {
+<span class="fc" id="L154">        throw IllegalArgumentException(&quot;Invalid column $index&quot;)</span>
+    }
+
+    override fun close() {
+<span class="fc" id="L158">        parser.close()</span>
+<span class="fc" id="L159">    }</span>
+
+<span class="fc" id="L161">    private var members = emptySet&lt;String&gt;()</span>
+<span class="fc" id="L162">    private var targetLoad = Double.POSITIVE_INFINITY</span>
+<span class="fc" id="L163">    private var score = 1.0</span>
+
+    /**
+     * Helper method to check if the reader is active.
+     */
+    private fun checkActive() {
+<span class="fc bfc" id="L169" title="All 6 branches covered.">        check(isStarted &amp;&amp; !parser.isClosed) { &quot;No active row. Did you call nextRow()?&quot; }</span>
+<span class="fc" id="L170">    }</span>
+
+    /**
+     * Reset the state.
+     */
+    private fun reset() {
+<span class="fc" id="L176">        members = emptySet()</span>
+<span class="fc" id="L177">        targetLoad = Double.POSITIVE_INFINITY</span>
+<span class="fc" id="L178">        score = 1.0</span>
+<span class="fc" id="L179">    }</span>
+
+    /**
+     * Parse a group an interference JSON file.
+     */
+    private fun parseGroup(parser: JsonParser) {
+<span class="fc" id="L185">        var targetLoad = Double.POSITIVE_INFINITY</span>
+<span class="fc" id="L186">        var score = 1.0</span>
+<span class="fc" id="L187">        val members = mutableSetOf&lt;String&gt;()</span>
+
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        if (!parser.isExpectedStartObjectToken) {</span>
+<span class="nc" id="L190">            throw JsonParseException(parser, &quot;Expected object, but got ${parser.currentToken()}&quot;)</span>
+        }
+
+<span class="fc bfc" id="L193" title="All 2 branches covered.">        while (parser.nextValue() != JsonToken.END_OBJECT) {</span>
+<span class="pc bpc" id="L194" title="1 of 6 branches missed.">            when (parser.currentName) {</span>
+<span class="fc" id="L195">                &quot;vms&quot; -&gt; parseGroupMembers(parser, members)</span>
+<span class="fc" id="L196">                &quot;minServerLoad&quot; -&gt; targetLoad = parser.doubleValue</span>
+<span class="fc" id="L197">                &quot;performanceScore&quot; -&gt; score = parser.doubleValue</span>
+            }
+        }
+
+<span class="fc" id="L201">        this.members = members</span>
+<span class="fc" id="L202">        this.targetLoad = targetLoad</span>
+<span class="fc" id="L203">        this.score = score</span>
+<span class="fc" id="L204">    }</span>
+
+    /**
+     * Parse the members of a group.
+     */
+    private fun parseGroupMembers(
+        parser: JsonParser,
+        members: MutableSet&lt;String&gt;,
+    ) {
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        if (!parser.isExpectedStartArrayToken) {</span>
+<span class="nc" id="L214">            throw JsonParseException(parser, &quot;Expected array for group members, but got ${parser.currentToken()}&quot;)</span>
+        }
+
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        while (parser.nextValue() != JsonToken.END_ARRAY) {</span>
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">            if (parser.currentToken() != JsonToken.VALUE_STRING) {</span>
+<span class="nc" id="L219">                throw JsonParseException(parser, &quot;Expected string value for group member&quot;)</span>
+            }
+
+<span class="fc" id="L222">            members.add(parser.text)</span>
+        }
+<span class="fc" id="L224">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

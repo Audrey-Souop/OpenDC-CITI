@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserAccounting.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.model</a> &gt; <span class="el_source">UserAccounting.java</span></div><h1>UserAccounting.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2023 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.model;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Parameters;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.Table;
+import java.time.LocalDate;
+
+/**
+ * Entity to track the number of simulation minutes used by a user.
+ */
+@Entity
+@Table
+@NamedQueries({
+    @NamedQuery(
+            name = &quot;UserAccounting.consumeBudget&quot;,
+            query =
+                    &quot;&quot;&quot;
+                UPDATE UserAccounting a
+                SET a.simulationTime = a.simulationTime + :seconds
+                WHERE a.userId = :userId AND a.periodEnd = :periodEnd
+            &quot;&quot;&quot;),
+    @NamedQuery(
+            name = &quot;UserAccounting.resetBudget&quot;,
+            query =
+                    &quot;&quot;&quot;
+                UPDATE UserAccounting a
+                SET a.periodEnd = :periodEnd, a.simulationTime = :seconds
+                WHERE a.userId = :userId AND a.periodEnd = :oldPeriodEnd
+            &quot;&quot;&quot;)
+})
+public class UserAccounting extends PanacheEntityBase {
+    /**
+     * User to which this object belongs.
+     */
+    @Id
+    @Column(name = &quot;user_id&quot;, nullable = false)
+    public String userId;
+
+    /**
+     * The end of the accounting period.
+     */
+    @Column(name = &quot;period_end&quot;, nullable = false)
+    public LocalDate periodEnd;
+
+    /**
+     * The number of simulation seconds to be used per accounting period.
+     */
+    @Column(name = &quot;simulation_time_budget&quot;, nullable = false)
+    public int simulationTimeBudget;
+
+    /**
+     * The number of simulation seconds used in this period. This number should reset once the accounting period has
+     * been reached.
+     */
+<span class="fc" id="L82">    @Column(name = &quot;simulation_time&quot;, nullable = false)</span>
+    public int simulationTime = 0;
+
+    /**
+     * Construct a new {@link UserAccounting} object.
+     *
+     * @param userId The identifier of the user that this object belongs to.
+     * @param periodEnd The end of the accounting period.
+     * @param simulationTimeBudget The number of simulation seconds available per accounting period.
+     */
+<span class="fc" id="L92">    public UserAccounting(String userId, LocalDate periodEnd, int simulationTimeBudget) {</span>
+<span class="fc" id="L93">        this.userId = userId;</span>
+<span class="fc" id="L94">        this.periodEnd = periodEnd;</span>
+<span class="fc" id="L95">        this.simulationTimeBudget = simulationTimeBudget;</span>
+<span class="fc" id="L96">    }</span>
+
+    /**
+     * JPA constructor.
+     */
+<span class="fc" id="L101">    protected UserAccounting() {}</span>
+
+    /**
+     * Return the {@link UserAccounting} object associated with the specified user id.
+     */
+    public static UserAccounting findByUser(String userId) {
+<span class="fc" id="L107">        return findById(userId);</span>
+    }
+
+    /**
+     * Create a new {@link UserAccounting} object and persist it to the database.
+     *
+     * @param userId The identifier of the user that this object belongs to.
+     * @param periodEnd The end of the accounting period.
+     * @param simulationTimeBudget The number of simulation seconds available per accounting period.
+     * @param simulationTime The initial simulation time that has been consumed.
+     */
+    public static UserAccounting create(
+            String userId, LocalDate periodEnd, int simulationTimeBudget, int simulationTime) {
+<span class="fc" id="L120">        UserAccounting newAccounting = new UserAccounting(userId, periodEnd, simulationTimeBudget);</span>
+<span class="fc" id="L121">        newAccounting.simulationTime = simulationTime;</span>
+<span class="fc" id="L122">        newAccounting.persistAndFlush();</span>
+<span class="fc" id="L123">        return newAccounting;</span>
+    }
+
+    /**
+     * Atomically consume the budget for this {@link UserAccounting} object.
+     *
+     * @param seconds The number of seconds to consume from the user.
+     * @return &lt;code&gt;true&lt;/code&gt; when the update succeeded, &lt;code&gt;false&lt;/code&gt; when there was a conflict.
+     */
+    public boolean consumeBudget(int seconds) {
+<span class="fc" id="L133">        long count = update(</span>
+                &quot;#UserAccounting.consumeBudget&quot;,
+<span class="fc" id="L135">                Parameters.with(&quot;userId&quot;, userId).and(&quot;periodEnd&quot;, periodEnd).and(&quot;seconds&quot;, seconds));</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        return count &gt; 0;</span>
+    }
+
+    /**
+     * Atomically reset the budget for this {@link UserAccounting} object.
+     *
+     * @param periodEnd The new end period for the budget.
+     * @param seconds The number of seconds that have already been consumed.
+     * @return &lt;code&gt;true&lt;/code&gt; when the update succeeded`, &lt;code&gt;false&lt;/code&gt; when there was a conflict.
+     */
+    public boolean resetBudget(LocalDate periodEnd, int seconds) {
+<span class="fc" id="L147">        long count = update(</span>
+                &quot;#UserAccounting.resetBudget&quot;,
+<span class="fc" id="L149">                Parameters.with(&quot;userId&quot;, userId)</span>
+<span class="fc" id="L150">                        .and(&quot;oldPeriodEnd&quot;, this.periodEnd)</span>
+<span class="fc" id="L151">                        .and(&quot;periodEnd&quot;, periodEnd)</span>
+<span class="fc" id="L152">                        .and(&quot;seconds&quot;, seconds));</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        return count &gt; 0;</span>
+    }
+
+    /**
+     * Determine whether the user has any remaining simulation budget.
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; when the user still has budget left, &lt;code&gt;false&lt;/code&gt; otherwise.
+     */
+    public boolean hasSimulationBudget() {
+<span class="fc" id="L162">        var today = LocalDate.now();</span>
+
+        // The accounting period must be over or there must be budget remaining.
+<span class="fc bfc" id="L165" title="All 4 branches covered.">        return !today.isBefore(periodEnd) || simulationTimeBudget &gt; simulationTime;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

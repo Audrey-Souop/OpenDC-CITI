@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="TableReader for Tasks" tests="7" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:37" hostname="ece-d6200-audu" time="0.077">
+  <properties/>
+  <testcase name="testReadWithoutNextRow()" classname="formats.wfformat.WfFormatTraceFormatTest$TasksTableReaderTest" time="0.003"/>
+  <testcase name="testReadAfterFinish()" classname="formats.wfformat.WfFormatTraceFormatTest$TasksTableReaderTest" time="0.004"/>
+  <testcase name="testReadFully()" classname="formats.wfformat.WfFormatTraceFormatTest$TasksTableReaderTest" time="0.007"/>
+  <testcase name="testVerifyNullColumns()" classname="formats.wfformat.WfFormatTraceFormatTest$TasksTableReaderTest" time="0.009"/>
+  <testcase name="testResolve()" classname="formats.wfformat.WfFormatTraceFormatTest$TasksTableReaderTest" time="0.003"/>
+  <testcase name="testResolveEmpty()" classname="formats.wfformat.WfFormatTraceFormatTest$TasksTableReaderTest" time="0.006"/>
+  <testcase name="testReadNonExistentColumns()" classname="formats.wfformat.WfFormatTraceFormatTest$TasksTableReaderTest" time="0.035"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

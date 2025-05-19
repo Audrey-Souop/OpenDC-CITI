@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimCpu.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.compute.cpu</a> &gt; <span class="el_source">SimCpu.java</span></div><h1>SimCpu.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.compute.cpu;
+
+import java.util.List;
+import java.util.Map;
+import org.opendc.simulator.compute.machine.PerformanceCounters;
+import org.opendc.simulator.compute.models.CpuModel;
+import org.opendc.simulator.engine.engine.FlowEngine;
+import org.opendc.simulator.engine.graph.FlowConsumer;
+import org.opendc.simulator.engine.graph.FlowEdge;
+import org.opendc.simulator.engine.graph.FlowNode;
+import org.opendc.simulator.engine.graph.FlowSupplier;
+
+/**
+ * A {@link SimCpu} of a machine.
+ */
+public final class SimCpu extends FlowNode implements FlowSupplier, FlowConsumer {
+    private final CpuModel cpuModel;
+
+    private final CpuPowerModel cpuPowerModel;
+
+<span class="nc" id="L43">    private double currentCpuDemand = 0.0f; // cpu capacity demanded by the mux</span>
+<span class="nc" id="L44">    private double currentCpuUtilization = 0.0f;</span>
+<span class="nc" id="L45">    private double currentCpuSupplied = 0.0f; // cpu capacity supplied to the mux</span>
+
+    private double currentPowerDemand; // power demanded of the psu
+<span class="nc" id="L48">    private double currentPowerSupplied = 0.0f; // cpu capacity supplied by the psu</span>
+
+    private double maxCapacity;
+
+<span class="nc" id="L52">    private final PerformanceCounters performanceCounters = new PerformanceCounters();</span>
+    private long lastCounterUpdate;
+    private final double cpuFrequencyInv;
+
+    private FlowEdge distributorEdge;
+    private FlowEdge psuEdge;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Basic Getters and Setters
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public double getFrequency() {
+<span class="nc" id="L64">        return cpuModel.getTotalCapacity();</span>
+    }
+
+    public void setFrequency(double frequency) {
+        // Clamp the capacity of the CPU between [0.0, maxFreq]
+<span class="nc" id="L69">        frequency = Math.max(0, Math.min(this.maxCapacity, frequency));</span>
+        //        psu.setCpuFrequency(muxInPort, frequency);
+<span class="nc" id="L71">    }</span>
+
+    @Override
+    public double getCapacity() {
+<span class="nc" id="L75">        return maxCapacity;</span>
+    }
+
+    public PerformanceCounters getPerformanceCounters() {
+<span class="nc" id="L79">        return performanceCounters;</span>
+    }
+
+    public double getPowerDraw() {
+<span class="nc" id="L83">        return this.currentPowerSupplied;</span>
+    }
+
+    public double getDemand() {
+<span class="nc" id="L87">        return this.currentCpuDemand;</span>
+    }
+
+    public double getSpeed() {
+<span class="nc" id="L91">        return this.currentCpuSupplied;</span>
+    }
+
+    public CpuModel getCpuModel() {
+<span class="nc" id="L95">        return cpuModel;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L100">        return &quot;SimBareMetalMachine.Cpu[model=&quot; + cpuModel + &quot;]&quot;;</span>
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public SimCpu(FlowEngine engine, CpuModel cpuModel, CpuPowerModel powerModel, int id) {
+<span class="nc" id="L108">        super(engine);</span>
+<span class="nc" id="L109">        this.cpuModel = cpuModel;</span>
+<span class="nc" id="L110">        this.maxCapacity = this.cpuModel.getTotalCapacity();</span>
+
+<span class="nc" id="L112">        this.cpuPowerModel = powerModel;</span>
+
+<span class="nc" id="L114">        this.lastCounterUpdate = clock.millis();</span>
+
+<span class="nc" id="L116">        this.cpuFrequencyInv = 1 / this.maxCapacity;</span>
+
+<span class="nc" id="L118">        this.currentPowerDemand = this.cpuPowerModel.computePower(this.currentCpuUtilization);</span>
+<span class="nc" id="L119">    }</span>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // FlowNode related functionality
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public long onUpdate(long now) {
+<span class="nc" id="L127">        updateCounters(now);</span>
+
+        // Check if supply == demand
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (this.currentPowerDemand != this.currentPowerSupplied) {</span>
+<span class="nc" id="L131">            this.pushOutgoingDemand(this.psuEdge, this.currentPowerDemand);</span>
+
+<span class="nc" id="L133">            return Long.MAX_VALUE;</span>
+        }
+
+<span class="nc" id="L136">        this.currentCpuSupplied = Math.min(this.currentCpuDemand, this.maxCapacity);</span>
+
+<span class="nc" id="L138">        this.pushOutgoingSupply(this.distributorEdge, this.currentCpuSupplied);</span>
+
+<span class="nc" id="L140">        return Long.MAX_VALUE;</span>
+    }
+
+    public void updateCounters() {
+<span class="nc" id="L144">        this.updateCounters(this.clock.millis());</span>
+<span class="nc" id="L145">    }</span>
+
+    /**
+     * Update the performance counters of the CPU.
+     *
+     * @param now The timestamp at which to update the counter.
+     */
+    public void updateCounters(long now) {
+<span class="nc" id="L153">        long lastUpdate = this.lastCounterUpdate;</span>
+<span class="nc" id="L154">        this.lastCounterUpdate = now;</span>
+<span class="nc" id="L155">        long delta = now - lastUpdate;</span>
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">        if (delta &gt; 0) {</span>
+<span class="nc" id="L158">            double demand = this.currentCpuDemand;</span>
+<span class="nc" id="L159">            double rate = this.currentCpuSupplied;</span>
+<span class="nc" id="L160">            double capacity = this.maxCapacity;</span>
+
+<span class="nc" id="L162">            final double factor = this.cpuFrequencyInv * delta;</span>
+
+<span class="nc" id="L164">            this.performanceCounters.addCpuActiveTime(Math.round(rate * factor));</span>
+<span class="nc" id="L165">            this.performanceCounters.addCpuIdleTime(Math.round((capacity - rate) * factor));</span>
+<span class="nc" id="L166">            this.performanceCounters.addCpuStealTime(Math.round((demand - rate) * factor));</span>
+        }
+
+<span class="nc" id="L169">        this.performanceCounters.setCpuDemand(this.currentCpuDemand);</span>
+<span class="nc" id="L170">        this.performanceCounters.setCpuSupply(this.currentCpuSupplied);</span>
+<span class="nc" id="L171">        this.performanceCounters.setCpuCapacity(this.maxCapacity);</span>
+<span class="nc" id="L172">    }</span>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // FlowGraph Related functionality
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Push new demand to the psu
+     */
+    @Override
+    public void pushOutgoingDemand(FlowEdge supplierEdge, double newPowerDemand) {
+<span class="nc" id="L183">        updateCounters();</span>
+<span class="nc" id="L184">        this.currentPowerDemand = newPowerDemand;</span>
+<span class="nc" id="L185">        this.psuEdge.pushDemand(newPowerDemand);</span>
+<span class="nc" id="L186">    }</span>
+
+    /**
+     * Push updated supply to the mux
+     */
+    @Override
+    public void pushOutgoingSupply(FlowEdge consumerEdge, double newCpuSupply) {
+<span class="nc" id="L193">        updateCounters();</span>
+<span class="nc" id="L194">        this.currentCpuSupplied = newCpuSupply;</span>
+
+<span class="nc" id="L196">        this.distributorEdge.pushSupply(newCpuSupply, true);</span>
+<span class="nc" id="L197">    }</span>
+
+    /**
+     * Handle new demand coming in from the mux
+     */
+    @Override
+    public void handleIncomingDemand(FlowEdge consumerEdge, double newCpuDemand) {
+<span class="nc" id="L204">        updateCounters();</span>
+<span class="nc" id="L205">        this.currentCpuDemand = newCpuDemand;</span>
+
+<span class="nc" id="L207">        this.currentCpuUtilization = Math.min(this.currentCpuDemand / this.maxCapacity, 1.0);</span>
+
+        // Calculate Power Demand and send to PSU
+<span class="nc" id="L210">        this.currentPowerDemand = this.cpuPowerModel.computePower(this.currentCpuUtilization);</span>
+
+<span class="nc" id="L212">        this.invalidate();</span>
+<span class="nc" id="L213">    }</span>
+
+    /**
+     * Handle updated supply from the psu
+     */
+    @Override
+    public void handleIncomingSupply(FlowEdge supplierEdge, double newPowerSupply) {
+<span class="nc" id="L220">        updateCounters();</span>
+<span class="nc" id="L221">        this.currentPowerSupplied = newPowerSupply;</span>
+
+<span class="nc" id="L223">        this.invalidate();</span>
+<span class="nc" id="L224">    }</span>
+
+    /**
+     * Add a connection to the mux
+     */
+    @Override
+    public void addConsumerEdge(FlowEdge consumerEdge) {
+<span class="nc" id="L231">        this.distributorEdge = consumerEdge;</span>
+<span class="nc" id="L232">    }</span>
+
+    /**
+     * Add a connection to the psu
+     */
+    @Override
+    public void addSupplierEdge(FlowEdge supplierEdge) {
+<span class="nc" id="L239">        this.psuEdge = supplierEdge;</span>
+
+<span class="nc" id="L241">        this.invalidate();</span>
+<span class="nc" id="L242">    }</span>
+
+    /**
+     * Remove the connection to the mux
+     */
+    @Override
+    public void removeConsumerEdge(FlowEdge consumerEdge) {
+<span class="nc" id="L249">        this.distributorEdge = null;</span>
+<span class="nc" id="L250">        this.invalidate();</span>
+<span class="nc" id="L251">    }</span>
+
+    /**
+     * Remove the connection to the psu
+     */
+    @Override
+    public void removeSupplierEdge(FlowEdge supplierEdge) {
+<span class="nc" id="L258">        this.psuEdge = null;</span>
+<span class="nc" id="L259">        this.invalidate();</span>
+<span class="nc" id="L260">    }</span>
+
+    @Override
+    public Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; getConnectedEdges() {
+<span class="nc" id="L264">        return Map.of(</span>
+<span class="nc" id="L265">                FlowEdge.NodeType.CONSUMING, List.of(this.psuEdge),</span>
+<span class="nc" id="L266">                FlowEdge.NodeType.SUPPLYING, List.of(this.distributorEdge));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

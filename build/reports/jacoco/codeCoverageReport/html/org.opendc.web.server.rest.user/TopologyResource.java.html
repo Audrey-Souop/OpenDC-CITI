@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TopologyResource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.rest.user</a> &gt; <span class="el_source">TopologyResource.java</span></div><h1>TopologyResource.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2023 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.rest.user;
+
+import io.quarkus.hibernate.orm.panache.Panache;
+import io.quarkus.security.identity.SecurityIdentity;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.persistence.PersistenceException;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import java.time.Instant;
+import java.util.List;
+import org.opendc.web.server.model.Project;
+import org.opendc.web.server.model.ProjectAuthorization;
+import org.opendc.web.server.model.Topology;
+
+/**
+ * A resource representing the constructed datacenter topologies.
+ */
+@Produces(&quot;application/json&quot;)
+@Path(&quot;/projects/{project}/topologies&quot;)
+@RolesAllowed(&quot;openid&quot;)
+public final class TopologyResource {
+    /**
+     * The identity of the current user.
+     */
+    private final SecurityIdentity identity;
+
+    /**
+     * Construct a {@link TopologyResource}.
+     *
+     * @param identity The {@link SecurityIdentity} of the current user.
+     */
+<span class="fc" id="L63">    public TopologyResource(SecurityIdentity identity) {</span>
+<span class="fc" id="L64">        this.identity = identity;</span>
+<span class="fc" id="L65">    }</span>
+
+    /**
+     * Get all topologies that belong to the specified project.
+     */
+    @GET
+    public List&lt;org.opendc.web.proto.user.Topology&gt; getAll(@PathParam(&quot;project&quot;) long projectId) {
+        // User must have access to project
+<span class="fc" id="L73">        ProjectAuthorization auth =</span>
+<span class="fc" id="L74">                ProjectAuthorization.findByUser(identity.getPrincipal().getName(), projectId);</span>
+
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L77">            return List.of();</span>
+        }
+
+<span class="fc" id="L80">        return Topology.findByProject(projectId).list().stream()</span>
+<span class="fc" id="L81">                .map((t) -&gt; UserProtocol.toDto(t, auth))</span>
+<span class="fc" id="L82">                .toList();</span>
+    }
+
+    /**
+     * Create a topology for this project.
+     */
+    @POST
+    @Consumes(&quot;application/json&quot;)
+    @Transactional
+    public org.opendc.web.proto.user.Topology create(
+            @PathParam(&quot;project&quot;) long projectId, @Valid org.opendc.web.proto.user.Topology.Create request) {
+        // User must have access to project
+<span class="fc" id="L94">        ProjectAuthorization auth =</span>
+<span class="fc" id="L95">                ProjectAuthorization.findByUser(identity.getPrincipal().getName(), projectId);</span>
+
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L98">            throw new WebApplicationException(&quot;Topology not found&quot;, 404);</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        } else if (!auth.canEdit()) {</span>
+<span class="nc" id="L100">            throw new WebApplicationException(&quot;Not permitted to edit project&quot;, 403);</span>
+        }
+
+<span class="fc" id="L103">        Instant now = Instant.now();</span>
+<span class="fc" id="L104">        Project project = auth.project;</span>
+<span class="fc" id="L105">        int number = project.allocateTopology(now);</span>
+
+<span class="fc" id="L107">        Topology topology = new Topology(project, number, request.getName(), now, request.getRooms());</span>
+
+<span class="fc" id="L109">        project.topologies.add(topology);</span>
+<span class="fc" id="L110">        topology.persist();</span>
+
+<span class="fc" id="L112">        return UserProtocol.toDto(topology, auth);</span>
+    }
+
+    /**
+     * Obtain a topology by its number.
+     */
+    @GET
+    @Path(&quot;{topology}&quot;)
+    public org.opendc.web.proto.user.Topology get(
+            @PathParam(&quot;project&quot;) long projectId, @PathParam(&quot;topology&quot;) int number) {
+        // User must have access to project
+<span class="fc" id="L123">        ProjectAuthorization auth =</span>
+<span class="fc" id="L124">                ProjectAuthorization.findByUser(identity.getPrincipal().getName(), projectId);</span>
+
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L127">            throw new WebApplicationException(&quot;Topology not found&quot;, 404);</span>
+        }
+
+<span class="fc" id="L130">        Topology topology = Topology.findByProject(projectId, number);</span>
+
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        if (topology == null) {</span>
+<span class="fc" id="L133">            throw new WebApplicationException(&quot;Topology not found&quot;, 404);</span>
+        }
+
+<span class="fc" id="L136">        return UserProtocol.toDto(topology, auth);</span>
+    }
+
+    /**
+     * Update the specified topology by its number.
+     */
+    @PUT
+    @Path(&quot;{topology}&quot;)
+    @Consumes(&quot;application/json&quot;)
+    @Transactional
+    public org.opendc.web.proto.user.Topology update(
+            @PathParam(&quot;project&quot;) long projectId,
+            @PathParam(&quot;topology&quot;) int number,
+            @Valid org.opendc.web.proto.user.Topology.Update request) {
+        // User must have access to project
+<span class="fc" id="L151">        ProjectAuthorization auth =</span>
+<span class="fc" id="L152">                ProjectAuthorization.findByUser(identity.getPrincipal().getName(), projectId);</span>
+
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L155">            throw new WebApplicationException(&quot;Topology not found&quot;, 404);</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        } else if (!auth.canEdit()) {</span>
+<span class="fc" id="L157">            throw new WebApplicationException(&quot;Not permitted to edit project&quot;, 403);</span>
+        }
+
+<span class="fc" id="L160">        Topology entity = Topology.findByProject(projectId, number);</span>
+
+<span class="fc bfc" id="L162" title="All 2 branches covered.">        if (entity == null) {</span>
+<span class="fc" id="L163">            throw new WebApplicationException(&quot;Topology not found&quot;, 404);</span>
+        }
+
+<span class="fc" id="L166">        entity.updatedAt = Instant.now();</span>
+<span class="fc" id="L167">        entity.rooms = request.getRooms();</span>
+
+<span class="fc" id="L169">        return UserProtocol.toDto(entity, auth);</span>
+    }
+
+    /**
+     * Delete the specified topology.
+     */
+    @Path(&quot;{topology}&quot;)
+    @DELETE
+    @Transactional
+    public org.opendc.web.proto.user.Topology delete(
+            @PathParam(&quot;project&quot;) long projectId, @PathParam(&quot;topology&quot;) int number) {
+        // User must have access to project
+<span class="fc" id="L181">        ProjectAuthorization auth =</span>
+<span class="fc" id="L182">                ProjectAuthorization.findByUser(identity.getPrincipal().getName(), projectId);</span>
+
+<span class="fc bfc" id="L184" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L185">            throw new WebApplicationException(&quot;Topology not found&quot;, 404);</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        } else if (!auth.canEdit()) {</span>
+<span class="fc" id="L187">            throw new WebApplicationException(&quot;Not permitted to edit project&quot;, 403);</span>
+        }
+
+<span class="fc" id="L190">        Topology entity = Topology.findByProject(projectId, number);</span>
+
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        if (entity == null) {</span>
+<span class="fc" id="L193">            throw new WebApplicationException(&quot;Topology not found&quot;, 404);</span>
+        }
+
+<span class="fc" id="L196">        entity.updatedAt = Instant.now();</span>
+<span class="fc" id="L197">        entity.delete();</span>
+
+        try {
+            // Flush the results, so we can check whether the constraints are not violated
+<span class="fc" id="L201">            Panache.flush();</span>
+<span class="fc" id="L202">        } catch (PersistenceException e) {</span>
+<span class="fc" id="L203">            throw new WebApplicationException(&quot;Topology is still in use&quot;, 403);</span>
+<span class="fc" id="L204">        }</span>
+
+<span class="fc" id="L206">        return UserProtocol.toDto(entity, auth);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

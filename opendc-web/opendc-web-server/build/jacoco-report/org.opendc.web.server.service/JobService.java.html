@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JobService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.service</a> &gt; <span class="el_source">JobService.java</span></div><h1>JobService.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2023 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.service;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import java.time.Instant;
+import java.util.Map;
+import org.opendc.web.proto.JobState;
+import org.opendc.web.server.model.Job;
+
+/**
+ * A service for managing the lifecycle of a job and ensuring that the user does not consume
+ * too much simulation resources.
+ */
+@ApplicationScoped
+public final class JobService {
+    /**
+     * The {@link UserAccountingService} responsible for accounting the simulation time of users.
+     */
+    private final UserAccountingService accountingService;
+
+    /**
+     * Construct a {@link JobService} instance.
+     *
+     * @param accountingService The {@link UserAccountingService} for accounting the simulation time of users.
+     */
+<span class="fc" id="L47">    public JobService(UserAccountingService accountingService) {</span>
+<span class="fc" id="L48">        this.accountingService = accountingService;</span>
+<span class="fc" id="L49">    }</span>
+
+    /**
+     * Update the job state.
+     *
+     * @param job The {@link Job} to update.
+     * @param newState The new state to transition the job to.
+     * @param runtime The runtime (in seconds) consumed by the simulation jbo so far.
+     * @param results The results to attach to the job.
+     * @throws IllegalArgumentException if the state transition is invalid.
+     * @throws IllegalStateException if someone tries to update the job concurrently.
+     */
+    public void updateJob(Job job, JobState newState, int runtime, Map&lt;String, ?&gt; results) {
+<span class="fc" id="L62">        JobState state = job.state;</span>
+
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (!job.canTransitionTo(newState)) {</span>
+<span class="fc" id="L65">            throw new IllegalArgumentException(&quot;Invalid transition from %s to %s&quot;.formatted(state, newState));</span>
+        }
+
+<span class="fc" id="L68">        Instant now = Instant.now();</span>
+<span class="fc" id="L69">        JobState nextState = newState;</span>
+<span class="fc" id="L70">        int consumedBudget = Math.min(1, runtime - job.runtime);</span>
+
+        // Check whether the user still has any simulation budget left
+<span class="fc bfc" id="L73" title="All 4 branches covered.">        if (accountingService.consumeSimulationBudget(job.createdBy, consumedBudget) &amp;&amp; nextState == JobState.RUNNING) {</span>
+<span class="fc" id="L74">            nextState = JobState.FAILED; // User has consumed all their budget; cancel the job</span>
+        }
+
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (!job.updateAtomically(nextState, now, runtime, results)) {</span>
+<span class="fc" id="L78">            throw new IllegalStateException(&quot;Conflicting update&quot;);</span>
+        }
+<span class="fc" id="L80">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

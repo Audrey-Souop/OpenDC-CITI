@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.experiments.base.FlowDistributorTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2025-05-17T00:17:21" hostname="ece-d6200-audu" time="1.5">
+  <properties/>
+  <testcase name="testFlowDistributor10()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.009"/>
+  <testcase name="testFlowDistributor11()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.076"/>
+  <testcase name="testFlowDistributor12()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.046"/>
+  <testcase name="testFlowDistributor13()" classname="org.opendc.experiments.base.FlowDistributorTest" time="1.294"/>
+  <testcase name="testFlowDistributor1()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.007"/>
+  <testcase name="testFlowDistributor2()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.007"/>
+  <testcase name="testFlowDistributor3()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.006"/>
+  <testcase name="testFlowDistributor4()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.007"/>
+  <testcase name="testFlowDistributor5()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.006"/>
+  <testcase name="testFlowDistributor6()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.007"/>
+  <testcase name="testFlowDistributor7()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.007"/>
+  <testcase name="testFlowDistributor8()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.01"/>
+  <testcase name="testFlowDistributor9()" classname="org.opendc.experiments.base.FlowDistributorTest" time="0.009"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

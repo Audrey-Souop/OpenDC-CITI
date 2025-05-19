@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.common.util.TimerSchedulerTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:29" hostname="ece-d6200-audu" time="0.083">
+  <properties/>
+  <testcase name="testBasicTimer()" classname="org.opendc.common.util.TimerSchedulerTest" time="0.018"/>
+  <testcase name="testCancelExisting()" classname="org.opendc.common.util.TimerSchedulerTest" time="0.006"/>
+  <testcase name="testOverrideBlock()" classname="org.opendc.common.util.TimerSchedulerTest" time="0.01"/>
+  <testcase name="testCancelNonExisting()" classname="org.opendc.common.util.TimerSchedulerTest" time="0.004"/>
+  <testcase name="testCancelAll()" classname="org.opendc.common.util.TimerSchedulerTest" time="0.003"/>
+  <testcase name="testOverride()" classname="org.opendc.common.util.TimerSchedulerTest" time="0.017"/>
+  <testcase name="testNegativeDelay()" classname="org.opendc.common.util.TimerSchedulerTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

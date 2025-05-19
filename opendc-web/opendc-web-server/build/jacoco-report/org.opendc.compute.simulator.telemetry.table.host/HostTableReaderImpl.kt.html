@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HostTableReaderImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.telemetry.table.host</a> &gt; <span class="el_source">HostTableReaderImpl.kt</span></div><h1>HostTableReaderImpl.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.telemetry.table.host
+
+import org.opendc.compute.simulator.host.SimHost
+import java.time.Duration
+import java.time.Instant
+
+/**
+ * An aggregator for host metrics before they are reported.
+ */
+<span class="nc" id="L32">public class HostTableReaderImpl(</span>
+<span class="nc" id="L33">    private val host: SimHost,</span>
+<span class="nc" id="L34">    private val startTime: Duration = Duration.ofMillis(0),</span>
+) : HostTableReader {
+    override fun copy(): HostTableReader {
+<span class="nc" id="L37">        val newHostTable =</span>
+<span class="nc" id="L38">            HostTableReaderImpl(host)</span>
+<span class="nc" id="L39">        newHostTable.setValues(this)</span>
+
+<span class="nc" id="L41">        return newHostTable</span>
+    }
+
+    override fun setValues(table: HostTableReader) {
+<span class="nc" id="L45">        _timestamp = table.timestamp</span>
+<span class="nc" id="L46">        _timestampAbsolute = table.timestampAbsolute</span>
+
+<span class="nc" id="L48">        _tasksTerminated = table.tasksTerminated</span>
+<span class="nc" id="L49">        _tasksActive = table.tasksActive</span>
+<span class="nc" id="L50">        _guestsError = table.guestsError</span>
+<span class="nc" id="L51">        _guestsInvalid = table.guestsInvalid</span>
+<span class="nc" id="L52">        _cpuLimit = table.cpuLimit</span>
+<span class="nc" id="L53">        _cpuDemand = table.cpuDemand</span>
+<span class="nc" id="L54">        _cpuUsage = table.cpuUsage</span>
+<span class="nc" id="L55">        _cpuUtilization = table.cpuUtilization</span>
+<span class="nc" id="L56">        _cpuActiveTime = table.cpuActiveTime</span>
+<span class="nc" id="L57">        _cpuIdleTime = table.cpuIdleTime</span>
+<span class="nc" id="L58">        _cpuStealTime = table.cpuStealTime</span>
+<span class="nc" id="L59">        _cpuLostTime = table.cpuLostTime</span>
+<span class="nc" id="L60">        _powerDraw = table.powerDraw</span>
+<span class="nc" id="L61">        _energyUsage = table.energyUsage</span>
+<span class="nc" id="L62">        _embodiedCarbon = table.embodiedCarbon</span>
+<span class="nc" id="L63">        _uptime = table.uptime</span>
+<span class="nc" id="L64">        _downtime = table.downtime</span>
+<span class="nc" id="L65">        _bootTime = table.bootTime</span>
+<span class="nc" id="L66">    }</span>
+
+<span class="nc" id="L68">    override val hostInfo: HostInfo =</span>
+<span class="nc" id="L69">        HostInfo(</span>
+<span class="nc" id="L70">            host.getName(),</span>
+<span class="nc" id="L71">            host.getClusterName(),</span>
+<span class="nc" id="L72">            &quot;x86&quot;,</span>
+<span class="nc" id="L73">            host.getModel().coreCount,</span>
+<span class="nc" id="L74">            host.getModel().cpuCapacity,</span>
+<span class="nc" id="L75">            host.getModel().memoryCapacity,</span>
+        )
+
+    override val timestamp: Instant
+<span class="nc" id="L79">        get() = _timestamp</span>
+<span class="nc" id="L80">    private var _timestamp = Instant.MIN</span>
+
+    override val timestampAbsolute: Instant
+<span class="nc" id="L83">        get() = _timestampAbsolute</span>
+<span class="nc" id="L84">    private var _timestampAbsolute = Instant.MIN</span>
+
+    override val tasksTerminated: Int
+<span class="nc" id="L87">        get() = _tasksTerminated</span>
+    private var _tasksTerminated = 0
+
+    override val tasksActive: Int
+<span class="nc" id="L91">        get() = _tasksActive</span>
+    private var _tasksActive = 0
+
+    override val guestsError: Int
+<span class="nc" id="L95">        get() = _guestsError</span>
+    private var _guestsError = 0
+
+    override val guestsInvalid: Int
+<span class="nc" id="L99">        get() = _guestsInvalid</span>
+    private var _guestsInvalid = 0
+
+    override val cpuLimit: Double
+<span class="nc" id="L103">        get() = _cpuLimit</span>
+    private var _cpuLimit = 0.0
+
+    override val cpuUsage: Double
+<span class="nc" id="L107">        get() = _cpuUsage</span>
+    private var _cpuUsage = 0.0
+
+    override val cpuDemand: Double
+<span class="nc" id="L111">        get() = _cpuDemand</span>
+    private var _cpuDemand = 0.0
+
+    override val cpuUtilization: Double
+<span class="nc" id="L115">        get() = _cpuUtilization</span>
+    private var _cpuUtilization = 0.0
+
+    override val cpuActiveTime: Long
+<span class="nc" id="L119">        get() = _cpuActiveTime - previousCpuActiveTime</span>
+    private var _cpuActiveTime = 0L
+    private var previousCpuActiveTime = 0L
+
+    override val cpuIdleTime: Long
+<span class="nc" id="L124">        get() = _cpuIdleTime - previousCpuIdleTime</span>
+    private var _cpuIdleTime = 0L
+    private var previousCpuIdleTime = 0L
+
+    override val cpuStealTime: Long
+<span class="nc" id="L129">        get() = _cpuStealTime - previousCpuStealTime</span>
+    private var _cpuStealTime = 0L
+    private var previousCpuStealTime = 0L
+
+    override val cpuLostTime: Long
+<span class="nc" id="L134">        get() = _cpuLostTime - previousCpuLostTime</span>
+    private var _cpuLostTime = 0L
+    private var previousCpuLostTime = 0L
+
+    override val powerDraw: Double
+<span class="nc" id="L139">        get() = _powerDraw</span>
+    private var _powerDraw = 0.0
+
+    override val energyUsage: Double
+<span class="nc" id="L143">        get() = _energyUsage - previousEnergyUsage</span>
+    private var _energyUsage = 0.0
+    private var previousEnergyUsage = 0.0
+
+    override val embodiedCarbon: Double
+<span class="nc" id="L148">        get() = _embodiedCarbon</span>
+    private var _embodiedCarbon = 0.0
+
+    override val uptime: Long
+<span class="nc" id="L152">        get() = _uptime - previousUptime</span>
+    private var _uptime = 0L
+    private var previousUptime = 0L
+
+    override val downtime: Long
+<span class="nc" id="L157">        get() = _downtime - previousDowntime</span>
+    private var _downtime = 0L
+    private var previousDowntime = 0L
+
+    override val bootTime: Instant?
+<span class="nc" id="L162">        get() = _bootTime</span>
+    private var _bootTime: Instant? = null
+
+    /**
+     * Record the next cycle.
+     */
+    override fun record(now: Instant) {
+<span class="nc" id="L169">        val hostCpuStats = host.getCpuStats()</span>
+<span class="nc" id="L170">        val hostSysStats = host.getSystemStats()</span>
+
+<span class="nc" id="L172">        _timestamp = now</span>
+<span class="nc" id="L173">        _timestampAbsolute = now + startTime</span>
+
+<span class="nc" id="L175">        _tasksTerminated = hostSysStats.guestsTerminated</span>
+<span class="nc" id="L176">        _tasksActive = hostSysStats.guestsRunning</span>
+<span class="nc" id="L177">        _guestsError = hostSysStats.guestsError</span>
+<span class="nc" id="L178">        _guestsInvalid = hostSysStats.guestsInvalid</span>
+<span class="nc" id="L179">        _cpuLimit = hostCpuStats.capacity</span>
+<span class="nc" id="L180">        _cpuDemand = hostCpuStats.demand</span>
+<span class="nc" id="L181">        _cpuUsage = hostCpuStats.usage</span>
+<span class="nc" id="L182">        _cpuUtilization = hostCpuStats.utilization</span>
+<span class="nc" id="L183">        _cpuActiveTime = hostCpuStats.activeTime</span>
+<span class="nc" id="L184">        _cpuIdleTime = hostCpuStats.idleTime</span>
+<span class="nc" id="L185">        _cpuStealTime = hostCpuStats.stealTime</span>
+<span class="nc" id="L186">        _cpuLostTime = hostCpuStats.lostTime</span>
+<span class="nc" id="L187">        _powerDraw = hostSysStats.powerDraw</span>
+<span class="nc" id="L188">        _energyUsage = hostSysStats.energyUsage</span>
+<span class="nc" id="L189">        _embodiedCarbon = hostSysStats.embodiedCarbon</span>
+<span class="nc" id="L190">        _uptime = hostSysStats.uptime.toMillis()</span>
+<span class="nc" id="L191">        _downtime = hostSysStats.downtime.toMillis()</span>
+<span class="nc" id="L192">        _bootTime = hostSysStats.bootTime</span>
+<span class="nc" id="L193">        _bootTime = hostSysStats.bootTime + startTime</span>
+<span class="nc" id="L194">    }</span>
+
+    /**
+     * Finish the aggregation for this cycle.
+     */
+    override fun reset() {
+        // Reset intermediate state for next aggregation
+<span class="nc" id="L201">        previousCpuActiveTime = _cpuActiveTime</span>
+<span class="nc" id="L202">        previousCpuIdleTime = _cpuIdleTime</span>
+<span class="nc" id="L203">        previousCpuStealTime = _cpuStealTime</span>
+<span class="nc" id="L204">        previousCpuLostTime = _cpuLostTime</span>
+<span class="nc" id="L205">        previousEnergyUsage = _energyUsage</span>
+<span class="nc" id="L206">        previousUptime = _uptime</span>
+<span class="nc" id="L207">        previousDowntime = _downtime</span>
+
+<span class="nc" id="L209">        _tasksTerminated = 0</span>
+<span class="nc" id="L210">        _tasksActive = 0</span>
+<span class="nc" id="L211">        _guestsError = 0</span>
+<span class="nc" id="L212">        _guestsInvalid = 0</span>
+
+<span class="nc" id="L214">        _cpuLimit = 0.0</span>
+<span class="nc" id="L215">        _cpuUsage = 0.0</span>
+<span class="nc" id="L216">        _cpuDemand = 0.0</span>
+<span class="nc" id="L217">        _cpuUtilization = 0.0</span>
+
+<span class="nc" id="L219">        _powerDraw = 0.0</span>
+<span class="nc" id="L220">        _energyUsage = 0.0</span>
+<span class="nc" id="L221">        _embodiedCarbon = 0.0</span>
+<span class="nc" id="L222">    }</span>
+<span class="nc" id="L223">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

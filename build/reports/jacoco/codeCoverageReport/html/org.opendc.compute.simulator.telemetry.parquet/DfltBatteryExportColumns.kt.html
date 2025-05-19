@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DfltBatteryExportColumns.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.telemetry.parquet</a> &gt; <span class="el_source">DfltBatteryExportColumns.kt</span></div><h1>DfltBatteryExportColumns.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.telemetry.parquet
+
+import org.apache.parquet.io.api.Binary
+import org.apache.parquet.schema.LogicalTypeAnnotation
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.BINARY
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.FLOAT
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT64
+import org.apache.parquet.schema.Types
+import org.opendc.compute.simulator.telemetry.table.battery.BatteryTableReader
+import org.opendc.trace.util.parquet.exporter.ExportColumn
+
+/**
+ * This object wraps the [ExportColumn]s to solves ambiguity for field
+ * names that are included in more than 1 exportable.
+ *
+ * Additionally, it allows to load all the fields at once by just its symbol,
+ * so that these columns can be deserialized. Additional fields can be added
+ * from anywhere, and they are deserializable as long as they are loaded by the jvm.
+ *
+ * ```kotlin
+ * ...
+ * // Loads the column
+ * DfltHostExportColumns
+ * ...
+ * ```
+ */
+public object DfltBatteryExportColumns {
+<span class="nc" id="L50">    public val TIMESTAMP: ExportColumn&lt;BatteryTableReader&gt; =</span>
+<span class="nc" id="L51">        ExportColumn(</span>
+<span class="nc" id="L52">            field = Types.required(INT64).named(&quot;timestamp&quot;),</span>
+<span class="nc" id="L53">        ) { it.timestamp.toEpochMilli() }</span>
+
+<span class="nc" id="L55">    public val TIMESTAMP_ABS: ExportColumn&lt;BatteryTableReader&gt; =</span>
+<span class="nc" id="L56">        ExportColumn(</span>
+<span class="nc" id="L57">            field = Types.required(INT64).named(&quot;timestamp_absolute&quot;),</span>
+<span class="nc" id="L58">        ) { it.timestampAbsolute.toEpochMilli() }</span>
+
+<span class="nc" id="L60">    public val NAME: ExportColumn&lt;BatteryTableReader&gt; =</span>
+<span class="nc" id="L61">        ExportColumn(</span>
+            field =
+<span class="nc" id="L63">                Types.required(BINARY)</span>
+<span class="nc" id="L64">                    .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="nc" id="L65">                    .named(&quot;name&quot;),</span>
+<span class="nc" id="L66">        ) { Binary.fromString(it.batteryInfo.name) }</span>
+
+<span class="nc" id="L68">    public val CLUSTER_NAME: ExportColumn&lt;BatteryTableReader&gt; =</span>
+<span class="nc" id="L69">        ExportColumn(</span>
+            field =
+<span class="nc" id="L71">                Types.required(BINARY)</span>
+<span class="nc" id="L72">                    .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="nc" id="L73">                    .named(&quot;cluster_name&quot;),</span>
+<span class="nc" id="L74">        ) { Binary.fromString(it.batteryInfo.clusterName) }</span>
+
+<span class="nc" id="L76">    public val POWER_DRAW: ExportColumn&lt;BatteryTableReader&gt; =</span>
+<span class="nc" id="L77">        ExportColumn(</span>
+<span class="nc" id="L78">            field = Types.required(FLOAT).named(&quot;power_draw&quot;),</span>
+<span class="nc" id="L79">        ) { it.powerDraw }</span>
+
+<span class="nc" id="L81">    public val ENERGY_USAGE: ExportColumn&lt;BatteryTableReader&gt; =</span>
+<span class="nc" id="L82">        ExportColumn(</span>
+<span class="nc" id="L83">            field = Types.required(FLOAT).named(&quot;energy_usage&quot;),</span>
+<span class="nc" id="L84">        ) { it.energyUsage }</span>
+
+<span class="nc" id="L86">    public val EMBODIED_CARBON: ExportColumn&lt;BatteryTableReader&gt; =</span>
+<span class="nc" id="L87">        ExportColumn(</span>
+<span class="nc" id="L88">            field = Types.required(FLOAT).named(&quot;embodied_carbon_emission&quot;),</span>
+<span class="nc" id="L89">        ) { it.embodiedCarbonEmission }</span>
+
+<span class="nc" id="L91">    public val CHARGE: ExportColumn&lt;BatteryTableReader&gt; =</span>
+<span class="nc" id="L92">        ExportColumn(</span>
+<span class="nc" id="L93">            field = Types.required(FLOAT).named(&quot;charge&quot;),</span>
+<span class="nc" id="L94">        ) { it.charge }</span>
+
+<span class="nc" id="L96">    public val CAPACITY: ExportColumn&lt;BatteryTableReader&gt; =</span>
+<span class="nc" id="L97">        ExportColumn(</span>
+<span class="nc" id="L98">            field = Types.required(FLOAT).named(&quot;capacity&quot;),</span>
+<span class="nc" id="L99">        ) { it.capacity }</span>
+
+<span class="nc" id="L101">    public val BATTERY_STATE: ExportColumn&lt;BatteryTableReader&gt; =</span>
+<span class="nc" id="L102">        ExportColumn(</span>
+            field =
+<span class="nc" id="L104">                Types.optional(BINARY)</span>
+<span class="nc" id="L105">                    .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="nc" id="L106">                    .named(&quot;battery_state&quot;),</span>
+<span class="nc" id="L107">        ) { Binary.fromString(it.batteryState.name) }</span>
+
+    /**
+     * The columns that are always included in the output file.
+     */
+<span class="nc" id="L112">    internal val BASE_EXPORT_COLUMNS =</span>
+<span class="nc" id="L113">        setOf(</span>
+<span class="nc" id="L114">            TIMESTAMP_ABS,</span>
+<span class="nc" id="L115">            TIMESTAMP,</span>
+<span class="nc" id="L116">            NAME,</span>
+<span class="nc" id="L117">            CLUSTER_NAME,</span>
+        )
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

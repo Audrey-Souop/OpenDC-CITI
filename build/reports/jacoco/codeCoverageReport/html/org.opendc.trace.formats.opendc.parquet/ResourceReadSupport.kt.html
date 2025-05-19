@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResourceReadSupport.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.formats.opendc.parquet</a> &gt; <span class="el_source">ResourceReadSupport.kt</span></div><h1>ResourceReadSupport.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.formats.opendc.parquet
+
+import org.apache.hadoop.conf.Configuration
+import org.apache.parquet.hadoop.api.InitContext
+import org.apache.parquet.hadoop.api.ReadSupport
+import org.apache.parquet.io.api.RecordMaterializer
+import org.apache.parquet.schema.LogicalTypeAnnotation
+import org.apache.parquet.schema.MessageType
+import org.apache.parquet.schema.PrimitiveType
+import org.apache.parquet.schema.Types
+import org.opendc.trace.TableColumn
+import org.opendc.trace.conv.resourceCpuCapacity
+import org.opendc.trace.conv.resourceCpuCount
+import org.opendc.trace.conv.resourceDeadline
+import org.opendc.trace.conv.resourceDuration
+import org.opendc.trace.conv.resourceID
+import org.opendc.trace.conv.resourceMemCapacity
+import org.opendc.trace.conv.resourceNature
+import org.opendc.trace.conv.resourceSubmissionTime
+
+/**
+ * A [ReadSupport] instance for [Resource] objects.
+ */
+<span class="fc" id="L46">internal class ResourceReadSupport(private val projection: List&lt;String&gt;?) : ReadSupport&lt;Resource&gt;() {</span>
+    /**
+     * Mapping from field names to [TableColumn]s.
+     */
+    private val fieldMap =
+<span class="fc" id="L51">        mapOf(</span>
+<span class="fc" id="L52">            &quot;id&quot; to resourceID,</span>
+<span class="fc" id="L53">            &quot;submissionTime&quot; to resourceSubmissionTime,</span>
+<span class="fc" id="L54">            &quot;submission_time&quot; to resourceSubmissionTime,</span>
+<span class="fc" id="L55">            &quot;duration&quot; to resourceDuration,</span>
+<span class="fc" id="L56">            &quot;maxCores&quot; to resourceCpuCount,</span>
+<span class="fc" id="L57">            &quot;cpu_count&quot; to resourceCpuCount,</span>
+<span class="fc" id="L58">            &quot;cpu_capacity&quot; to resourceCpuCapacity,</span>
+<span class="fc" id="L59">            &quot;requiredMemory&quot; to resourceMemCapacity,</span>
+<span class="fc" id="L60">            &quot;mem_capacity&quot; to resourceMemCapacity,</span>
+<span class="fc" id="L61">            &quot;nature&quot; to resourceNature,</span>
+<span class="fc" id="L62">            &quot;deadline&quot; to resourceDeadline,</span>
+        )
+
+    override fun init(context: InitContext): ReadContext {
+<span class="fc" id="L66">        val projectedSchema =</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            if (projection != null) {</span>
+<span class="fc" id="L68">                Types.buildMessage()</span>
+<span class="fc" id="L69">                    .apply {</span>
+<span class="fc" id="L70">                        val projectionSet = projection.toSet()</span>
+
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                        for (field in READ_SCHEMA.fields) {</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">                            val col = fieldMap[field.name] ?: continue</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                            if (col in projectionSet) {</span>
+<span class="fc" id="L75">                                addField(field)</span>
+                            }
+                        }
+<span class="fc" id="L78">                    }</span>
+<span class="fc" id="L79">                    .named(READ_SCHEMA.name)</span>
+            } else {
+<span class="fc" id="L81">                READ_SCHEMA</span>
+            }
+
+<span class="fc" id="L84">        return ReadContext(projectedSchema)</span>
+    }
+
+    override fun prepareForRead(
+        configuration: Configuration,
+        keyValueMetaData: Map&lt;String, String&gt;,
+        fileSchema: MessageType,
+        readContext: ReadContext,
+<span class="fc" id="L92">    ): RecordMaterializer&lt;Resource&gt; = ResourceRecordMaterializer(readContext.requestedSchema)</span>
+
+    companion object {
+        /**
+         * Parquet read schema (version 2.0) for the &quot;resources&quot; table in the trace.
+         */
+        @JvmStatic
+<span class="nc" id="L99">        val READ_SCHEMA_V2_0: MessageType =</span>
+<span class="fc" id="L100">            Types.buildMessage()</span>
+<span class="fc" id="L101">                .addFields(</span>
+<span class="fc" id="L102">                    Types</span>
+<span class="fc" id="L103">                        .required(PrimitiveType.PrimitiveTypeName.BINARY)</span>
+<span class="fc" id="L104">                        .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="fc" id="L105">                        .named(&quot;id&quot;),</span>
+                    Types
+<span class="fc" id="L107">                        .required(PrimitiveType.PrimitiveTypeName.INT64)</span>
+<span class="fc" id="L108">                        .`as`(LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MILLIS))</span>
+<span class="fc" id="L109">                        .named(&quot;submissionTime&quot;),</span>
+                    Types
+<span class="fc" id="L111">                        .required(PrimitiveType.PrimitiveTypeName.INT64)</span>
+<span class="fc" id="L112">                        .named(&quot;duration&quot;),</span>
+                    Types
+<span class="fc" id="L114">                        .required(PrimitiveType.PrimitiveTypeName.INT32)</span>
+<span class="fc" id="L115">                        .named(&quot;maxCores&quot;),</span>
+                    Types
+<span class="fc" id="L117">                        .required(PrimitiveType.PrimitiveTypeName.INT64)</span>
+<span class="fc" id="L118">                        .named(&quot;requiredMemory&quot;),</span>
+                    Types
+<span class="fc" id="L120">                        .optional(PrimitiveType.PrimitiveTypeName.BINARY)</span>
+<span class="fc" id="L121">                        .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="fc" id="L122">                        .named(&quot;nature&quot;),</span>
+                    Types
+<span class="fc" id="L124">                        .optional(PrimitiveType.PrimitiveTypeName.INT64)</span>
+<span class="fc" id="L125">                        .named(&quot;deadline&quot;),</span>
+                )
+<span class="fc" id="L127">                .named(&quot;resource&quot;)</span>
+
+        /**
+         * Parquet read schema (version 2.1) for the &quot;resources&quot; table in the trace.
+         */
+        @JvmStatic
+<span class="nc" id="L133">        val READ_SCHEMA_V2_1: MessageType =</span>
+<span class="fc" id="L134">            Types.buildMessage()</span>
+<span class="fc" id="L135">                .addFields(</span>
+<span class="fc" id="L136">                    Types</span>
+<span class="fc" id="L137">                        .required(PrimitiveType.PrimitiveTypeName.BINARY)</span>
+<span class="fc" id="L138">                        .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="fc" id="L139">                        .named(&quot;id&quot;),</span>
+                    Types
+<span class="fc" id="L141">                        .required(PrimitiveType.PrimitiveTypeName.INT64)</span>
+<span class="fc" id="L142">                        .`as`(LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MILLIS))</span>
+<span class="fc" id="L143">                        .named(&quot;submission_time&quot;),</span>
+                    Types
+<span class="fc" id="L145">                        .required(PrimitiveType.PrimitiveTypeName.INT64)</span>
+<span class="fc" id="L146">                        .named(&quot;duration&quot;),</span>
+                    Types
+<span class="fc" id="L148">                        .required(PrimitiveType.PrimitiveTypeName.INT32)</span>
+<span class="fc" id="L149">                        .named(&quot;cpu_count&quot;),</span>
+                    Types
+<span class="fc" id="L151">                        .required(PrimitiveType.PrimitiveTypeName.DOUBLE)</span>
+<span class="fc" id="L152">                        .named(&quot;cpu_capacity&quot;),</span>
+                    Types
+<span class="fc" id="L154">                        .required(PrimitiveType.PrimitiveTypeName.INT64)</span>
+<span class="fc" id="L155">                        .named(&quot;mem_capacity&quot;),</span>
+                    Types
+<span class="fc" id="L157">                        .optional(PrimitiveType.PrimitiveTypeName.BINARY)</span>
+<span class="fc" id="L158">                        .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="fc" id="L159">                        .named(&quot;nature&quot;),</span>
+                    Types
+<span class="fc" id="L161">                        .optional(PrimitiveType.PrimitiveTypeName.INT64)</span>
+<span class="fc" id="L162">                        .named(&quot;deadline&quot;),</span>
+                )
+<span class="fc" id="L164">                .named(&quot;resource&quot;)</span>
+
+        /**
+         * Parquet read schema for the &quot;resources&quot; table in the trace.
+         */
+        @JvmStatic
+<span class="nc" id="L170">        val READ_SCHEMA: MessageType =</span>
+<span class="fc" id="L171">            READ_SCHEMA_V2_0</span>
+<span class="fc" id="L172">                .union(READ_SCHEMA_V2_1)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

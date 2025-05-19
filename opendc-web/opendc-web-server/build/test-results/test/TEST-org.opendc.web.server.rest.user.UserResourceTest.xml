@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.web.server.rest.user.UserResourceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2025-05-17T00:28:10" hostname="ece-d6200-audu" time="0.036">
+  <properties/>
+  <testcase name="testMe()" classname="org.opendc.web.server.rest.user.UserResourceTest" time="0.029"/>
+  <testcase name="testMeUnauthorized()" classname="org.opendc.web.server.rest.user.UserResourceTest" time="0.006"/>
+  <system-out><![CDATA[Hibernate: 
+    select
+        ua1_0.user_id,
+        ua1_0.period_end,
+        ua1_0.simulation_time,
+        ua1_0.simulation_time_budget 
+    from
+        UserAccounting ua1_0 
+    where
+        ua1_0.user_id=?
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

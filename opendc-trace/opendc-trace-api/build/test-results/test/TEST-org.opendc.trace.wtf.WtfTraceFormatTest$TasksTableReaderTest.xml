@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="TableReader for Tasks" tests="7" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:38" hostname="ece-d6200-audu" time="0.13">
+  <properties/>
+  <testcase name="testReadWithoutNextRow()" classname="org.opendc.trace.wtf.WtfTraceFormatTest$TasksTableReaderTest" time="0.003"/>
+  <testcase name="testReadAfterFinish()" classname="org.opendc.trace.wtf.WtfTraceFormatTest$TasksTableReaderTest" time="0.027"/>
+  <testcase name="testReadFully()" classname="org.opendc.trace.wtf.WtfTraceFormatTest$TasksTableReaderTest" time="0.026"/>
+  <testcase name="testVerifyNullColumns()" classname="org.opendc.trace.wtf.WtfTraceFormatTest$TasksTableReaderTest" time="0.037"/>
+  <testcase name="testResolve()" classname="org.opendc.trace.wtf.WtfTraceFormatTest$TasksTableReaderTest" time="0.001"/>
+  <testcase name="testResolveEmpty()" classname="org.opendc.trace.wtf.WtfTraceFormatTest$TasksTableReaderTest" time="0.001"/>
+  <testcase name="testReadNonExistentColumns()" classname="org.opendc.trace.wtf.WtfTraceFormatTest$TasksTableReaderTest" time="0.031"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

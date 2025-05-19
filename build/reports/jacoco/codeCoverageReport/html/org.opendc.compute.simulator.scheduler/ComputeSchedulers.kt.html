@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ComputeSchedulers.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.scheduler</a> &gt; <span class="el_source">ComputeSchedulers.kt</span></div><h1>ComputeSchedulers.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+@file:JvmName(&quot;ComputeSchedulers&quot;)
+
+package org.opendc.compute.simulator.scheduler
+import org.opendc.compute.simulator.scheduler.filters.ComputeFilter
+import org.opendc.compute.simulator.scheduler.filters.RamFilter
+import org.opendc.compute.simulator.scheduler.filters.VCpuFilter
+import org.opendc.compute.simulator.scheduler.timeshift.TimeshiftScheduler
+import org.opendc.compute.simulator.scheduler.weights.CoreRamWeigher
+import org.opendc.compute.simulator.scheduler.weights.CpuUtilizationWeigher
+import org.opendc.compute.simulator.scheduler.weights.InstanceCountWeigher
+import org.opendc.compute.simulator.scheduler.weights.RamWeigher
+import org.opendc.compute.simulator.scheduler.weights.VCpuWeigher
+import java.time.InstantSource
+import java.util.SplittableRandom
+import java.util.random.RandomGenerator
+
+// added by Audrey
+// Each allocation policy uses a combination of filters and weighers to determine the most suitable host for scheduling VMs.
+// Filters narrow down the list of potential hosts based on certain criteria,
+// while weighers assign a score to each host according to specific characteristics, guiding the final selection process.
+
+// In OpenDC, a scheduler is used to assign VMs to physical hosts within a simulated data center environment.
+// The code you provided includes several predefined (prefabs) scheduling strategies that use different combinations
+// of filters and weighers to make these scheduling decisions. For example, the Mem scheduler might prioritize placing VMs
+// on hosts with the most available memory, whereas the Random scheduler might select hosts arbitrarily.
+// These scheduling strategies allow users to experiment with different resource management policies and
+// observe their effects on the performance and efficiency of the simulated data center.
+
+public enum class ComputeSchedulerEnum {
+<span class="nc" id="L52">    Mem,</span>
+<span class="nc" id="L53">    MemInv,</span>
+<span class="nc" id="L54">    CoreMem,</span>
+<span class="nc" id="L55">    CoreMemInv,</span>
+<span class="nc" id="L56">    ActiveServers,</span>
+<span class="nc" id="L57">    ActiveServersInv,</span>
+<span class="nc" id="L58">    ProvisionedCores,</span>
+<span class="nc" id="L59">    ProvisionedCoresInv,</span>
+<span class="nc" id="L60">    Random,</span>
+<span class="nc" id="L61">    TaskNumMemorizing,</span>
+<span class="nc" id="L62">    Timeshift,</span>
+<span class="nc" id="L63">    TimeshiftNoPeak,</span>
+<span class="nc" id="L64">    CpuUtilization,</span>
+}
+
+public fun createPrefabComputeScheduler(
+    name: String,
+    seeder: RandomGenerator,
+    clock: InstantSource,
+): ComputeScheduler {
+<span class="nc" id="L72">    return createPrefabComputeScheduler(ComputeSchedulerEnum.valueOf(name.uppercase()), seeder, clock)</span>
+}
+
+/**
+ * Create a [ComputeScheduler] for the experiment.
+ */
+public fun createPrefabComputeScheduler(
+    name: ComputeSchedulerEnum,
+    seeder: RandomGenerator,
+    clock: InstantSource,
+): ComputeScheduler {
+<span class="nc" id="L83">    val cpuThreshold: Double = 0.2 // added by Audrey</span>
+<span class="nc" id="L84">    val cpuAllocationRatio = 1.0</span>
+<span class="nc" id="L85">    val ramAllocationRatio = 1.5</span>
+<span class="nc bnc" id="L86" title="All 13 branches missed.">    return when (name) {</span>
+        ComputeSchedulerEnum.Mem -&gt;
+<span class="nc" id="L88">            FilterScheduler(</span>
+<span class="nc" id="L89">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L90">                weighers = listOf(RamWeigher(multiplier = 1.0)),</span>
+            )
+        ComputeSchedulerEnum.MemInv -&gt;
+<span class="nc" id="L93">            FilterScheduler(</span>
+<span class="nc" id="L94">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L95">                weighers = listOf(RamWeigher(multiplier = -1.0)),</span>
+            )
+        ComputeSchedulerEnum.CoreMem -&gt;
+<span class="nc" id="L98">            FilterScheduler(</span>
+<span class="nc" id="L99">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L100">                weighers = listOf(CoreRamWeigher(multiplier = 1.0)),</span>
+            )
+        ComputeSchedulerEnum.CoreMemInv -&gt;
+<span class="nc" id="L103">            FilterScheduler(</span>
+<span class="nc" id="L104">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L105">                weighers = listOf(CoreRamWeigher(multiplier = -1.0)),</span>
+            )
+        ComputeSchedulerEnum.ActiveServers -&gt;
+<span class="nc" id="L108">            FilterScheduler(</span>
+<span class="nc" id="L109">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L110">                weighers = listOf(InstanceCountWeigher(multiplier = -1.0)),</span>
+            )
+        ComputeSchedulerEnum.ActiveServersInv -&gt;
+<span class="nc" id="L113">            FilterScheduler(</span>
+<span class="nc" id="L114">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L115">                weighers = listOf(InstanceCountWeigher(multiplier = 1.0)),</span>
+            )
+        ComputeSchedulerEnum.ProvisionedCores -&gt;
+<span class="nc" id="L118">            FilterScheduler(</span>
+<span class="nc" id="L119">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L120">                weighers = listOf(VCpuWeigher(cpuAllocationRatio, multiplier = 1.0)),</span>
+            )
+        ComputeSchedulerEnum.ProvisionedCoresInv -&gt;
+<span class="nc" id="L123">            FilterScheduler(</span>
+<span class="nc" id="L124">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L125">                weighers = listOf(VCpuWeigher(cpuAllocationRatio, multiplier = -1.0)),</span>
+            )
+        ComputeSchedulerEnum.Random -&gt;
+<span class="nc" id="L128">            FilterScheduler(</span>
+<span class="nc" id="L129">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L130">                weighers = emptyList(),</span>
+<span class="nc" id="L131">                subsetSize = Int.MAX_VALUE,</span>
+<span class="nc" id="L132">                random = SplittableRandom(seeder.nextLong()),</span>
+            )
+        ComputeSchedulerEnum.TaskNumMemorizing -&gt;
+<span class="nc" id="L135">            MemorizingScheduler(</span>
+<span class="nc" id="L136">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+            )
+        ComputeSchedulerEnum.Timeshift -&gt;
+<span class="nc" id="L139">            TimeshiftScheduler(</span>
+<span class="nc" id="L140">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L141">                weighers = listOf(RamWeigher(multiplier = 1.0)),</span>
+<span class="nc" id="L142">                windowSize = 168,</span>
+<span class="nc" id="L143">                clock = clock,</span>
+<span class="nc" id="L144">                random = SplittableRandom(seeder.nextLong()),</span>
+            )
+        ComputeSchedulerEnum.TimeshiftNoPeak -&gt;
+<span class="nc" id="L147">            TimeshiftScheduler(</span>
+<span class="nc" id="L148">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L149">                weighers = listOf(RamWeigher(multiplier = 1.0)),</span>
+<span class="nc" id="L150">                windowSize = 168,</span>
+<span class="nc" id="L151">                clock = clock,</span>
+<span class="nc" id="L152">                random = SplittableRandom(seeder.nextLong()),</span>
+            )
+
+        ComputeSchedulerEnum.CpuUtilization -&gt;
+<span class="nc" id="L156">            FilterScheduler(</span>
+<span class="nc" id="L157">                filters = listOf(ComputeFilter(), VCpuFilter(cpuAllocationRatio), RamFilter(ramAllocationRatio)),</span>
+<span class="nc" id="L158">                weighers = listOf(CpuUtilizationWeigher(multiplier = 1.0)),</span>
+            )
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

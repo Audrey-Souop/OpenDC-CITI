@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.trace.util.parquet.ParquetTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:29" hostname="ece-d6200-audu" time="1.509">
+  <properties/>
+  <testcase name="testSmoke()" classname="org.opendc.trace.util.parquet.ParquetTest" time="1.494"/>
+  <testcase name="testNonExistent()" classname="org.opendc.trace.util.parquet.ParquetTest" time="0.004"/>
+  <testcase name="testOverwrite()" classname="org.opendc.trace.util.parquet.ParquetTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J: Class path contains multiple SLF4J providers.
+SLF4J: Found provider [org.slf4j.simple.SimpleServiceProvider@29006752]
+SLF4J: Found provider [org.apache.logging.slf4j.SLF4JServiceProvider@470a9030]
+SLF4J: See https://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual provider is of type [org.slf4j.simple.SimpleServiceProvider@29006752]
+[Test worker] INFO org.apache.parquet.hadoop.InternalParquetRecordReader - RecordReader initialized will read a total of 4 records.
+[Test worker] INFO org.apache.parquet.hadoop.InternalParquetRecordReader - at row 0. reading next block
+[Test worker] INFO org.apache.parquet.hadoop.InternalParquetRecordReader - block read in memory in 12 ms. row count = 4
+]]></system-err>
+</testsuite>

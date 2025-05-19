@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="TableWriter for Interference Groups" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:37" hostname="ece-d6200-audu" time="0.029">
+  <properties/>
+  <testcase name="testWriteWithoutRow()" classname="formats.opendc.OdcVmTraceFormatTest$InterferenceGroupsTableWriterTest" time="0.005"/>
+  <testcase name="testWriteNonExistentColumns()" classname="formats.opendc.OdcVmTraceFormatTest$InterferenceGroupsTableWriterTest" time="0.011"/>
+  <testcase name="testEndRowWithoutStart()" classname="formats.opendc.OdcVmTraceFormatTest$InterferenceGroupsTableWriterTest" time="0.002"/>
+  <testcase name="testResolve()" classname="formats.opendc.OdcVmTraceFormatTest$InterferenceGroupsTableWriterTest" time="0.003"/>
+  <testcase name="testResolveEmpty()" classname="formats.opendc.OdcVmTraceFormatTest$InterferenceGroupsTableWriterTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

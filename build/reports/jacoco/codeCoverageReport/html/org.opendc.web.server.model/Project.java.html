@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Project.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.model</a> &gt; <span class="el_source">Project.java</span></div><h1>Project.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.model;
+
+import io.quarkus.hibernate.orm.panache.Panache;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Parameters;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * A project in OpenDC encapsulates all the datacenter designs and simulation runs for a set of users.
+ */
+@Entity
+@Table
+@NamedQueries({
+    @NamedQuery(
+            name = &quot;Project.findByUser&quot;,
+            query =
+                    &quot;&quot;&quot;
+            SELECT a
+            FROM ProjectAuthorization a
+            WHERE a.key.userName = :userName
+        &quot;&quot;&quot;),
+    @NamedQuery(
+            name = &quot;Project.allocatePortfolio&quot;,
+            query =
+                    &quot;&quot;&quot;
+            UPDATE Project p
+            SET p.portfoliosCreated = :oldState + 1, p.updatedAt = :now
+            WHERE p.id = :id AND p.portfoliosCreated = :oldState
+        &quot;&quot;&quot;),
+    @NamedQuery(
+            name = &quot;Project.allocateTopology&quot;,
+            query =
+                    &quot;&quot;&quot;
+            UPDATE Project p
+            SET p.topologiesCreated = :oldState + 1, p.updatedAt = :now
+            WHERE p.id = :id AND p.topologiesCreated = :oldState
+        &quot;&quot;&quot;),
+    @NamedQuery(
+            name = &quot;Project.allocateScenario&quot;,
+            query =
+                    &quot;&quot;&quot;
+            UPDATE Project p
+            SET p.scenariosCreated = :oldState + 1, p.updatedAt = :now
+            WHERE p.id = :id AND p.scenariosCreated = :oldState
+        &quot;&quot;&quot;)
+})
+public class Project extends PanacheEntityBase {
+
+    /**
+     * The main ID of a project.
+     * The value starts at 6 to account for the other 5 projects already made by the loading script.
+     */
+    @Id
+    @SequenceGenerator(name = &quot;projectSeq&quot;, sequenceName = &quot;project_id_seq&quot;, allocationSize = 1, initialValue = 7)
+    @GeneratedValue(generator = &quot;projectSeq&quot;)
+    public Long id;
+
+    /**
+     * The name of the project.
+     */
+    @Column(nullable = false)
+    public String name;
+
+    /**
+     * The instant at which the project was created.
+     */
+    @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
+    public Instant createdAt;
+
+    /**
+     * The instant at which the project was updated.
+     */
+    @Column(name = &quot;updated_at&quot;, nullable = false)
+    public Instant updatedAt;
+
+    /**
+     * The portfolios belonging to this project.
+     */
+<span class="fc" id="L114">    @OneToMany(</span>
+            cascade = {CascadeType.ALL},
+            mappedBy = &quot;project&quot;,
+            orphanRemoval = true)
+    @OrderBy(&quot;id ASC&quot;)
+    public Set&lt;Portfolio&gt; portfolios = new HashSet&lt;&gt;();
+
+    /**
+     * The number of portfolios created for this project (including deleted portfolios).
+     */
+<span class="fc" id="L124">    @Column(name = &quot;portfolios_created&quot;, nullable = false)</span>
+    public int portfoliosCreated = 0;
+
+    /**
+     * The topologies belonging to this project.
+     */
+<span class="fc" id="L130">    @OneToMany(</span>
+            cascade = {CascadeType.ALL},
+            mappedBy = &quot;project&quot;,
+            orphanRemoval = true)
+    @OrderBy(&quot;id ASC&quot;)
+    public Set&lt;Topology&gt; topologies = new HashSet&lt;&gt;();
+
+    /**
+     * The number of topologies created for this project (including deleted topologies).
+     */
+<span class="fc" id="L140">    @Column(name = &quot;topologies_created&quot;, nullable = false)</span>
+    public int topologiesCreated = 0;
+
+    /**
+     * The scenarios belonging to this project.
+     */
+<span class="fc" id="L146">    @OneToMany(mappedBy = &quot;project&quot;, orphanRemoval = true)</span>
+    public Set&lt;Scenario&gt; scenarios = new HashSet&lt;&gt;();
+
+    /**
+     * The number of scenarios created for this project (including deleted scenarios).
+     */
+<span class="fc" id="L152">    @Column(name = &quot;scenarios_created&quot;, nullable = false)</span>
+    public int scenariosCreated = 0;
+
+    /**
+     * The users authorized to access the project.
+     */
+<span class="fc" id="L158">    @OneToMany(</span>
+            cascade = {CascadeType.ALL},
+            mappedBy = &quot;project&quot;,
+            orphanRemoval = true)
+    public Set&lt;ProjectAuthorization&gt; authorizations = new HashSet&lt;&gt;();
+
+    /**
+     * Construct a {@link Project} object.
+     */
+<span class="fc" id="L167">    public Project(String name, Instant createdAt) {</span>
+<span class="fc" id="L168">        this.name = name;</span>
+<span class="fc" id="L169">        this.createdAt = createdAt;</span>
+<span class="fc" id="L170">        this.updatedAt = createdAt;</span>
+<span class="fc" id="L171">    }</span>
+
+    /**
+     * JPA constructor
+     */
+<span class="fc" id="L176">    protected Project() {}</span>
+
+    /**
+     * Allocate the next portfolio number for the specified [project].
+     *
+     * @param time The time at which the new portfolio is created.
+     */
+    public int allocatePortfolio(Instant time) {
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">        for (int i = 0; i &lt; 4; i++) {</span>
+<span class="fc" id="L185">            long count = update(</span>
+                    &quot;#Project.allocatePortfolio&quot;,
+<span class="fc" id="L187">                    Parameters.with(&quot;id&quot;, id).and(&quot;oldState&quot;, portfoliosCreated).and(&quot;now&quot;, time));</span>
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">            if (count &gt; 0) {</span>
+<span class="fc" id="L189">                return portfoliosCreated + 1;</span>
+            } else {
+<span class="nc" id="L191">                Panache.getEntityManager().refresh(this);</span>
+            }
+        }
+
+<span class="nc" id="L195">        throw new IllegalStateException(&quot;Failed to allocate next portfolio&quot;);</span>
+    }
+
+    /**
+     * Allocate the next topology number for the specified [project].
+     *
+     * @param time The time at which the new topology is created.
+     */
+    public int allocateTopology(Instant time) {
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">        for (int i = 0; i &lt; 4; i++) {</span>
+<span class="fc" id="L205">            long count = update(</span>
+                    &quot;#Project.allocateTopology&quot;,
+<span class="fc" id="L207">                    Parameters.with(&quot;id&quot;, id).and(&quot;oldState&quot;, topologiesCreated).and(&quot;now&quot;, time));</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">            if (count &gt; 0) {</span>
+<span class="fc" id="L209">                return topologiesCreated + 1;</span>
+            } else {
+<span class="nc" id="L211">                Panache.getEntityManager().refresh(this);</span>
+            }
+        }
+
+<span class="nc" id="L215">        throw new IllegalStateException(&quot;Failed to allocate next topology&quot;);</span>
+    }
+
+    /**
+     * Allocate the next scenario number for the specified [project].
+     *
+     * @param time The time at which the new scenario is created.
+     */
+    public int allocateScenario(Instant time) {
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">        for (int i = 0; i &lt; 4; i++) {</span>
+<span class="fc" id="L225">            long count = update(</span>
+                    &quot;#Project.allocateScenario&quot;,
+<span class="fc" id="L227">                    Parameters.with(&quot;id&quot;, id).and(&quot;oldState&quot;, scenariosCreated).and(&quot;now&quot;, time));</span>
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">            if (count &gt; 0) {</span>
+<span class="fc" id="L229">                return scenariosCreated + 1;</span>
+            } else {
+<span class="nc" id="L231">                Panache.getEntityManager().refresh(this);</span>
+            }
+        }
+
+<span class="nc" id="L235">        throw new IllegalStateException(&quot;Failed to allocate next scenario&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

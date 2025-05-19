@@ -1,0 +1,3 @@
+org.opendc.web.ui.deployment.OpenDCUiConfig.apiBaseUrl=The base URL of the OpenDC API.
+org.opendc.web.ui.deployment.OpenDCUiConfig.include=A flag to include the OpenDC UI extension into the build.
+org.opendc.web.ui.deployment.OpenDCUiConfig.sentryDsn=Sentry DSN.

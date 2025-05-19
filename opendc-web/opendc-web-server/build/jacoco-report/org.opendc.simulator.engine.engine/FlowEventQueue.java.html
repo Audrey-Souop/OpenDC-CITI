@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FlowEventQueue.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.engine.engine</a> &gt; <span class="el_source">FlowEventQueue.java</span></div><h1>FlowEventQueue.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.engine.engine;
+
+import java.util.Arrays;
+import org.opendc.simulator.engine.graph.FlowNode;
+
+/**
+ * A specialized priority queue for future event of {@link FlowNode}s sorted on time.
+ * The queue is based on a min heap binary tree (https://www.digitalocean.com/community/tutorials/min-heap-binary-tree)
+ * The nodes keep a timerIndex which indicates their placement in the tree.
+ * The timerIndex is -1 when a node is not in the tree.
+ *
+ * &lt;p&gt;
+ * By using a specialized priority queue, we reduce the overhead caused by the default priority queue implementation
+ * being generic.
+ */
+public final class FlowEventQueue {
+    /**
+     * Array representation of binary heap of {@link FlowNode} instances.
+     */
+    private FlowNode[] queue;
+
+    /**
+     * The number of elements in the priority queue.
+     */
+<span class="nc" id="L47">    private int size = 0;</span>
+
+    /**
+     * Construct a {@link FlowEventQueue} with the specified initial capacity.
+     *
+     * @param initialCapacity The initial capacity of the queue.
+     */
+<span class="nc" id="L54">    public FlowEventQueue(int initialCapacity) {</span>
+<span class="nc" id="L55">        this.queue = new FlowNode[initialCapacity];</span>
+<span class="nc" id="L56">    }</span>
+
+    /**
+     * Enqueue a timer for the specified node or update the existing timer.
+     *
+     * When Long.MAX_VALUE is given as a deadline, the node is removed from the queue
+     * @param node node to queue
+     */
+    public void enqueue(FlowNode node) {
+        // The timerIndex indicates whether a node is already in the queue
+<span class="nc" id="L66">        int timerIndex = node.getTimerIndex();</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (node.getDeadline() != Long.MAX_VALUE) {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            if (timerIndex &gt;= 0) {</span>
+<span class="nc" id="L70">                update(this.queue, node, timerIndex);</span>
+            } else {
+<span class="nc" id="L72">                add(this.queue, node);</span>
+            }
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        } else if (timerIndex &gt;= 0) {</span>
+<span class="nc" id="L75">            delete(this.queue, timerIndex);</span>
+<span class="nc" id="L76">            node.setTimerIndex(-1);</span>
+        }
+<span class="nc" id="L78">    }</span>
+
+    /**
+     * Retrieve the head of the queue if its deadline does not exceed &lt;code&gt;now&lt;/code&gt;.
+     *
+     * @param now The timestamp that the deadline of the head of the queue should not exceed.
+     * @return The head of the queue if its deadline does not exceed &lt;code&gt;now&lt;/code&gt;, otherwise &lt;code&gt;null&lt;/code&gt;.
+     */
+    public FlowNode poll(long now) {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (this.size == 0) {</span>
+<span class="nc" id="L88">            return null;</span>
+        }
+
+<span class="nc" id="L91">        final FlowNode head = this.queue[0];</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (now &lt; head.getDeadline()) {</span>
+<span class="nc" id="L94">            return null;</span>
+        }
+
+        // Move the last element of the queue to the front
+<span class="nc" id="L98">        this.size--;</span>
+<span class="nc" id="L99">        final FlowNode next = this.queue[this.size];</span>
+<span class="nc" id="L100">        this.queue[this.size] = null; // Clear the last element of the queue</span>
+
+        // Sift down the new head.
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (this.size &gt; 0) {</span>
+<span class="nc" id="L104">            siftDown(0, next, this.queue, this.size);</span>
+        }
+
+        // Set the index of the head to -1 indicating it is not scheduled anymore
+<span class="nc" id="L108">        head.setTimerIndex(-1);</span>
+<span class="nc" id="L109">        return head;</span>
+    }
+
+    /**
+     * Find the earliest deadline in the queue.
+     */
+    public long peekDeadline() {
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (this.size &gt; 0) {</span>
+<span class="nc" id="L117">            return this.queue[0].getDeadline();</span>
+        }
+
+<span class="nc" id="L120">        return Long.MAX_VALUE;</span>
+    }
+
+    /**
+     * Add a new entry to the queue.
+     */
+    private void add(FlowNode[] es, FlowNode node) {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if (this.size &gt;= this.queue.length) {</span>
+            // Re-fetch the resized array
+<span class="nc" id="L129">            this.grow();</span>
+        }
+
+<span class="nc" id="L132">        siftUp(this.size, node, this.queue);</span>
+
+<span class="nc" id="L134">        this.size++;</span>
+<span class="nc" id="L135">    }</span>
+
+    /**
+     * Update the deadline of an existing entry in the queue.
+     */
+    private void update(FlowNode[] eventList, FlowNode node, int timerIndex) {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        if (timerIndex &gt; 0) {</span>
+<span class="nc" id="L142">            int parentIndex = (timerIndex - 1) &gt;&gt;&gt; 1;</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">            if (eventList[parentIndex].getDeadline() &gt; node.getDeadline()) {</span>
+<span class="nc" id="L144">                siftUp(timerIndex, node, eventList);</span>
+<span class="nc" id="L145">                return;</span>
+            }
+        }
+
+<span class="nc" id="L149">        siftDown(timerIndex, node, eventList, this.size);</span>
+<span class="nc" id="L150">    }</span>
+
+    /**
+     * The move a node from the queue
+     *
+     * @param eventList all scheduled events
+     * @param timerIndex the index of the node to remove
+     */
+    private void delete(FlowNode[] eventList, int timerIndex) {
+<span class="nc" id="L159">        this.size--;</span>
+
+        // If the element is the last element, simply remove it
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        if (timerIndex == this.size) {</span>
+<span class="nc" id="L163">            eventList[timerIndex] = null;</span>
+        }
+
+        // Else, swap the node to remove with the last node and sift it up or down to get the moved node in the correct
+        // position.
+        else {
+
+            // swap the node with the last element
+<span class="nc" id="L171">            FlowNode moved = eventList[this.size];</span>
+<span class="nc" id="L172">            eventList[this.size] = null;</span>
+
+<span class="nc" id="L174">            siftDown(timerIndex, moved, eventList, this.size);</span>
+
+            // SiftUp, if siftDown did not move the node
+<span class="nc bnc" id="L177" title="All 2 branches missed.">            if (eventList[timerIndex] == moved) {</span>
+<span class="nc" id="L178">                siftUp(timerIndex, moved, eventList);</span>
+            }
+        }
+<span class="nc" id="L181">    }</span>
+
+    /**
+     * Increases the capacity of the array.
+     */
+    private FlowNode[] grow() {
+<span class="nc" id="L187">        FlowNode[] queue = this.queue;</span>
+<span class="nc" id="L188">        int oldCapacity = queue.length;</span>
+<span class="nc" id="L189">        int newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1);</span>
+
+<span class="nc" id="L191">        queue = Arrays.copyOf(queue, newCapacity);</span>
+<span class="nc" id="L192">        this.queue = queue;</span>
+<span class="nc" id="L193">        return queue;</span>
+    }
+
+    /**
+     * Iteratively swap the node at the given timerIndex with its parents until the node is at the correct
+     * position in the binary tree (ie, both children of the node are bigger than the node itself).
+     *
+     * @param timerIndex the index of the node that needs to be sifted up
+     * @param node the node that needs to be sifted up
+     * @param eventList the list of nodes that are scheduled
+     */
+    private static void siftUp(int timerIndex, FlowNode node, FlowNode[] eventList) {
+<span class="nc bnc" id="L205" title="All 2 branches missed.">        while (timerIndex &gt; 0) {</span>
+            // Find parent Node
+<span class="nc" id="L207">            int parentIndex = (timerIndex - 1) &gt;&gt;&gt; 1;</span>
+<span class="nc" id="L208">            FlowNode parentNode = eventList[parentIndex];</span>
+
+            // Break if the deadline of the node is bigger than the parent node
+<span class="nc bnc" id="L211" title="All 2 branches missed.">            if (node.getDeadline() &gt;= parentNode.getDeadline()) break;</span>
+
+            // Otherwise, swap node with the parentNode
+<span class="nc" id="L214">            eventList[timerIndex] = parentNode;</span>
+<span class="nc" id="L215">            parentNode.setTimerIndex(timerIndex);</span>
+<span class="nc" id="L216">            timerIndex = parentIndex;</span>
+<span class="nc" id="L217">        }</span>
+
+<span class="nc" id="L219">        eventList[timerIndex] = node;</span>
+<span class="nc" id="L220">        node.setTimerIndex(timerIndex);</span>
+<span class="nc" id="L221">    }</span>
+
+    /**
+     * Iteratively swap the node at the given timerIndex with its smallest child until the node is at the correct
+     * position in the binary tree (ie, both children of the node are bigger than the node itself).
+     *
+     * @param timerIndex the index of the node that needs to be sifted down
+     * @param node the node that needs to be sifted down
+     * @param eventList the list of nodes that are scheduled
+     * @param queueSize the current size of the queue
+     */
+    private static void siftDown(int timerIndex, FlowNode node, FlowNode[] eventList, int queueSize) {
+<span class="nc" id="L233">        int half = queueSize &gt;&gt;&gt; 1; // loop while a non-leaf</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">        while (timerIndex &lt; half) {</span>
+
+            // Get the index of the smallest child
+<span class="nc" id="L237">            int smallestChildIndex = getSmallestChildIndex(timerIndex, eventList, queueSize);</span>
+
+            // Get the smallest child
+<span class="nc" id="L240">            FlowNode smallestChildNode = eventList[smallestChildIndex];</span>
+
+            // If the node is smaller than the smallest child, break
+<span class="nc bnc" id="L243" title="All 2 branches missed.">            if (node.getDeadline() &lt;= smallestChildNode.getDeadline()) break;</span>
+
+            // Otherwise, swap the node with its smallest child
+<span class="nc" id="L246">            eventList[timerIndex] = smallestChildNode;</span>
+<span class="nc" id="L247">            smallestChildNode.setTimerIndex(timerIndex);</span>
+<span class="nc" id="L248">            timerIndex = smallestChildIndex;</span>
+<span class="nc" id="L249">        }</span>
+
+<span class="nc" id="L251">        eventList[timerIndex] = node;</span>
+<span class="nc" id="L252">        node.setTimerIndex(timerIndex);</span>
+<span class="nc" id="L253">    }</span>
+
+    /**
+     * Return the index of the child with the smallest deadline time of the node at the given timerIndex
+     *
+     * @param timerIndex the index of the parent node
+     * @param eventList the list of all scheduled events
+     * @param queueSize the current size of the queue
+     * @return the timerIndex of the smallest child
+     */
+    private static int getSmallestChildIndex(int timerIndex, FlowNode[] eventList, int queueSize) {
+        // Calculate the index of the left child
+<span class="nc" id="L265">        int leftChildIndex = (timerIndex &lt;&lt; 1) + 1;</span>
+
+        // If the left child is at the end of the queue, there is no right child.
+        // Thus, the left child is always the smallest
+<span class="nc bnc" id="L269" title="All 2 branches missed.">        if (leftChildIndex + 1 &gt;= queueSize) return leftChildIndex;</span>
+
+<span class="nc" id="L271">        FlowNode leftChildNode = eventList[leftChildIndex];</span>
+
+        // Get right child
+<span class="nc" id="L274">        int rightChildIndex = leftChildIndex + 1;</span>
+<span class="nc" id="L275">        FlowNode rightChildNode = eventList[rightChildIndex];</span>
+
+        // If the rightChild is smaller, return its index
+        // otherwise, return the index of the left child
+<span class="nc bnc" id="L279" title="All 2 branches missed.">        if (rightChildNode.getDeadline() &lt; leftChildNode.getDeadline()) {</span>
+<span class="nc" id="L280">            return rightChildIndex;</span>
+        }
+<span class="nc" id="L282">        return leftChildIndex;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

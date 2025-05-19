@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Job.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.model</a> &gt; <span class="el_source">Job.java</span></div><h1>Job.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.model;
+
+import io.hypersistence.utils.hibernate.type.json.JsonType;
+import io.quarkus.hibernate.orm.panache.Panache;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Parameters;
+import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.Map;
+import org.hibernate.annotations.Type;
+import org.opendc.web.proto.JobState;
+
+/**
+ * A simulation job to be run by the simulator.
+ */
+@Entity
+@Table
+@NamedQueries({
+    @NamedQuery(
+            name = &quot;Job.updateOne&quot;,
+            query =
+                    &quot;&quot;&quot;
+                UPDATE Job j
+                SET j.state = :newState, j.updatedAt = :updatedAt, j.runtime = :runtime, j.results = :results
+                WHERE j.id = :id AND j.state = :oldState
+            &quot;&quot;&quot;)
+})
+public class Job extends PanacheEntityBase {
+    /**
+     * The main ID of a project.
+     * The value starts at 6 to account for the other 5 projects already made by the loading script.
+     */
+    @Id
+    @SequenceGenerator(name = &quot;jobSeq&quot;, sequenceName = &quot;job_id_seq&quot;, allocationSize = 1, initialValue = 3)
+    @GeneratedValue(generator = &quot;jobSeq&quot;)
+    public Long id;
+
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumn(name = &quot;scenario_id&quot;, foreignKey = @ForeignKey(name = &quot;fk_jobs_scenario&quot;), nullable = false)
+    public Scenario scenario;
+
+    @Column(name = &quot;created_by&quot;, nullable = false, updatable = false)
+    public String createdBy;
+
+    @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
+    public Instant createdAt;
+
+    /**
+     * The number of simulation runs to perform.
+     */
+    @Column(nullable = false, updatable = false)
+    public int repeats;
+
+    /**
+     * The instant at which the job was updated.
+     */
+    @Column(name = &quot;updated_at&quot;, nullable = false)
+    public Instant updatedAt;
+
+    /**
+     * The state of the job.
+     */
+<span class="fc" id="L86">    @Enumerated(EnumType.STRING)</span>
+    @Column(nullable = false)
+    public JobState state = JobState.PENDING;
+
+    /**
+     * The runtime of the job (in seconds).
+     */
+<span class="fc" id="L93">    @Column(nullable = false)</span>
+    public int runtime = 0;
+
+    /**
+     * Experiment results in JSON
+     */
+<span class="fc" id="L99">    @Column(columnDefinition = &quot;jsonb&quot;)</span>
+    @Type(JsonType.class)
+    public Map&lt;String, ?&gt; results = null;
+
+    /**
+     * Construct a {@link Job} instance.
+     */
+<span class="fc" id="L106">    public Job(Scenario scenario, String createdBy, Instant createdAt, int repeats) {</span>
+<span class="fc" id="L107">        this.createdBy = createdBy;</span>
+<span class="fc" id="L108">        this.scenario = scenario;</span>
+<span class="fc" id="L109">        this.createdAt = createdAt;</span>
+<span class="fc" id="L110">        this.updatedAt = createdAt;</span>
+<span class="fc" id="L111">        this.repeats = repeats;</span>
+<span class="fc" id="L112">    }</span>
+
+    /**
+     * JPA constructor
+     */
+<span class="fc" id="L117">    protected Job() {}</span>
+
+    /**
+     * Find {@link Job}s in the specified {@link JobState}.
+     *
+     * @param state The state of the jobs to find.
+     * @return A query for jobs that are in the specified state.
+     */
+    public static PanacheQuery&lt;Job&gt; findByState(JobState state) {
+<span class="fc" id="L126">        return find(&quot;state&quot;, state);</span>
+    }
+
+    /**
+     * Atomically update this job.
+     *
+     * @param newState The new state to enter into.
+     * @param time The time at which the update occurs.
+     * @param results The results to possible set.
+     * @return &lt;code&gt;true&lt;/code&gt; when the update succeeded`, &lt;code&gt;false&lt;/code&gt; when there was a conflict.
+     */
+    public boolean updateAtomically(JobState newState, Instant time, int runtime, Map&lt;String, ?&gt; results) {
+<span class="fc" id="L138">        long count = update(</span>
+                &quot;#Job.updateOne&quot;,
+<span class="fc" id="L140">                Parameters.with(&quot;id&quot;, id)</span>
+<span class="fc" id="L141">                        .and(&quot;oldState&quot;, state)</span>
+<span class="fc" id="L142">                        .and(&quot;newState&quot;, newState)</span>
+<span class="fc" id="L143">                        .and(&quot;updatedAt&quot;, time)</span>
+<span class="fc" id="L144">                        .and(&quot;runtime&quot;, runtime)</span>
+<span class="fc" id="L145">                        .and(&quot;results&quot;, results));</span>
+<span class="fc" id="L146">        Panache.getEntityManager().refresh(this);</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        return count &gt; 0;</span>
+    }
+
+    /**
+     * Determine whether the job is allowed to transition to &lt;code&gt;newState&lt;/code&gt;.
+     *
+     * @param newState The new state to transition to.
+     * @return &lt;code&gt;true&lt;/code&gt; if the transition to the new state is legal, &lt;code&gt;false&lt;/code&gt; otherwise.
+     */
+    public boolean canTransitionTo(JobState newState) {
+        // Note that we always allow transitions from the state
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        return newState == this.state</span>
+<span class="pc bpc" id="L159" title="2 of 4 branches missed.">                || switch (this.state) {</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">                    case PENDING -&gt; newState == JobState.CLAIMED;</span>
+<span class="nc bnc" id="L161" title="All 4 branches missed.">                    case CLAIMED -&gt; newState == JobState.RUNNING || newState == JobState.FAILED;</span>
+<span class="pc bpc" id="L162" title="1 of 4 branches missed.">                    case RUNNING -&gt; newState == JobState.FINISHED || newState == JobState.FAILED;</span>
+<span class="pc" id="L163">                    case FINISHED, FAILED -&gt; false;</span>
+                };
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

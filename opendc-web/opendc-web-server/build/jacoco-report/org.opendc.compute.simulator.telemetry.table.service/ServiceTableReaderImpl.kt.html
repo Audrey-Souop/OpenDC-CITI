@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ServiceTableReaderImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.telemetry.table.service</a> &gt; <span class="el_source">ServiceTableReaderImpl.kt</span></div><h1>ServiceTableReaderImpl.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.telemetry.table.service
+
+import org.opendc.compute.simulator.service.ComputeService
+import java.time.Duration
+import java.time.Instant
+
+/**
+ * An aggregator for service metrics before they are reported.
+ */
+<span class="nc" id="L32">public class ServiceTableReaderImpl(</span>
+<span class="nc" id="L33">    private val service: ComputeService,</span>
+<span class="nc" id="L34">    private val startTime: Duration = Duration.ofMillis(0),</span>
+) : ServiceTableReader {
+    override fun copy(): ServiceTableReader {
+<span class="nc" id="L37">        val newServiceTable =</span>
+<span class="nc" id="L38">            ServiceTableReaderImpl(</span>
+<span class="nc" id="L39">                service,</span>
+            )
+<span class="nc" id="L41">        newServiceTable.setValues(this)</span>
+
+<span class="nc" id="L43">        return newServiceTable</span>
+    }
+
+    override fun setValues(table: ServiceTableReader) {
+<span class="nc" id="L47">        _timestamp = table.timestamp</span>
+<span class="nc" id="L48">        _timestampAbsolute = table.timestampAbsolute</span>
+
+<span class="nc" id="L50">        _hostsUp = table.hostsUp</span>
+<span class="nc" id="L51">        _hostsDown = table.hostsDown</span>
+<span class="nc" id="L52">        _tasksTotal = table.tasksTotal</span>
+<span class="nc" id="L53">        _tasksPending = table.tasksPending</span>
+<span class="nc" id="L54">        _tasksActive = table.tasksActive</span>
+<span class="nc" id="L55">        _tasksCompleted = table.tasksCompleted</span>
+<span class="nc" id="L56">        _tasksTerminated = table.tasksTerminated</span>
+<span class="nc" id="L57">        _attemptsSuccess = table.attemptsSuccess</span>
+<span class="nc" id="L58">        _attemptsFailure = table.attemptsFailure</span>
+<span class="nc" id="L59">    }</span>
+
+<span class="nc" id="L61">    private var _timestamp: Instant = Instant.MIN</span>
+    override val timestamp: Instant
+<span class="nc" id="L63">        get() = _timestamp</span>
+
+<span class="nc" id="L65">    private var _timestampAbsolute: Instant = Instant.MIN</span>
+    override val timestampAbsolute: Instant
+<span class="nc" id="L67">        get() = _timestampAbsolute</span>
+
+    override val hostsUp: Int
+<span class="nc" id="L70">        get() = _hostsUp</span>
+    private var _hostsUp = 0
+
+    override val hostsDown: Int
+<span class="nc" id="L74">        get() = _hostsDown</span>
+    private var _hostsDown = 0
+
+    override val tasksTotal: Int
+<span class="nc" id="L78">        get() = _tasksTotal</span>
+    private var _tasksTotal = 0
+
+    override val tasksPending: Int
+<span class="nc" id="L82">        get() = _tasksPending</span>
+    private var _tasksPending = 0
+
+    override val tasksCompleted: Int
+<span class="nc" id="L86">        get() = _tasksCompleted</span>
+    private var _tasksCompleted = 0
+
+    override val tasksActive: Int
+<span class="nc" id="L90">        get() = _tasksActive</span>
+    private var _tasksActive = 0
+
+    override val tasksTerminated: Int
+<span class="nc" id="L94">        get() = _tasksTerminated</span>
+    private var _tasksTerminated = 0
+
+    override val attemptsSuccess: Int
+<span class="nc" id="L98">        get() = _attemptsSuccess</span>
+    private var _attemptsSuccess = 0
+
+    override val attemptsFailure: Int
+<span class="nc" id="L102">        get() = _attemptsFailure</span>
+    private var _attemptsFailure = 0
+
+    /**
+     * Record the next cycle.
+     */
+    override fun record(now: Instant) {
+<span class="nc" id="L109">        _timestamp = now</span>
+<span class="nc" id="L110">        _timestampAbsolute = now + startTime</span>
+
+<span class="nc" id="L112">        val stats = service.getSchedulerStats()</span>
+<span class="nc" id="L113">        _hostsUp = stats.hostsAvailable</span>
+<span class="nc" id="L114">        _hostsDown = stats.hostsUnavailable</span>
+<span class="nc" id="L115">        _tasksTotal = stats.tasksTotal</span>
+<span class="nc" id="L116">        _tasksPending = stats.tasksPending</span>
+<span class="nc" id="L117">        _tasksCompleted = stats.tasksCompleted</span>
+<span class="nc" id="L118">        _tasksActive = stats.tasksActive</span>
+<span class="nc" id="L119">        _tasksTerminated = stats.tasksTerminated</span>
+<span class="nc" id="L120">        _attemptsSuccess = stats.attemptsSuccess.toInt()</span>
+<span class="nc" id="L121">        _attemptsFailure = stats.attemptsFailure.toInt()</span>
+<span class="nc" id="L122">    }</span>
+<span class="nc" id="L123">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

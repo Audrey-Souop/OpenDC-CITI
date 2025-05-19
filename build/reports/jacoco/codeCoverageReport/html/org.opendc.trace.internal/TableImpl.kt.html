@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TableImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.internal</a> &gt; <span class="el_source">TableImpl.kt</span></div><h1>TableImpl.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.internal
+
+import org.opendc.trace.Table
+import org.opendc.trace.TableColumn
+import org.opendc.trace.TableReader
+import org.opendc.trace.TableWriter
+import java.util.Objects
+
+/**
+ * Internal implementation of [Table].
+ */
+<span class="pc" id="L34">internal class TableImpl(val trace: TraceImpl, override val name: String) : Table {</span>
+    /**
+     * The details of this table.
+     */
+<span class="fc" id="L38">    private val details = trace.format.getDetails(trace.path, name)</span>
+
+    override val columns: List&lt;TableColumn&gt;
+<span class="fc" id="L41">        get() = details.columns</span>
+
+    override fun newReader(projection: List&lt;String&gt;?): TableReader {
+<span class="fc" id="L44">        return trace.format.newReader(trace.path, name, projection)</span>
+    }
+
+<span class="nc" id="L47">    override fun newWriter(): TableWriter = trace.format.newWriter(trace.path, name)</span>
+
+<span class="nc" id="L49">    override fun toString(): String = &quot;Table[name=$name]&quot;</span>
+
+<span class="nc" id="L51">    override fun hashCode(): Int = Objects.hash(trace, name)</span>
+
+<span class="nc bnc" id="L53" title="All 6 branches missed.">    override fun equals(other: Any?): Boolean = other is TableImpl &amp;&amp; trace == other.trace &amp;&amp; name == other.name</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

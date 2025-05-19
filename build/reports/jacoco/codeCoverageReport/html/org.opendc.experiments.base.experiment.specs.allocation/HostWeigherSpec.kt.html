@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HostWeigherSpec.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.experiments.base.experiment.specs.allocation</a> &gt; <span class="el_source">HostWeigherSpec.kt</span></div><h1>HostWeigherSpec.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2025 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.experiments.base.experiment.specs.allocation
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import org.opendc.compute.simulator.scheduler.weights.CoreRamWeigher
+import org.opendc.compute.simulator.scheduler.weights.CpuUtilizationWeigher
+import org.opendc.compute.simulator.scheduler.weights.HostWeigher
+import org.opendc.compute.simulator.scheduler.weights.InstanceCountWeigher
+import org.opendc.compute.simulator.scheduler.weights.RamWeigher
+import org.opendc.compute.simulator.scheduler.weights.VCpuCapacityWeigher
+import org.opendc.compute.simulator.scheduler.weights.VCpuWeigher
+
+/**
+ * A specification for a host weigher.
+ *
+ * A host weigher can be defined in a JSON file by adding the serialName as the type parameter.
+ *
+ * The user then has to specify any additional parameters required for the weigher.
+ */
+<span class="nc" id="L42">@Serializable</span>
+<span class="nc" id="L43">public sealed class HostWeigherSpec</span>
+
+<span class="nc bnc" id="L45" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;CoreRam&quot;)
+<span class="nc" id="L47">public data class CoreRamWeigherSpec(</span>
+<span class="nc" id="L48">    val multiplier: Double,</span>
+<span class="nc" id="L49">) : HostWeigherSpec()</span>
+
+<span class="nc bnc" id="L51" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;InstanceCount&quot;)
+<span class="nc" id="L53">public data class InstanceCountWeigherSpec(</span>
+<span class="nc" id="L54">    val multiplier: Double,</span>
+<span class="nc" id="L55">) : HostWeigherSpec()</span>
+
+<span class="nc bnc" id="L57" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;Ram&quot;)
+<span class="nc" id="L59">public data class RamWeigherSpec(</span>
+<span class="nc" id="L60">    val multiplier: Double,</span>
+<span class="nc" id="L61">) : HostWeigherSpec()</span>
+
+<span class="nc bnc" id="L63" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;VCpuCapacity&quot;)
+<span class="nc" id="L65">public data class VCpuCapacityWeigherSpec(</span>
+<span class="nc" id="L66">    val multiplier: Double,</span>
+<span class="nc" id="L67">) : HostWeigherSpec()</span>
+
+<span class="nc bnc" id="L69" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;VCpu&quot;)
+<span class="nc" id="L71">public data class VCpuWeigherSpec(</span>
+<span class="nc" id="L72">    val multiplier: Double,</span>
+<span class="nc" id="L73">) : HostWeigherSpec()</span>
+
+<span class="nc bnc" id="L75" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;CpuUtilization&quot;)
+<span class="nc" id="L77">public data class CpuUtilizationWeigherSpec(</span>
+<span class="nc" id="L78">    val multiplier: Double,</span>
+<span class="nc" id="L79">) : HostWeigherSpec()</span>
+
+public fun createHostWeigher(weigherSpec: HostWeigherSpec): HostWeigher {
+<span class="nc" id="L82">    return when (weigherSpec) {</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        is CoreRamWeigherSpec -&gt; CoreRamWeigher(weigherSpec.multiplier)</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        is InstanceCountWeigherSpec -&gt; InstanceCountWeigher(weigherSpec.multiplier)</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        is RamWeigherSpec -&gt; RamWeigher(weigherSpec.multiplier)</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        is VCpuCapacityWeigherSpec -&gt; VCpuCapacityWeigher(weigherSpec.multiplier)</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        is VCpuWeigherSpec -&gt; VCpuWeigher(weigherSpec.multiplier)</span>
+<span class="nc" id="L88">        is CpuUtilizationWeigherSpec -&gt; CpuUtilizationWeigher(weigherSpec.multiplier)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskQueue.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator</a> &gt; <span class="el_source">TaskQueue.java</span></div><h1>TaskQueue.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator;
+
+import java.util.Arrays;
+
+/**
+ * Specialized priority queue for pending tasks.
+ *
+ * &lt;p&gt;
+ * This class uses a specialized priority queue (as opposed to a generic {@link java.util.PriorityQueue}), which reduces
+ * unnecessary allocations in the simulator's hot path.
+ */
+final class TaskQueue {
+    /**
+     * The deadlines of the pending tasks.
+     */
+    private long[] deadlines;
+
+    /**
+     * The identifiers of the pending tasks. Identifiers are used to provide a total order for pending tasks in case
+     * the deadline of two tasks is the same.
+     */
+    private int[] ids;
+
+    /**
+     * The {@link Runnable}s representing the tasks that have been scheduled.
+     */
+    private Runnable[] tasks;
+
+    /**
+     * The number of elements in the priority queue.
+     */
+<span class="nc" id="L54">    private int size = 0;</span>
+
+    /**
+     * Construct a {@link TaskQueue} with the specified initial capacity.
+     *
+     * @param initialCapacity The initial capacity of the queue.
+     */
+<span class="nc" id="L61">    public TaskQueue(int initialCapacity) {</span>
+<span class="nc" id="L62">        this.deadlines = new long[initialCapacity];</span>
+<span class="nc" id="L63">        this.ids = new int[initialCapacity];</span>
+<span class="nc" id="L64">        this.tasks = new Runnable[initialCapacity];</span>
+<span class="nc" id="L65">    }</span>
+
+    /**
+     * Construct a {@link TaskQueue} with an initial capacity of 256 elements.
+     */
+    public TaskQueue() {
+<span class="nc" id="L71">        this(256);</span>
+<span class="nc" id="L72">    }</span>
+
+    /**
+     * Add a new task to this queue.
+     *
+     * @param deadline The deadline of the task.
+     * @param id       The identifier of the task.
+     * @param task     The {@link Runnable} representing the task to execute.
+     */
+    public void add(long deadline, int id, Runnable task) {
+<span class="nc" id="L82">        int i = size;</span>
+<span class="nc" id="L83">        long[] deadlines = this.deadlines;</span>
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (i &gt;= deadlines.length) {</span>
+<span class="nc" id="L86">            grow();</span>
+
+            // Re-fetch the resized array
+<span class="nc" id="L89">            deadlines = this.deadlines;</span>
+        }
+
+<span class="nc" id="L92">        siftUp(deadlines, ids, tasks, i, deadline, id, task);</span>
+
+<span class="nc" id="L94">        size = i + 1;</span>
+<span class="nc" id="L95">    }</span>
+
+    /**
+     * Retrieve the next task to be executed.
+     *
+     * @return The head of the queue or &lt;code&gt;null&lt;/code&gt; if the queue is empty.
+     */
+    public Runnable poll() {
+<span class="nc" id="L103">        final Runnable[] tasks = this.tasks;</span>
+<span class="nc" id="L104">        final Runnable result = tasks[0];</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (result != null) {</span>
+<span class="nc" id="L107">            int n = --size;</span>
+
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            if (n &gt; 0) {</span>
+<span class="nc" id="L110">                long[] deadlines = this.deadlines;</span>
+<span class="nc" id="L111">                int[] ids = this.ids;</span>
+
+<span class="nc" id="L113">                siftDown(deadlines, ids, tasks, 0, n, deadlines[n], ids[n], tasks[n]);</span>
+            }
+
+            // Clear the last element of the queue
+<span class="nc" id="L117">            tasks[n] = null;</span>
+        }
+
+<span class="nc" id="L120">        return result;</span>
+    }
+
+    /**
+     * Find the earliest deadline in the queue.
+     *
+     * @return The earliest deadline in the queue or {@link Long#MAX_VALUE} if the queue is empty.
+     */
+    public long peekDeadline() {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (size == 0) {</span>
+<span class="nc" id="L130">            return Long.MAX_VALUE;</span>
+        }
+
+<span class="nc" id="L133">        return deadlines[0];</span>
+    }
+
+    /**
+     * Remove the timer entry with the specified &lt;code&gt;deadline&lt;/code&gt; and &lt;code&gt;id&lt;/code&gt;.
+     */
+    public boolean remove(long deadline, int id) {
+<span class="nc" id="L140">        long[] deadlines = this.deadlines;</span>
+<span class="nc" id="L141">        int[] ids = this.ids;</span>
+
+<span class="nc" id="L143">        int size = this.size;</span>
+<span class="nc" id="L144">        int i = -1;</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        for (int j = 0; j &lt; size; j++) {</span>
+<span class="nc bnc" id="L147" title="All 4 branches missed.">            if (deadlines[j] == deadline &amp;&amp; ids[j] == id) {</span>
+<span class="nc" id="L148">                i = j;</span>
+<span class="nc" id="L149">                break;</span>
+            }
+        }
+
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        if (i &lt; 0) {</span>
+<span class="nc" id="L154">            return false;</span>
+        }
+
+<span class="nc" id="L157">        Runnable[] tasks = this.tasks;</span>
+<span class="nc" id="L158">        int s = size - 1;</span>
+<span class="nc" id="L159">        this.size = s;</span>
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (s == i) {</span>
+<span class="nc" id="L162">            tasks[i] = null;</span>
+        } else {
+<span class="nc" id="L164">            long movedDeadline = deadlines[s];</span>
+<span class="nc" id="L165">            int movedId = ids[s];</span>
+<span class="nc" id="L166">            Runnable movedTask = tasks[s];</span>
+
+<span class="nc" id="L168">            tasks[s] = null;</span>
+
+<span class="nc" id="L170">            siftDown(deadlines, ids, tasks, i, s, movedDeadline, movedId, movedTask);</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (tasks[i] == movedTask) {</span>
+<span class="nc" id="L172">                siftUp(deadlines, ids, tasks, i, movedDeadline, movedId, movedTask);</span>
+            }
+        }
+
+<span class="nc" id="L176">        return true;</span>
+    }
+
+    /**
+     * Increases the capacity of the priority queue.
+     */
+    private void grow() {
+<span class="nc" id="L183">        int oldCapacity = deadlines.length;</span>
+
+        // Double size if small; else grow by 50%
+<span class="nc bnc" id="L186" title="All 2 branches missed.">        int newCapacity = oldCapacity + (oldCapacity &lt; 64 ? oldCapacity + 2 : oldCapacity &gt;&gt; 1);</span>
+
+<span class="nc" id="L188">        deadlines = Arrays.copyOf(deadlines, newCapacity);</span>
+<span class="nc" id="L189">        ids = Arrays.copyOf(ids, newCapacity);</span>
+<span class="nc" id="L190">        tasks = Arrays.copyOf(tasks, newCapacity);</span>
+<span class="nc" id="L191">    }</span>
+
+    /**
+     * Sift up an entry in the heap.
+     */
+    private static void siftUp(
+            long[] deadlines, int[] ids, Runnable[] tasks, int k, long deadline, int id, Runnable task) {
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        while (k &gt; 0) {</span>
+<span class="nc" id="L199">            int parent = (k - 1) &gt;&gt;&gt; 1;</span>
+<span class="nc" id="L200">            long parentDeadline = deadlines[parent];</span>
+<span class="nc" id="L201">            int parentId = ids[parent];</span>
+
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            if (compare(deadline, id, parentDeadline, parentId) &gt;= 0) {</span>
+<span class="nc" id="L204">                break;</span>
+            }
+
+<span class="nc" id="L207">            deadlines[k] = parentDeadline;</span>
+<span class="nc" id="L208">            ids[k] = parentId;</span>
+<span class="nc" id="L209">            tasks[k] = tasks[parent];</span>
+
+<span class="nc" id="L211">            k = parent;</span>
+<span class="nc" id="L212">        }</span>
+
+<span class="nc" id="L214">        deadlines[k] = deadline;</span>
+<span class="nc" id="L215">        ids[k] = id;</span>
+<span class="nc" id="L216">        tasks[k] = task;</span>
+<span class="nc" id="L217">    }</span>
+
+    /**
+     * Sift down an entry in the heap.
+     */
+    private static void siftDown(
+            long[] deadlines, int[] ids, Runnable[] tasks, int k, int n, long deadline, int id, Runnable task) {
+<span class="nc" id="L224">        int half = n &gt;&gt;&gt; 1; // loop while a non-leaf</span>
+
+<span class="nc bnc" id="L226" title="All 2 branches missed.">        while (k &lt; half) {</span>
+<span class="nc" id="L227">            int child = (k &lt;&lt; 1) + 1; // assume left child is least</span>
+
+<span class="nc" id="L229">            long childDeadline = deadlines[child];</span>
+<span class="nc" id="L230">            int childId = ids[child];</span>
+
+<span class="nc" id="L232">            int right = child + 1;</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">            if (right &lt; n) {</span>
+<span class="nc" id="L234">                long rightDeadline = deadlines[right];</span>
+<span class="nc" id="L235">                int rightId = ids[right];</span>
+
+<span class="nc bnc" id="L237" title="All 2 branches missed.">                if (compare(childDeadline, childId, rightDeadline, rightId) &gt; 0) {</span>
+<span class="nc" id="L238">                    child = right;</span>
+<span class="nc" id="L239">                    childDeadline = rightDeadline;</span>
+<span class="nc" id="L240">                    childId = rightId;</span>
+                }
+            }
+
+<span class="nc bnc" id="L244" title="All 2 branches missed.">            if (compare(deadline, id, childDeadline, childId) &lt;= 0) {</span>
+<span class="nc" id="L245">                break;</span>
+            }
+
+<span class="nc" id="L248">            deadlines[k] = childDeadline;</span>
+<span class="nc" id="L249">            ids[k] = childId;</span>
+<span class="nc" id="L250">            tasks[k] = tasks[child];</span>
+
+<span class="nc" id="L252">            k = child;</span>
+<span class="nc" id="L253">        }</span>
+
+<span class="nc" id="L255">        deadlines[k] = deadline;</span>
+<span class="nc" id="L256">        ids[k] = id;</span>
+<span class="nc" id="L257">        tasks[k] = task;</span>
+<span class="nc" id="L258">    }</span>
+
+    /**
+     * Helper method to compare two task entries.
+     */
+    private static int compare(long leftDeadline, int leftId, long rightDeadline, int rightId) {
+<span class="nc" id="L264">        int cmp = Long.compare(leftDeadline, rightDeadline);</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">        return cmp == 0 ? Integer.compare(leftId, rightId) : cmp;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

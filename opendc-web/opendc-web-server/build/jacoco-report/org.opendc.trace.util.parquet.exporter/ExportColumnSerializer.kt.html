@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExportColumnSerializer.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.util.parquet.exporter</a> &gt; <span class="el_source">ExportColumnSerializer.kt</span></div><h1>ExportColumnSerializer.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.util.parquet.exporter
+
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.serialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.jsonArray
+import org.opendc.common.logger.errAndNull
+import org.opendc.common.logger.logger
+
+/**
+ * Returns a serializer for [ExportColumn] of [T] based on [ExportColumn.name]. Export columns can be
+ * deserialized from string values if the string matches a [ExportColumn.regex].
+ *
+ * ###### Note:
+ * - **In order to deserialize columns, they need to be loaded at runtime**.
+ * - **The serializer needs the reified type [T], meaning static deserialization
+ * (e.g. `@Serializable`, `@Serializer`) will not work. The serializer for [ExportColumn] of [T] needs to be retrieved with this method.**
+ *
+ * It is assumed the user always know what type of column is needed from deserialization,
+ * so that column can be encoded only by their name, not including their type (which would be tedious to write in json).
+ *
+ * ```kotlin
+ * // Decode column of Foo
+ * class Foo: Exportable
+ * json.decodeFrom&lt;smth&gt;(deserializer = columnSerializer&lt;Foo&gt;(), &lt;smth&gt;)
+ *
+ * // Decode a collection of columns of Foo
+ * json.decodeFrom&lt;smth&gt;(deserializer = ListSerializer(columnSerializer&lt;Foo&gt;()), &lt;smth&gt;)
+ * ```
+ */
+public inline fun &lt;reified T : Exportable&gt; columnSerializer(): KSerializer&lt;ExportColumn&lt;T&gt;&gt; =
+<span class="nc" id="L60">    object : KSerializer&lt;ExportColumn&lt;T&gt;&gt; {</span>
+<span class="nc" id="L61">        override val descriptor: SerialDescriptor = serialDescriptor&lt;String&gt;()</span>
+
+        override fun deserialize(decoder: Decoder): ExportColumn&lt;T&gt; {
+<span class="nc" id="L64">            val strValue = decoder.decodeString().trim('&quot;')</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">            return ExportColumn.matchingColOrNull&lt;T&gt;(strValue)</span>
+<span class="nc" id="L66">                ?: throw SerializationException(</span>
+<span class="nc" id="L67">                    &quot;unable to deserialize export column '$strValue'.&quot; +</span>
+                        &quot;Keep in mind that export columns need to be loaded by the jvm in order to be deserialized&quot;,
+                )
+        }
+
+        override fun serialize(
+            encoder: Encoder,
+            value: ExportColumn&lt;T&gt;,
+        ) {
+<span class="nc" id="L76">            encoder.encodeString(value.name)</span>
+<span class="nc" id="L77">        }</span>
+    }
+
+/**
+ * Serializer for a [List] of [ExportColumn] of [T], with the peculiarity of
+ * ignoring unrecognized column names (logging an error when an
+ * unrecognized column is encountered).
+ */
+<span class="nc" id="L85">public class ColListSerializer&lt;T : Exportable&gt;(</span>
+<span class="nc" id="L86">    private val columnSerializer: KSerializer&lt;ExportColumn&lt;T&gt;&gt;,</span>
+) : KSerializer&lt;List&lt;ExportColumn&lt;T&gt;&gt;&gt; {
+<span class="nc" id="L88">    private val listSerializer = ListSerializer(columnSerializer)</span>
+<span class="nc" id="L89">    override val descriptor: SerialDescriptor = ListSerializer(columnSerializer).descriptor</span>
+
+    /**
+     * Unrecognized columns are ignored and an error message is logged.
+     *
+     * @return the decoded list of [ExportColumn]s (might be empty).
+     * @throws[SerializationException] if the current element is not a [jsonArray] or its string representation.
+     */
+    override fun deserialize(decoder: Decoder): List&lt;ExportColumn&lt;T&gt;&gt; =
+<span class="nc bnc" id="L98" title="All 8 branches missed.">        (decoder as? JsonDecoder)?.decodeJsonElement()?.jsonArray?.mapNotNull {</span>
+<span class="nc" id="L99">            try {</span>
+<span class="nc" id="L100">                Json.decodeFromJsonElement(columnSerializer, it)</span>
+<span class="nc" id="L101">            } catch (_: Exception) {</span>
+<span class="nc" id="L102">                LOG.errAndNull(&quot;no match found for column $it, ignoring...&quot;)</span>
+            }
+<span class="nc" id="L104">        } ?: let {</span>
+<span class="nc" id="L105">            val strValue = decoder.decodeString().trim('&quot;')</span>
+            // Basically a recursive call with a json decoder instead of the argument decoder.
+<span class="nc" id="L107">            Json.decodeFromString(strValue)</span>
+<span class="nc" id="L108">        }</span>
+
+    override fun serialize(
+        encoder: Encoder,
+        value: List&lt;ExportColumn&lt;T&gt;&gt;,
+    ) {
+<span class="nc" id="L114">        listSerializer.serialize(encoder, value)</span>
+<span class="nc" id="L115">    }</span>
+
+    private companion object {
+<span class="nc" id="L118">        val LOG by logger()</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HostsProvisioningStep.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.provisioner</a> &gt; <span class="el_source">HostsProvisioningStep.kt</span></div><h1>HostsProvisioningStep.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.provisioner
+
+import org.opendc.compute.carbon.getCarbonFragments
+import org.opendc.compute.simulator.host.SimHost
+import org.opendc.compute.simulator.service.ComputeService
+import org.opendc.compute.topology.specs.ClusterSpec
+import org.opendc.compute.topology.specs.HostSpec
+import org.opendc.compute.topology.specs.createSimBatteryPolicy
+import org.opendc.simulator.compute.power.CarbonModel
+import org.opendc.simulator.compute.power.SimPowerSource
+import org.opendc.simulator.compute.power.batteries.BatteryAggregator
+import org.opendc.simulator.compute.power.batteries.SimBattery
+import org.opendc.simulator.engine.engine.FlowEngine
+import org.opendc.simulator.engine.graph.FlowDistributor
+import org.opendc.simulator.engine.graph.FlowEdge
+
+/**
+ * A [ProvisioningStep] that provisions a list of hosts for a [ComputeService].
+ *
+ * @param serviceDomain The domain name under which the compute service is registered.
+ * @param clusterSpecs A list of [HostSpec] objects describing the simulated hosts to provision.
+ * @param startTime The absolute start time of the simulation. Used to determine the carbon trace offset.
+ */
+<span class="nc" id="L46">public class HostsProvisioningStep internal constructor(</span>
+<span class="nc" id="L47">    private val serviceDomain: String,</span>
+<span class="nc" id="L48">    private val clusterSpecs: List&lt;ClusterSpec&gt;,</span>
+<span class="nc" id="L49">    private val startTime: Long = 0L,</span>
+) : ProvisioningStep {
+    override fun apply(ctx: ProvisioningContext): AutoCloseable {
+<span class="nc" id="L52">        val service =</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            requireNotNull(</span>
+<span class="nc" id="L54">                ctx.registry.resolve(serviceDomain, ComputeService::class.java),</span>
+<span class="nc" id="L55">            ) { &quot;Compute service $serviceDomain does not exist&quot; }</span>
+<span class="nc" id="L56">        val simHosts = mutableSetOf&lt;SimHost&gt;()</span>
+<span class="nc" id="L57">        val simPowerSources = mutableListOf&lt;SimPowerSource&gt;()</span>
+
+<span class="nc" id="L59">        val engine = FlowEngine.create(ctx.dispatcher)</span>
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        for (cluster in clusterSpecs) {</span>
+            // Create the Power Source to which hosts are connected
+
+            // Create Power Source
+<span class="nc" id="L65">            val simPowerSource = SimPowerSource(engine, cluster.powerSource.totalPower.toDouble(), cluster.powerSource.name, cluster.name)</span>
+<span class="nc" id="L66">            simPowerSources.add(simPowerSource)</span>
+<span class="nc" id="L67">            service.addPowerSource(simPowerSource)</span>
+
+<span class="nc" id="L69">            val hostDistributor = FlowDistributor(engine)</span>
+
+<span class="nc" id="L71">            val carbonFragments = getCarbonFragments(cluster.powerSource.carbonTracePath)</span>
+
+<span class="nc" id="L73">            var carbonModel: CarbonModel? = null</span>
+            // Create Carbon Model
+<span class="nc bnc" id="L75" title="All 2 branches missed.">            if (carbonFragments != null) {</span>
+<span class="nc" id="L76">                carbonModel = CarbonModel(engine, carbonFragments, startTime)</span>
+<span class="nc" id="L77">                carbonModel.addReceiver(simPowerSource)</span>
+<span class="nc" id="L78">                ctx.registry.register(serviceDomain, CarbonModel::class.java, carbonModel)</span>
+            }
+
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if (cluster.battery != null) {</span>
+                // Create Battery Distributor
+<span class="nc" id="L83">                val batteryDistributor = FlowDistributor(engine)</span>
+<span class="nc" id="L84">                FlowEdge(batteryDistributor, simPowerSource)</span>
+
+                // Create Battery
+<span class="nc" id="L87">                val battery =</span>
+<span class="nc" id="L88">                    SimBattery(</span>
+<span class="nc" id="L89">                        engine,</span>
+<span class="nc" id="L90">                        cluster.battery!!.capacity,</span>
+<span class="nc" id="L91">                        cluster.battery!!.chargingSpeed,</span>
+<span class="nc" id="L92">                        cluster.battery!!.initialCharge,</span>
+<span class="nc" id="L93">                        cluster.battery!!.name,</span>
+<span class="nc" id="L94">                        cluster.name,</span>
+<span class="nc" id="L95">                        cluster.battery!!.embodiedCarbon,</span>
+<span class="nc" id="L96">                        cluster.battery!!.expectedLifetime,</span>
+                    )
+<span class="nc" id="L98">                FlowEdge(battery, batteryDistributor)</span>
+
+                // Create Aggregator
+<span class="nc" id="L101">                val batteryAggregator = BatteryAggregator(engine, battery, batteryDistributor)</span>
+
+<span class="nc" id="L103">                val batteryPolicy =</span>
+<span class="nc" id="L104">                    createSimBatteryPolicy(</span>
+<span class="nc" id="L105">                        cluster.battery!!.batteryPolicy,</span>
+<span class="nc" id="L106">                        engine,</span>
+<span class="nc" id="L107">                        battery,</span>
+<span class="nc" id="L108">                        batteryAggregator,</span>
+                    )
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                carbonModel?.addReceiver(batteryPolicy)</span>
+
+<span class="nc" id="L113">                FlowEdge(hostDistributor, batteryAggregator)</span>
+
+<span class="nc" id="L115">                service.addBattery(battery)</span>
+            } else {
+<span class="nc" id="L117">                FlowEdge(hostDistributor, simPowerSource)</span>
+            }
+
+            // Create hosts, they are connected to the powerMux when SimMachine is created
+<span class="nc bnc" id="L121" title="All 2 branches missed.">            for (hostSpec in cluster.hostSpecs) {</span>
+<span class="nc" id="L122">                val simHost =</span>
+<span class="nc" id="L123">                    SimHost(</span>
+<span class="nc" id="L124">                        hostSpec.name,</span>
+<span class="nc" id="L125">                        cluster.name,</span>
+<span class="nc" id="L126">                        ctx.dispatcher.timeSource,</span>
+<span class="nc" id="L127">                        engine,</span>
+<span class="nc" id="L128">                        hostSpec.model,</span>
+<span class="nc" id="L129">                        hostSpec.cpuPowerModel,</span>
+<span class="nc" id="L130">                        hostSpec.embodiedCarbon,</span>
+<span class="nc" id="L131">                        hostSpec.expectedLifetime,</span>
+<span class="nc" id="L132">                        hostDistributor,</span>
+                    )
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">                require(simHosts.add(simHost)) { &quot;Host with name ${hostSpec.name} already exists&quot; }</span>
+<span class="nc" id="L136">                service.addHost(simHost)</span>
+            }
+        }
+
+<span class="nc" id="L140">        return AutoCloseable {</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            for (simHost in simHosts) {</span>
+<span class="nc" id="L142">                simHost.close()</span>
+            }
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            for (simPowerSource in simPowerSources) {</span>
+<span class="nc" id="L146">                simPowerSource.close()</span>
+            }
+<span class="nc" id="L148">        }</span>
+    }
+<span class="nc" id="L150">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

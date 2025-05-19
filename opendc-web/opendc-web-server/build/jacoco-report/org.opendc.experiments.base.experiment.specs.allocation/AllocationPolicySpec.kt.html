@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AllocationPolicySpec.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.experiments.base.experiment.specs.allocation</a> &gt; <span class="el_source">AllocationPolicySpec.kt</span></div><h1>AllocationPolicySpec.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.experiments.base.experiment.specs.allocation
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import org.opendc.compute.simulator.scheduler.ComputeScheduler
+import org.opendc.compute.simulator.scheduler.ComputeSchedulerEnum
+import org.opendc.compute.simulator.scheduler.FilterScheduler
+import org.opendc.compute.simulator.scheduler.createPrefabComputeScheduler
+import org.opendc.compute.simulator.scheduler.timeshift.MemorizingTimeshift
+import org.opendc.compute.simulator.scheduler.timeshift.TaskStopper
+import org.opendc.compute.simulator.scheduler.timeshift.TimeshiftScheduler
+import java.time.InstantSource
+import java.util.random.RandomGenerator
+import kotlin.coroutines.CoroutineContext
+
+/**
+ * specification describing how tasks are allocated
+ */
+<span class="nc" id="L41">@Serializable</span>
+public sealed interface AllocationPolicySpec
+
+<span class="nc bnc" id="L44" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;prefab&quot;)
+<span class="nc" id="L46">public data class PrefabAllocationPolicySpec(</span>
+<span class="nc" id="L47">    val policyName: ComputeSchedulerEnum = ComputeSchedulerEnum.Mem,</span>
+) : AllocationPolicySpec {
+<span class="nc" id="L49">    public val name: String = policyName.toString()</span>
+<span class="nc" id="L50">}</span>
+
+<span class="nc bnc" id="L52" title="All 9 branches missed.">@Serializable</span>
+@SerialName(&quot;filter&quot;)
+<span class="nc" id="L54">public data class FilterAllocationPolicySpec(</span>
+<span class="nc" id="L55">    val filters: List&lt;HostFilterSpec&gt;,</span>
+<span class="nc" id="L56">    val weighers: List&lt;HostWeigherSpec&gt;,</span>
+<span class="nc" id="L57">    val subsetSize: Int = 1,</span>
+<span class="nc" id="L58">) : AllocationPolicySpec</span>
+
+<span class="nc bnc" id="L60" title="All 16 branches missed.">@Serializable</span>
+@SerialName(&quot;timeshift&quot;)
+<span class="nc" id="L62">public data class TimeShiftAllocationPolicySpec(</span>
+<span class="nc" id="L63">    val filters: List&lt;HostFilterSpec&gt;,</span>
+<span class="nc" id="L64">    val weighers: List&lt;HostWeigherSpec&gt;,</span>
+<span class="nc" id="L65">    val windowSize: Int = 168,</span>
+<span class="nc" id="L66">    val subsetSize: Int = 1,</span>
+<span class="nc" id="L67">    val forecast: Boolean = true,</span>
+<span class="nc" id="L68">    val shortForecastThreshold: Double = 0.2,</span>
+<span class="nc" id="L69">    val longForecastThreshold: Double = 0.35,</span>
+<span class="nc" id="L70">    val forecastSize: Int = 24,</span>
+<span class="nc" id="L71">    val taskStopper: TaskStopperSpec? = null,</span>
+<span class="nc" id="L72">    val memorize: Boolean = true,</span>
+<span class="nc" id="L73">) : AllocationPolicySpec</span>
+
+<span class="nc bnc" id="L75" title="All 9 branches missed.">@Serializable</span>
+@SerialName(&quot;CpuUtilization&quot;)
+<span class="nc" id="L77">public data class CpuUtilizationAllocationPolicySpec(</span>
+<span class="nc" id="L78">    val filters: List&lt;HostFilterSpec&gt;,</span>
+<span class="nc" id="L79">    val weighers: List&lt;HostWeigherSpec&gt;,</span>
+<span class="nc" id="L80">    val subsetSize: Int = 1,</span>
+<span class="nc" id="L81">) : AllocationPolicySpec</span>
+
+public fun createComputeScheduler(
+    spec: AllocationPolicySpec,
+    seeder: RandomGenerator,
+    clock: InstantSource,
+): ComputeScheduler {
+<span class="nc" id="L88">    return when (spec) {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        is PrefabAllocationPolicySpec -&gt; createPrefabComputeScheduler(spec.policyName, seeder, clock)</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        is FilterAllocationPolicySpec -&gt; {</span>
+<span class="nc" id="L91">            val filters = spec.filters.map { createHostFilter(it) }</span>
+<span class="nc" id="L92">            val weighers = spec.weighers.map { createHostWeigher(it) }</span>
+<span class="nc" id="L93">            FilterScheduler(filters, weighers, spec.subsetSize, seeder)</span>
+        }
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        is TimeShiftAllocationPolicySpec -&gt; {</span>
+<span class="nc" id="L96">            val filters = spec.filters.map { createHostFilter(it) }</span>
+<span class="nc" id="L97">            val weighers = spec.weighers.map { createHostWeigher(it) }</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            if (spec.memorize) {</span>
+<span class="nc" id="L99">                MemorizingTimeshift(</span>
+<span class="nc" id="L100">                    filters,</span>
+<span class="nc" id="L101">                    spec.windowSize,</span>
+<span class="nc" id="L102">                    clock,</span>
+<span class="nc" id="L103">                    spec.forecast,</span>
+<span class="nc" id="L104">                    spec.shortForecastThreshold,</span>
+<span class="nc" id="L105">                    spec.longForecastThreshold,</span>
+<span class="nc" id="L106">                    spec.forecastSize,</span>
+                )
+            } else {
+<span class="nc" id="L109">                TimeshiftScheduler(</span>
+<span class="nc" id="L110">                    filters, weighers, spec.windowSize, clock, spec.subsetSize, spec.forecast,</span>
+<span class="nc" id="L111">                    spec.shortForecastThreshold, spec.longForecastThreshold, spec.forecastSize, seeder,</span>
+                )
+            }
+        }
+<span class="nc" id="L115">        is CpuUtilizationAllocationPolicySpec -&gt; {</span>
+<span class="nc" id="L116">            val filters = spec.filters.map { createHostFilter(it) }</span>
+<span class="nc" id="L117">            val weighers = spec.weighers.map { createHostWeigher(it) }</span>
+<span class="nc" id="L118">            FilterScheduler(filters, weighers, spec.subsetSize, seeder)</span>
+        }
+    }
+}
+
+<span class="nc bnc" id="L123" title="All 10 branches missed.">@Serializable</span>
+@SerialName(&quot;taskstopper&quot;)
+<span class="nc" id="L125">public data class TaskStopperSpec(</span>
+<span class="nc" id="L126">    val forecast: Boolean = true,</span>
+<span class="nc" id="L127">    val forecastThreshold: Double = 0.6,</span>
+<span class="nc" id="L128">    val forecastSize: Int = 24,</span>
+<span class="nc" id="L129">    val windowSize: Int = 168,</span>
+<span class="nc" id="L130">)</span>
+
+public fun createTaskStopper(
+    spec: TaskStopperSpec?,
+    context: CoroutineContext,
+    clock: InstantSource,
+): TaskStopper? {
+<span class="nc" id="L137">    val taskStopper =</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if (spec != null) {</span>
+<span class="nc" id="L139">            TaskStopper(</span>
+<span class="nc" id="L140">                clock,</span>
+<span class="nc" id="L141">                context,</span>
+<span class="nc" id="L142">                spec.forecast,</span>
+<span class="nc" id="L143">                spec.forecastThreshold,</span>
+<span class="nc" id="L144">                spec.forecastSize,</span>
+<span class="nc" id="L145">                spec.windowSize,</span>
+            )
+        } else {
+<span class="nc" id="L148">            null</span>
+        }
+
+<span class="nc" id="L151">    return taskStopper</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

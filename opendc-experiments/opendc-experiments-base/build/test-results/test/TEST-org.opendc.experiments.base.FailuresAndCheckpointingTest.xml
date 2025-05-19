@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.experiments.base.FailuresAndCheckpointingTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2025-05-17T00:17:21" hostname="ece-d6200-audu" time="0.112">
+  <properties/>
+  <testcase name="testCheckpoints1()" classname="org.opendc.experiments.base.FailuresAndCheckpointingTest" time="0.011"/>
+  <testcase name="testCheckpoints2()" classname="org.opendc.experiments.base.FailuresAndCheckpointingTest" time="0.011"/>
+  <testcase name="testCheckpoints3()" classname="org.opendc.experiments.base.FailuresAndCheckpointingTest" time="0.008"/>
+  <testcase name="testCheckpoints4()" classname="org.opendc.experiments.base.FailuresAndCheckpointingTest" time="0.008"/>
+  <testcase name="testCheckpoints5()" classname="org.opendc.experiments.base.FailuresAndCheckpointingTest" time="0.008"/>
+  <testcase name="testCheckpoints6()" classname="org.opendc.experiments.base.FailuresAndCheckpointingTest" time="0.008"/>
+  <testcase name="testFailures1()" classname="org.opendc.experiments.base.FailuresAndCheckpointingTest" time="0.009"/>
+  <testcase name="testFailures2()" classname="org.opendc.experiments.base.FailuresAndCheckpointingTest" time="0.008"/>
+  <testcase name="testFailures3()" classname="org.opendc.experiments.base.FailuresAndCheckpointingTest" time="0.009"/>
+  <testcase name="testFailures4()" classname="org.opendc.experiments.base.FailuresAndCheckpointingTest" time="0.029"/>
+  <system-out><![CDATA[20:17:21.822 [?[33mWARN ?[m] org.opendc.compute.simulator.service.ComputeService - task Task[uid=00000000-0000-0000-6e78-9e6aa1b965f4,name=0,state=PROVISIONING] has been terminated because it failed 10 times
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MemorizingTimeshift.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.scheduler.timeshift</a> &gt; <span class="el_source">MemorizingTimeshift.kt</span></div><h1>MemorizingTimeshift.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2025 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.scheduler.timeshift
+
+import org.opendc.compute.simulator.scheduler.ComputeScheduler
+import org.opendc.compute.simulator.scheduler.SchedulingRequest
+import org.opendc.compute.simulator.scheduler.SchedulingResult
+import org.opendc.compute.simulator.scheduler.SchedulingResultType
+import org.opendc.compute.simulator.scheduler.filters.HostFilter
+import org.opendc.compute.simulator.service.HostView
+import org.opendc.compute.simulator.service.ServiceTask
+import org.opendc.simulator.compute.power.CarbonModel
+import java.time.Instant
+import java.time.InstantSource
+import java.util.LinkedList
+
+<span class="nc" id="L37">public class MemorizingTimeshift(</span>
+<span class="nc" id="L38">    private val filters: List&lt;HostFilter&gt;,</span>
+<span class="nc" id="L39">    override val windowSize: Int,</span>
+<span class="nc" id="L40">    override val clock: InstantSource,</span>
+<span class="nc" id="L41">    override val forecast: Boolean = true,</span>
+<span class="nc" id="L42">    override val shortForecastThreshold: Double = 0.2,</span>
+<span class="nc" id="L43">    override val longForecastThreshold: Double = 0.35,</span>
+<span class="nc" id="L44">    override val forecastSize: Int = 24,</span>
+<span class="nc" id="L45">    public val maxTimesSkipped: Int = 7,</span>
+) : ComputeScheduler, Timeshifter {
+    // We assume that there will be max 200 tasks per host.
+    // The index of a host list is the number of tasks on that host.
+<span class="nc bnc" id="L49" title="All 2 branches missed.">    private val hostsQueue = List(100) { mutableListOf&lt;HostView&gt;() }</span>
+    private var minAvailableHost = 0
+    private var numHosts = 0
+
+<span class="nc" id="L53">    override val pastCarbonIntensities: LinkedList&lt;Double&gt; = LinkedList&lt;Double&gt;()</span>
+<span class="nc" id="L54">    override var carbonRunningSum: Double = 0.0</span>
+<span class="nc" id="L55">    override var shortLowCarbon: Boolean = false // Low carbon regime for short tasks (&lt; 2 hours)</span>
+<span class="nc" id="L56">    override var longLowCarbon: Boolean = false // Low carbon regime for long tasks (&gt;= hours)</span>
+<span class="nc" id="L57">    override var carbonMod: CarbonModel? = null</span>
+
+    override fun addHost(host: HostView) {
+<span class="nc" id="L60">        val zeroQueue = hostsQueue[0]</span>
+<span class="nc" id="L61">        zeroQueue.add(host)</span>
+<span class="nc" id="L62">        host.priorityIndex = 0</span>
+<span class="nc" id="L63">        host.listIndex = zeroQueue.size - 1</span>
+<span class="nc" id="L64">        numHosts++</span>
+<span class="nc" id="L65">        minAvailableHost = 0</span>
+<span class="nc" id="L66">    }</span>
+
+    override fun removeHost(host: HostView) {
+<span class="nc" id="L69">        val priorityIdx = host.priorityIndex</span>
+<span class="nc" id="L70">        val listIdx = host.listIndex</span>
+<span class="nc" id="L71">        val chosenList = hostsQueue[priorityIdx]</span>
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (chosenList.size == 1) {</span>
+<span class="nc" id="L74">            chosenList.removeLast()</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">            if (listIdx == minAvailableHost) {</span>
+<span class="nc bnc" id="L76" title="All 4 branches missed.">                for (i in minAvailableHost + 1..hostsQueue.lastIndex) {</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">                    if (hostsQueue[i].size &gt; 0) {</span>
+<span class="nc" id="L78">                        minAvailableHost = i</span>
+<span class="nc" id="L79">                        break</span>
+                    }
+                }
+            }
+        } else {
+<span class="nc" id="L84">            val lastItem = chosenList.removeLast()</span>
+<span class="nc" id="L85">            chosenList[listIdx] = lastItem</span>
+<span class="nc" id="L86">            lastItem.listIndex = listIdx</span>
+        }
+<span class="nc" id="L88">        numHosts--</span>
+<span class="nc" id="L89">    }</span>
+
+    override fun select(iter: MutableIterator&lt;SchedulingRequest&gt;): SchedulingResult {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (numHosts == 0) {</span>
+<span class="nc" id="L93">            return SchedulingResult(SchedulingResultType.FAILURE)</span>
+        }
+
+<span class="nc" id="L96">        val maxIters = 10000</span>
+<span class="nc" id="L97">        var numIters = 0</span>
+
+<span class="nc" id="L99">        var chosenList: MutableList&lt;HostView&gt;? = null</span>
+<span class="nc" id="L100">        var chosenHost: HostView? = null</span>
+
+<span class="nc" id="L102">        var result: SchedulingResult? = null</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        taskloop@ for (req in iter) {</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            if (req.isCancelled) {</span>
+<span class="nc" id="L105">                iter.remove()</span>
+<span class="nc" id="L106">                continue</span>
+            }
+
+<span class="nc" id="L109">            numIters++</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            if (numIters &gt; maxIters) {</span>
+<span class="nc" id="L111">                return SchedulingResult(SchedulingResultType.EMPTY)</span>
+            }
+
+<span class="nc" id="L114">            val task = req.task</span>
+
+            /**
+             If we are not in a low carbon regime, delay tasks.
+             Only delay tasks if they are deferrable and it doesn't violate the deadline.
+             Separate delay thresholds for short and long tasks.
+             */
+<span class="nc bnc" id="L121" title="All 2 branches missed.">            if (task.nature.deferrable) {</span>
+<span class="nc" id="L122">                val durInHours = task.duration.toHours()</span>
+<span class="nc bnc" id="L123" title="All 4 branches missed.">                if ((durInHours &lt; 2 &amp;&amp; !shortLowCarbon) ||</span>
+<span class="nc bnc" id="L124" title="All 4 branches missed.">                    (durInHours &gt;= 2 &amp;&amp; !longLowCarbon)</span>
+                ) {
+<span class="nc" id="L126">                    val currentTime = clock.instant()</span>
+<span class="nc" id="L127">                    val estimatedCompletion = currentTime.plus(task.duration)</span>
+<span class="nc" id="L128">                    val deadline = Instant.ofEpochMilli(task.deadline)</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">                    if (estimatedCompletion.isBefore(deadline)) {</span>
+                        // No need to schedule this task in a high carbon intensity period
+<span class="nc" id="L131">                        continue</span>
+                    }
+                }
+            }
+
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            for (chosenListIndex in minAvailableHost until hostsQueue.size) {</span>
+<span class="nc" id="L137">                chosenList = hostsQueue[chosenListIndex]</span>
+
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                for (host in chosenList) {</span>
+<span class="nc" id="L140">                    val satisfied = filters.all { filter -&gt; filter.test(host, req.task) }</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">                    if (satisfied) {</span>
+<span class="nc" id="L142">                        iter.remove()</span>
+<span class="nc" id="L143">                        chosenHost = host</span>
+<span class="nc" id="L144">                        result = SchedulingResult(SchedulingResultType.SUCCESS, host, req)</span>
+<span class="nc" id="L145">                        break@taskloop</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                    } else if (req.timesSkipped &gt;= maxTimesSkipped) {</span>
+<span class="nc" id="L147">                        return SchedulingResult(SchedulingResultType.FAILURE, null, req)</span>
+                    }
+                }
+            }
+<span class="nc" id="L151">            req.timesSkipped++</span>
+        }
+
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (result == null) return SchedulingResult(SchedulingResultType.EMPTY) // No tasks to schedule that fit</span>
+
+        // Bookkeeping to maintain the calendar priority queue
+<span class="nc bnc" id="L157" title="All 2 branches missed.">        if (chosenList!!.size == 1) {</span>
+<span class="nc" id="L158">            chosenList.removeLast()</span>
+<span class="nc" id="L159">            minAvailableHost++</span>
+        } else {
+<span class="nc" id="L161">            val listIdx = chosenHost!!.listIndex</span>
+            // Not using removeLast here as it would cause problems during swapping
+            // if chosenHost is lastItem
+<span class="nc" id="L164">            val lastItem = chosenList.last()</span>
+<span class="nc" id="L165">            chosenList[listIdx] = lastItem</span>
+<span class="nc" id="L166">            lastItem.listIndex = listIdx</span>
+<span class="nc" id="L167">            chosenList.removeLast()</span>
+        }
+
+<span class="nc" id="L170">        val nextList = hostsQueue[chosenHost!!.priorityIndex + 1]</span>
+<span class="nc" id="L171">        nextList.add(chosenHost)</span>
+<span class="nc" id="L172">        chosenHost.priorityIndex++</span>
+<span class="nc" id="L173">        chosenHost.listIndex = nextList.size - 1</span>
+
+<span class="nc" id="L175">        return result</span>
+    }
+
+    override fun removeTask(
+        task: ServiceTask,
+        host: HostView?,
+    ) {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        if (host == null) return</span>
+
+<span class="nc" id="L184">        val priorityIdx = host.priorityIndex</span>
+<span class="nc" id="L185">        val listIdx = host.listIndex</span>
+<span class="nc" id="L186">        val chosenList = hostsQueue[priorityIdx]</span>
+<span class="nc" id="L187">        val nextList = hostsQueue[priorityIdx - 1]</span>
+
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        if (chosenList.size == 1) {</span>
+<span class="nc" id="L190">            chosenList.removeLast()</span>
+        } else {
+<span class="nc" id="L192">            val lastItem = chosenList.last()</span>
+<span class="nc" id="L193">            chosenList[listIdx] = lastItem</span>
+<span class="nc" id="L194">            lastItem.listIndex = listIdx</span>
+<span class="nc" id="L195">            chosenList.removeLast()</span>
+        }
+
+<span class="nc" id="L198">        nextList.add(host)</span>
+<span class="nc" id="L199">        host.priorityIndex--</span>
+<span class="nc" id="L200">        host.listIndex = nextList.size - 1</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        if (priorityIdx == minAvailableHost) {</span>
+<span class="nc" id="L202">            minAvailableHost--</span>
+        }
+<span class="nc" id="L204">    }</span>
+<span class="nc" id="L205">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

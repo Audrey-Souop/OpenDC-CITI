@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenDCRunnerProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.runner.deployment</a> &gt; <span class="el_source">OpenDCRunnerProcessor.java</span></div><h1>OpenDCRunnerProcessor.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.runner.deployment;
+
+import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
+
+import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
+import io.quarkus.deployment.annotations.BuildProducer;
+import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.*;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
+import io.quarkus.deployment.util.ServiceUtil;
+import io.quarkus.runtime.RuntimeValue;
+import java.io.IOException;
+import java.util.Set;
+import java.util.function.BooleanSupplier;
+import org.opendc.trace.spi.TraceFormat;
+import org.opendc.web.runner.JobManager;
+import org.opendc.web.runner.OpenDCRunner;
+import org.opendc.web.runner.runtime.OpenDCRunnerRecorder;
+import org.opendc.web.runner.runtime.OpenDCRunnerRuntimeConfig;
+
+/**
+ * Build processor for the OpenDC web runner Quarkus extension.
+ */
+<span class="nc" id="L47">public class OpenDCRunnerProcessor {</span>
+
+    private static final String FEATURE = &quot;opendc-runner&quot;;
+
+    /**
+     * Provide the {@link FeatureBuildItem} for this Quarkus extension.
+     */
+    @BuildStep(onlyIf = IsIncluded.class)
+    public FeatureBuildItem feature() {
+<span class="nc" id="L56">        return new FeatureBuildItem(FEATURE);</span>
+    }
+
+    /**
+     * Build step to register the trace formats used by OpenDC.
+     */
+    @BuildStep
+    void registerTraceFormats(BuildProducer&lt;ServiceProviderBuildItem&gt; services) throws IOException {
+<span class="nc" id="L64">        String service = &quot;META-INF/services/&quot; + TraceFormat.class.getName();</span>
+
+        Set&lt;String&gt; implementations =
+<span class="nc" id="L67">                ServiceUtil.classNamesNamedIn(Thread.currentThread().getContextClassLoader(), service);</span>
+
+<span class="nc" id="L69">        services.produce(</span>
+<span class="nc" id="L70">                new ServiceProviderBuildItem(TraceFormat.class.getName(), implementations.toArray(new String[0])));</span>
+<span class="nc" id="L71">    }</span>
+
+    /**
+     * Mark {@link JobManager} as unremoveable, since we look up this service dynamically in {@link OpenDCRunnerRecorder}.
+     */
+    @BuildStep
+    UnremovableBeanBuildItem unremovableBeans() {
+<span class="nc" id="L78">        return UnremovableBeanBuildItem.beanTypes(JobManager.class);</span>
+    }
+
+    /**
+     * Build step to create the runner service.
+     */
+    @BuildStep(onlyIf = IsIncluded.class)
+    @Record(RUNTIME_INIT)
+    ServiceStartBuildItem createRunnerService(
+            OpenDCRunnerRecorder recorder,
+            OpenDCRunnerRuntimeConfig config,
+            BuildProducer&lt;OpenDCRunnerBuildItem&gt; runnerBuildItem) {
+<span class="nc" id="L90">        RuntimeValue&lt;OpenDCRunner&gt; runner = recorder.createRunner(config);</span>
+<span class="nc" id="L91">        runnerBuildItem.produce(new OpenDCRunnerBuildItem(runner));</span>
+<span class="nc" id="L92">        return new ServiceStartBuildItem(&quot;OpenDCRunnerService&quot;);</span>
+    }
+
+    /**
+     * Build step to start the runner service.
+     */
+    @BuildStep(onlyIf = IsIncluded.class)
+    @Record(RUNTIME_INIT)
+    void startRunnerService(
+            ApplicationStartBuildItem start,
+            OpenDCRunnerBuildItem runnerBuildItem,
+            OpenDCRunnerRecorder recorder,
+            OpenDCRunnerRuntimeConfig config,
+            ShutdownContextBuildItem shutdownContextBuildItem) {
+<span class="nc" id="L106">        recorder.startRunner(runnerBuildItem.getRunner(), config, shutdownContextBuildItem);</span>
+<span class="nc" id="L107">    }</span>
+
+    /**
+     * A {@link BooleanSupplier} to determine if the OpenDC web runner extension should be included.
+     */
+    private static class IsIncluded implements BooleanSupplier {
+        OpenDCRunnerConfig config;
+
+        @Override
+        public boolean getAsBoolean() {
+<span class="nc" id="L117">            return config.include;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

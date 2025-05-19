@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OdcVmTraceFormat.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.formats.opendc</a> &gt; <span class="el_source">OdcVmTraceFormat.kt</span></div><h1>OdcVmTraceFormat.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.formats.opendc
+
+import com.fasterxml.jackson.core.JsonEncoding
+import com.fasterxml.jackson.core.JsonFactory
+import org.apache.parquet.column.ParquetProperties
+import org.apache.parquet.hadoop.ParquetFileWriter
+import org.apache.parquet.hadoop.metadata.CompressionCodecName
+import org.opendc.trace.TableColumn
+import org.opendc.trace.TableColumnType
+import org.opendc.trace.TableReader
+import org.opendc.trace.TableWriter
+import org.opendc.trace.conv.INTERFERENCE_GROUP_MEMBERS
+import org.opendc.trace.conv.INTERFERENCE_GROUP_SCORE
+import org.opendc.trace.conv.INTERFERENCE_GROUP_TARGET
+import org.opendc.trace.conv.TABLE_INTERFERENCE_GROUPS
+import org.opendc.trace.conv.TABLE_RESOURCES
+import org.opendc.trace.conv.TABLE_RESOURCE_STATES
+import org.opendc.trace.conv.resourceCpuCapacity
+import org.opendc.trace.conv.resourceCpuCount
+import org.opendc.trace.conv.resourceDeadline
+import org.opendc.trace.conv.resourceDuration
+import org.opendc.trace.conv.resourceID
+import org.opendc.trace.conv.resourceMemCapacity
+import org.opendc.trace.conv.resourceNature
+import org.opendc.trace.conv.resourceStateCpuUsage
+import org.opendc.trace.conv.resourceStateDuration
+import org.opendc.trace.conv.resourceStateTimestamp
+import org.opendc.trace.conv.resourceSubmissionTime
+import org.opendc.trace.formats.opendc.parquet.ResourceReadSupport
+import org.opendc.trace.formats.opendc.parquet.ResourceStateReadSupport
+import org.opendc.trace.formats.opendc.parquet.ResourceStateWriteSupport
+import org.opendc.trace.formats.opendc.parquet.ResourceWriteSupport
+import org.opendc.trace.spi.TableDetails
+import org.opendc.trace.spi.TraceFormat
+import org.opendc.trace.util.parquet.LocalParquetReader
+import org.opendc.trace.util.parquet.LocalParquetWriter
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.exists
+
+/**
+ * A [TraceFormat] implementation of the OpenDC virtual machine trace format.
+ */
+<span class="fc" id="L66">public class OdcVmTraceFormat : TraceFormat {</span>
+    /**
+     * A [JsonFactory] that is used to parse the JSON-based interference model.
+     */
+<span class="fc" id="L70">    private val jsonFactory = JsonFactory()</span>
+
+    /**
+     * The name of this trace format.
+     */
+<span class="pc" id="L75">    override val name: String = &quot;opendc-vm&quot;</span>
+
+    override fun create(path: Path) {
+        // Construct directory containing the trace files
+<span class="nc" id="L79">        Files.createDirectories(path)</span>
+
+<span class="nc" id="L81">        val tables = getTables(path)</span>
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        for (table in tables) {</span>
+<span class="nc" id="L84">            val writer = newWriter(path, table)</span>
+<span class="nc" id="L85">            writer.close()</span>
+        }
+<span class="nc" id="L87">    }</span>
+
+<span class="fc" id="L89">    override fun getTables(path: Path): List&lt;String&gt; = listOf(TABLE_RESOURCES, TABLE_RESOURCE_STATES, TABLE_INTERFERENCE_GROUPS)</span>
+
+    override fun getDetails(
+        path: Path,
+        table: String,
+    ): TableDetails {
+<span class="fc bfc" id="L95" title="All 4 branches covered.">        return when (table) {</span>
+            TABLE_RESOURCES -&gt;
+<span class="fc" id="L97">                TableDetails(</span>
+<span class="fc" id="L98">                    listOf(</span>
+<span class="fc" id="L99">                        TableColumn(resourceID, TableColumnType.String),</span>
+<span class="fc" id="L100">                        TableColumn(resourceSubmissionTime, TableColumnType.Instant),</span>
+<span class="fc" id="L101">                        TableColumn(resourceDuration, TableColumnType.Long),</span>
+<span class="fc" id="L102">                        TableColumn(resourceCpuCount, TableColumnType.Int),</span>
+<span class="fc" id="L103">                        TableColumn(resourceCpuCapacity, TableColumnType.Double),</span>
+<span class="fc" id="L104">                        TableColumn(resourceMemCapacity, TableColumnType.Double),</span>
+<span class="fc" id="L105">                        TableColumn(resourceNature, TableColumnType.String),</span>
+<span class="fc" id="L106">                        TableColumn(resourceDeadline, TableColumnType.Long),</span>
+                    ),
+                )
+            TABLE_RESOURCE_STATES -&gt;
+<span class="fc" id="L110">                TableDetails(</span>
+<span class="fc" id="L111">                    listOf(</span>
+<span class="fc" id="L112">                        TableColumn(resourceID, TableColumnType.String),</span>
+<span class="fc" id="L113">                        TableColumn(resourceStateTimestamp, TableColumnType.Instant),</span>
+<span class="fc" id="L114">                        TableColumn(resourceStateDuration, TableColumnType.Duration),</span>
+<span class="fc" id="L115">                        TableColumn(resourceCpuCount, TableColumnType.Int),</span>
+<span class="fc" id="L116">                        TableColumn(resourceStateCpuUsage, TableColumnType.Double),</span>
+                    ),
+                )
+            TABLE_INTERFERENCE_GROUPS -&gt;
+<span class="fc" id="L120">                TableDetails(</span>
+<span class="fc" id="L121">                    listOf(</span>
+<span class="fc" id="L122">                        TableColumn(INTERFERENCE_GROUP_MEMBERS, TableColumnType.Set(TableColumnType.String)),</span>
+<span class="fc" id="L123">                        TableColumn(INTERFERENCE_GROUP_TARGET, TableColumnType.Double),</span>
+<span class="fc" id="L124">                        TableColumn(INTERFERENCE_GROUP_SCORE, TableColumnType.Double),</span>
+                    ),
+                )
+<span class="fc" id="L127">            else -&gt; throw IllegalArgumentException(&quot;Table $table not supported&quot;)</span>
+        }
+    }
+
+    override fun newReader(
+        path: Path,
+        table: String,
+        projection: List&lt;String&gt;?,
+    ): TableReader {
+<span class="pc bpc" id="L136" title="1 of 4 branches missed.">        return when (table) {</span>
+            TABLE_RESOURCES -&gt; {
+<span class="fc" id="L138">                val reader = LocalParquetReader(path.resolve(&quot;tasks.parquet&quot;), ResourceReadSupport(projection))</span>
+<span class="fc" id="L139">                OdcVmResourceTableReader(reader)</span>
+            }
+            TABLE_RESOURCE_STATES -&gt; {
+<span class="fc" id="L142">                val reader = LocalParquetReader(path.resolve(&quot;fragments.parquet&quot;), ResourceStateReadSupport(projection))</span>
+<span class="fc" id="L143">                OdcVmResourceStateTableReader(reader)</span>
+            }
+            TABLE_INTERFERENCE_GROUPS -&gt; {
+<span class="fc" id="L146">                val modelPath = path.resolve(&quot;interference-model.json&quot;)</span>
+<span class="fc" id="L147">                val parser =</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">                    if (modelPath.exists()) {</span>
+<span class="fc" id="L149">                        jsonFactory.createParser(modelPath.toFile())</span>
+                    } else {
+<span class="fc" id="L151">                        jsonFactory.createParser(&quot;[]&quot;) // If model does not exist, return empty model</span>
+                    }
+
+<span class="fc" id="L154">                OdcVmInterferenceJsonTableReader(parser)</span>
+            }
+<span class="nc" id="L156">            else -&gt; throw IllegalArgumentException(&quot;Table $table not supported&quot;)</span>
+        }
+    }
+
+    override fun newWriter(
+        path: Path,
+        table: String,
+    ): TableWriter {
+<span class="pc bpc" id="L164" title="1 of 4 branches missed.">        return when (table) {</span>
+            TABLE_RESOURCES -&gt; {
+<span class="fc" id="L166">                val writer =</span>
+<span class="fc" id="L167">                    LocalParquetWriter.builder(path.resolve(&quot;tasks.parquet&quot;), ResourceWriteSupport())</span>
+<span class="fc" id="L168">                        .withCompressionCodec(CompressionCodecName.ZSTD)</span>
+<span class="fc" id="L169">                        .withPageWriteChecksumEnabled(true)</span>
+<span class="fc" id="L170">                        .withWriterVersion(ParquetProperties.WriterVersion.PARQUET_2_0)</span>
+<span class="fc" id="L171">                        .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)</span>
+<span class="fc" id="L172">                        .build()</span>
+<span class="fc" id="L173">                OdcVmResourceTableWriter(writer)</span>
+            }
+            TABLE_RESOURCE_STATES -&gt; {
+<span class="fc" id="L176">                val writer =</span>
+<span class="fc" id="L177">                    LocalParquetWriter.builder(path.resolve(&quot;fragments.parquet&quot;), ResourceStateWriteSupport())</span>
+<span class="fc" id="L178">                        .withCompressionCodec(CompressionCodecName.ZSTD)</span>
+<span class="fc" id="L179">                        .withDictionaryEncoding(&quot;id&quot;, true)</span>
+<span class="fc" id="L180">                        .withBloomFilterEnabled(&quot;id&quot;, true)</span>
+<span class="fc" id="L181">                        .withPageWriteChecksumEnabled(true)</span>
+<span class="fc" id="L182">                        .withWriterVersion(ParquetProperties.WriterVersion.PARQUET_2_0)</span>
+<span class="fc" id="L183">                        .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)</span>
+<span class="fc" id="L184">                        .build()</span>
+<span class="fc" id="L185">                OdcVmResourceStateTableWriter(writer)</span>
+            }
+            TABLE_INTERFERENCE_GROUPS -&gt; {
+<span class="fc" id="L188">                val generator = jsonFactory.createGenerator(path.resolve(&quot;interference-model.json&quot;).toFile(), JsonEncoding.UTF8)</span>
+<span class="fc" id="L189">                OdcVmInterferenceJsonTableWriter(generator)</span>
+            }
+<span class="nc" id="L191">            else -&gt; throw IllegalArgumentException(&quot;Table $table not supported&quot;)</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

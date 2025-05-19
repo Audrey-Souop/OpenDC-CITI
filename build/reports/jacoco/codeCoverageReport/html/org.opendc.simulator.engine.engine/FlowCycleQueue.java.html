@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FlowCycleQueue.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.engine.engine</a> &gt; <span class="el_source">FlowCycleQueue.java</span></div><h1>FlowCycleQueue.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.engine.engine;
+
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import org.opendc.simulator.engine.graph.FlowNode;
+
+/**
+ * A specialized {@link ArrayDeque} implementation that contains the {@link FlowNode}s
+ * that should be updated in the current cycle, because of a change caused by another update in the current cycle.
+ * &lt;p&gt;
+ * By using a specialized class, we reduce the overhead caused by type-erasure.
+ */
+final class FlowCycleQueue {
+    /**
+     * The array of elements in the queue.
+     */
+    private FlowNode[] nodeQueue;
+
+<span class="fc" id="L41">    private int head = 0;</span>
+<span class="fc" id="L42">    private int tail = 0;</span>
+
+<span class="fc" id="L44">    public FlowCycleQueue(int initialCapacity) {</span>
+<span class="fc" id="L45">        nodeQueue = new FlowNode[initialCapacity];</span>
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * Add the specified context to the queue.
+     */
+    void add(FlowNode ctx) {
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (ctx.getInCycleQueue()) {</span>
+<span class="fc" id="L53">            return;</span>
+        }
+
+<span class="fc" id="L56">        final FlowNode[] es = nodeQueue;</span>
+<span class="fc" id="L57">        int tail = this.tail;</span>
+
+<span class="fc" id="L59">        es[tail] = ctx;</span>
+
+<span class="fc" id="L61">        tail = inc(tail, es.length);</span>
+<span class="fc" id="L62">        this.tail = tail;</span>
+
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (head == tail) {</span>
+<span class="fc" id="L65">            doubleCapacity();</span>
+        }
+
+<span class="fc" id="L68">        ctx.setInCycleQueue(true);</span>
+<span class="fc" id="L69">    }</span>
+
+    /**
+     * Remove a {@link FlowNode} from the queue or &lt;code&gt;null&lt;/code&gt; if the queue is empty.
+     */
+    FlowNode poll() {
+<span class="fc" id="L75">        final FlowNode[] es = nodeQueue;</span>
+<span class="fc" id="L76">        int head = this.head;</span>
+<span class="fc" id="L77">        FlowNode ctx = es[head];</span>
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (ctx != null) {</span>
+<span class="fc" id="L80">            es[head] = null;</span>
+<span class="fc" id="L81">            this.head = inc(head, es.length);</span>
+<span class="fc" id="L82">            ctx.setInCycleQueue(false);</span>
+        }
+
+<span class="fc" id="L85">        return ctx;</span>
+    }
+
+    /**
+     * Doubles the capacity of this deque
+     */
+    private void doubleCapacity() {
+<span class="fc" id="L92">        int oldCapacity = nodeQueue.length;</span>
+<span class="fc" id="L93">        int newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1);</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (newCapacity &lt; 0) {</span>
+<span class="nc" id="L95">            throw new IllegalStateException(&quot;Sorry, deque too big&quot;);</span>
+        }
+
+<span class="fc" id="L98">        final FlowNode[] es = nodeQueue = Arrays.copyOf(nodeQueue, newCapacity);</span>
+
+        // Exceptionally, here tail == head needs to be disambiguated
+<span class="pc bpc" id="L101" title="3 of 6 branches missed.">        if (tail &lt; head || (tail == head &amp;&amp; es[head] != null)) {</span>
+            // wrap around; slide first leg forward to end of array
+<span class="fc" id="L103">            int newSpace = newCapacity - oldCapacity;</span>
+<span class="fc" id="L104">            System.arraycopy(es, head, es, head + newSpace, oldCapacity - head);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            for (int i = head, to = (head += newSpace); i &lt; to; i++) es[i] = null;</span>
+        }
+<span class="fc" id="L107">    }</span>
+
+    /**
+     * Circularly increments i, mod modulus.
+     * Precondition and postcondition: 0 &lt;= i &lt; modulus.
+     */
+    private static int inc(int i, int modulus) {
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (++i &gt;= modulus) i = 0;</span>
+<span class="fc" id="L115">        return i;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

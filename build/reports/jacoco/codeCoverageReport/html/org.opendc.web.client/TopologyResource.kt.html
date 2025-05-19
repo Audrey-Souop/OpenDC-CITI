@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TopologyResource.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.client</a> &gt; <span class="el_source">TopologyResource.kt</span></div><h1>TopologyResource.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.client
+
+import org.opendc.web.client.internal.delete
+import org.opendc.web.client.internal.get
+import org.opendc.web.client.internal.post
+import org.opendc.web.client.internal.put
+import org.opendc.web.client.transport.TransportClient
+import org.opendc.web.proto.user.Topology
+
+/**
+ * A resource representing the topologies available to the user.
+ */
+<span class="nc" id="L35">public class TopologyResource internal constructor(private val client: TransportClient) {</span>
+    /**
+     * List all topologies that belong to the specified [project].
+     */
+<span class="nc bnc" id="L39" title="All 2 branches missed.">    public fun getAll(project: Long): List&lt;Topology&gt; = client.get(&quot;projects/$project/topologies&quot;) ?: emptyList()</span>
+
+    /**
+     * Obtain the topology for [project] with [index].
+     */
+    public fun get(
+        project: Long,
+        index: Int,
+<span class="nc" id="L47">    ): Topology? = client.get(&quot;projects/$project/topologies/$index&quot;)</span>
+
+    /**
+     * Create a new topology for [project] with [request].
+     */
+    public fun create(
+        project: Long,
+        request: Topology.Create,
+    ): Topology {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        return checkNotNull(client.post(&quot;projects/$project/topologies&quot;, request))</span>
+    }
+
+    /**
+     * Update the topology with [index] for [project] using the specified [request].
+     */
+    public fun update(
+        project: Long,
+        index: Int,
+        request: Topology.Update,
+    ): Topology? {
+<span class="nc" id="L67">        return client.put(&quot;projects/$project/topologies/$index&quot;, request)</span>
+    }
+
+    /**
+     * Delete the topology for [project] with [index].
+     */
+    public fun delete(
+        project: Long,
+        index: Long,
+    ): Topology {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        return requireNotNull(client.delete(&quot;projects/$project/topologies/$index&quot;)) { &quot;Unknown topology $index&quot; }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

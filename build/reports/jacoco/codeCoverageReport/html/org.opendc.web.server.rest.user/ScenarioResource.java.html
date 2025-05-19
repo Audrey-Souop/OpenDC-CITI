@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScenarioResource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.rest.user</a> &gt; <span class="el_source">ScenarioResource.java</span></div><h1>ScenarioResource.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2023 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.rest.user;
+
+import io.quarkus.security.identity.SecurityIdentity;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import java.util.List;
+import org.opendc.web.server.model.ProjectAuthorization;
+import org.opendc.web.server.model.Scenario;
+
+/**
+ * A resource representing the scenarios of a portfolio.
+ */
+@Produces(&quot;application/json&quot;)
+@Path(&quot;/projects/{project}/scenarios&quot;)
+@RolesAllowed(&quot;openid&quot;)
+public final class ScenarioResource {
+    /**
+     * The identity of the current user.
+     */
+    private final SecurityIdentity identity;
+
+    /**
+     * Construct a {@link ScenarioResource}.
+     *
+     * @param identity The {@link SecurityIdentity} of the current user.
+     */
+<span class="fc" id="L55">    public ScenarioResource(SecurityIdentity identity) {</span>
+<span class="fc" id="L56">        this.identity = identity;</span>
+<span class="fc" id="L57">    }</span>
+
+    /**
+     * Obtain the scenarios belonging to a project.
+     */
+    @GET
+    public List&lt;org.opendc.web.proto.user.Scenario&gt; getAll(@PathParam(&quot;project&quot;) long projectId) {
+        // User must have access to project
+<span class="fc" id="L65">        ProjectAuthorization auth =</span>
+<span class="fc" id="L66">                ProjectAuthorization.findByUser(identity.getPrincipal().getName(), projectId);</span>
+
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L69">            throw new WebApplicationException(&quot;Project not found&quot;, 404);</span>
+        }
+
+<span class="fc" id="L72">        return Scenario.findByProject(projectId).list().stream()</span>
+<span class="fc" id="L73">                .map((s) -&gt; UserProtocol.toDto(s, auth))</span>
+<span class="fc" id="L74">                .toList();</span>
+    }
+
+    /**
+     * Obtain a scenario by its identifier.
+     */
+    @GET
+    @Path(&quot;{scenario}&quot;)
+    public org.opendc.web.proto.user.Scenario get(
+            @PathParam(&quot;project&quot;) long projectId, @PathParam(&quot;scenario&quot;) int number) {
+        // User must have access to project
+<span class="fc" id="L85">        ProjectAuthorization auth =</span>
+<span class="fc" id="L86">                ProjectAuthorization.findByUser(identity.getPrincipal().getName(), projectId);</span>
+
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L89">            throw new WebApplicationException(&quot;Project not found&quot;, 404);</span>
+        }
+
+<span class="fc" id="L92">        Scenario scenario = Scenario.findByProject(projectId, number);</span>
+
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (scenario == null) {</span>
+<span class="fc" id="L95">            throw new WebApplicationException(&quot;Scenario not found&quot;, 404);</span>
+        }
+
+<span class="fc" id="L98">        return UserProtocol.toDto(scenario, auth);</span>
+    }
+
+    /**
+     * Delete a scenario.
+     */
+    @DELETE
+    @Path(&quot;{scenario}&quot;)
+    @Transactional
+    public org.opendc.web.proto.user.Scenario delete(
+            @PathParam(&quot;project&quot;) long projectId, @PathParam(&quot;scenario&quot;) int number) {
+        // User must have access to project
+<span class="fc" id="L110">        ProjectAuthorization auth =</span>
+<span class="fc" id="L111">                ProjectAuthorization.findByUser(identity.getPrincipal().getName(), projectId);</span>
+
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L114">            throw new WebApplicationException(&quot;Project not found&quot;, 404);</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        } else if (!auth.canEdit()) {</span>
+<span class="fc" id="L116">            throw new WebApplicationException(&quot;Not permitted to edit project&quot;, 403);</span>
+        }
+
+<span class="fc" id="L119">        Scenario entity = Scenario.findByProject(projectId, number);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        if (entity == null) {</span>
+<span class="fc" id="L121">            throw new WebApplicationException(&quot;Scenario not found&quot;, 404);</span>
+        }
+
+<span class="fc" id="L124">        entity.delete();</span>
+<span class="fc" id="L125">        return UserProtocol.toDto(entity, auth);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

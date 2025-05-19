@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskTableReaderImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.telemetry.table.task</a> &gt; <span class="el_source">TaskTableReaderImpl.kt</span></div><h1>TaskTableReaderImpl.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2025 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.telemetry.table.task
+
+import org.opendc.compute.api.TaskState
+import org.opendc.compute.simulator.host.SimHost
+import org.opendc.compute.simulator.service.ComputeService
+import org.opendc.compute.simulator.service.ServiceTask
+import org.opendc.compute.simulator.telemetry.table.host.HostInfo
+import java.time.Duration
+import java.time.Instant
+
+/**
+ * An aggregator for task metrics before they are reported.
+ */
+<span class="nc" id="L36">public class TaskTableReaderImpl(</span>
+<span class="nc" id="L37">    private val service: ComputeService,</span>
+<span class="nc" id="L38">    private val task: ServiceTask,</span>
+<span class="nc" id="L39">    private val startTime: Duration = Duration.ofMillis(0),</span>
+) : TaskTableReader {
+    override fun copy(): TaskTableReader {
+<span class="nc" id="L42">        val newTaskTable =</span>
+<span class="nc" id="L43">            TaskTableReaderImpl(</span>
+<span class="nc" id="L44">                service,</span>
+<span class="nc" id="L45">                task,</span>
+            )
+<span class="nc" id="L47">        newTaskTable.setValues(this)</span>
+
+<span class="nc" id="L49">        return newTaskTable</span>
+    }
+
+    override fun setValues(table: TaskTableReader) {
+<span class="nc" id="L53">        host = table.host</span>
+
+<span class="nc" id="L55">        _timestamp = table.timestamp</span>
+<span class="nc" id="L56">        _timestampAbsolute = table.timestampAbsolute</span>
+
+<span class="nc" id="L58">        _cpuLimit = table.cpuLimit</span>
+<span class="nc" id="L59">        _cpuDemand = table.cpuDemand</span>
+<span class="nc" id="L60">        _cpuUsage = table.cpuUsage</span>
+<span class="nc" id="L61">        _cpuActiveTime = table.cpuActiveTime</span>
+<span class="nc" id="L62">        _cpuIdleTime = table.cpuIdleTime</span>
+<span class="nc" id="L63">        _cpuStealTime = table.cpuStealTime</span>
+<span class="nc" id="L64">        _cpuLostTime = table.cpuLostTime</span>
+<span class="nc" id="L65">        _uptime = table.uptime</span>
+<span class="nc" id="L66">        _downtime = table.downtime</span>
+<span class="nc" id="L67">        _numFailures = table.numFailures</span>
+<span class="nc" id="L68">        _numPauses = table.numPauses</span>
+<span class="nc" id="L69">        _scheduleTime = table.scheduleTime</span>
+
+<span class="nc" id="L71">        _submissionTime = table.submissionTime</span>
+<span class="nc" id="L72">        _finishTime = table.finishTime</span>
+
+<span class="nc" id="L74">        _taskState = table.taskState</span>
+<span class="nc" id="L75">    }</span>
+
+    /**
+     * The static information about this task.
+     */
+<span class="nc" id="L80">    override val taskInfo: TaskInfo =</span>
+<span class="nc" id="L81">        TaskInfo(</span>
+<span class="nc" id="L82">            task.uid.toString(),</span>
+<span class="nc" id="L83">            task.name,</span>
+<span class="nc" id="L84">            &quot;vm&quot;,</span>
+<span class="nc" id="L85">            &quot;x86&quot;,</span>
+<span class="nc" id="L86">            task.flavor.coreCount,</span>
+<span class="nc" id="L87">            task.flavor.memorySize,</span>
+        )
+
+    /**
+     * The [HostInfo] of the host on which the task is hosted.
+     */
+<span class="nc" id="L93">    override var host: HostInfo? = null</span>
+    private var _host: SimHost? = null
+
+<span class="nc" id="L96">    private var _timestamp = Instant.MIN</span>
+    override val timestamp: Instant
+<span class="nc" id="L98">        get() = _timestamp</span>
+
+<span class="nc" id="L100">    private var _timestampAbsolute = Instant.MIN</span>
+    override val timestampAbsolute: Instant
+<span class="nc" id="L102">        get() = _timestampAbsolute</span>
+
+    override val uptime: Long
+<span class="nc" id="L105">        get() = _uptime - previousUptime</span>
+    private var _uptime: Long = 0
+    private var previousUptime = 0L
+
+    override val downtime: Long
+<span class="nc" id="L110">        get() = _downtime - previousDowntime</span>
+    private var _downtime: Long = 0
+    private var previousDowntime = 0L
+
+    override val numFailures: Int
+<span class="nc" id="L115">        get() = _numFailures</span>
+    private var _numFailures = 0
+
+    override val numPauses: Int
+<span class="nc" id="L119">        get() = _numPauses</span>
+    private var _numPauses = 0
+
+    override val submissionTime: Instant?
+<span class="nc" id="L123">        get() = _submissionTime</span>
+    private var _submissionTime: Instant? = null
+
+    override val scheduleTime: Instant?
+<span class="nc" id="L127">        get() = _scheduleTime</span>
+    private var _scheduleTime: Instant? = null
+
+    override val finishTime: Instant?
+<span class="nc" id="L131">        get() = _finishTime</span>
+    private var _finishTime: Instant? = null
+
+    override val cpuLimit: Double
+<span class="nc" id="L135">        get() = _cpuLimit</span>
+    private var _cpuLimit = 0.0
+
+    override val cpuUsage: Double
+<span class="nc" id="L139">        get() = _cpuUsage</span>
+    private var _cpuUsage = 0.0
+
+    override val cpuDemand: Double
+<span class="nc" id="L143">        get() = _cpuDemand</span>
+    private var _cpuDemand = 0.0
+
+    override val cpuActiveTime: Long
+<span class="nc" id="L147">        get() = _cpuActiveTime - previousCpuActiveTime</span>
+    private var _cpuActiveTime = 0L
+    private var previousCpuActiveTime = 0L
+
+    override val cpuIdleTime: Long
+<span class="nc" id="L152">        get() = _cpuIdleTime - previousCpuIdleTime</span>
+    private var _cpuIdleTime = 0L
+    private var previousCpuIdleTime = 0L
+
+    override val cpuStealTime: Long
+<span class="nc" id="L157">        get() = _cpuStealTime - previousCpuStealTime</span>
+    private var _cpuStealTime = 0L
+    private var previousCpuStealTime = 0L
+
+    override val cpuLostTime: Long
+<span class="nc" id="L162">        get() = _cpuLostTime - previousCpuLostTime</span>
+    private var _cpuLostTime = 0L
+    private var previousCpuLostTime = 0L
+
+    override val taskState: TaskState?
+<span class="nc" id="L167">        get() = _taskState</span>
+    private var _taskState: TaskState? = null
+
+    /**
+     * Record the next cycle.
+     */
+    override fun record(now: Instant) {
+<span class="nc" id="L174">        val newHost = service.lookupHost(task)</span>
+<span class="nc bnc" id="L175" title="All 6 branches missed.">        if (newHost != null &amp;&amp; newHost.getName() != _host?.getName()) {</span>
+<span class="nc" id="L176">            _host = newHost</span>
+<span class="nc" id="L177">            host =</span>
+<span class="nc" id="L178">                HostInfo(</span>
+<span class="nc" id="L179">                    newHost.getName(),</span>
+<span class="nc" id="L180">                    newHost.getClusterName(),</span>
+<span class="nc" id="L181">                    &quot;x86&quot;,</span>
+<span class="nc" id="L182">                    newHost.getModel().coreCount,</span>
+<span class="nc" id="L183">                    newHost.getModel().cpuCapacity,</span>
+<span class="nc" id="L184">                    newHost.getModel().memoryCapacity,</span>
+                )
+        }
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        val cpuStats = _host?.getCpuStats(task)</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        val sysStats = _host?.getSystemStats(task)</span>
+
+<span class="nc" id="L191">        _timestamp = now</span>
+<span class="nc" id="L192">        _timestampAbsolute = now + startTime</span>
+
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        _cpuLimit = cpuStats?.capacity ?: 0.0</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        _cpuDemand = cpuStats?.demand ?: 0.0</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        _cpuUsage = cpuStats?.usage ?: 0.0</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        _cpuActiveTime = cpuStats?.activeTime ?: _cpuActiveTime</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        _cpuIdleTime = cpuStats?.idleTime ?: _cpuIdleTime</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        _cpuStealTime = cpuStats?.stealTime ?: _cpuStealTime</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        _cpuLostTime = cpuStats?.lostTime ?: _cpuLostTime</span>
+<span class="nc bnc" id="L201" title="All 4 branches missed.">        _uptime = sysStats?.uptime?.toMillis() ?: _uptime</span>
+<span class="nc bnc" id="L202" title="All 4 branches missed.">        _downtime = sysStats?.downtime?.toMillis() ?: _downtime</span>
+
+<span class="nc" id="L204">        _numFailures = task.numFailures</span>
+<span class="nc" id="L205">        _numPauses = task.numPauses</span>
+<span class="nc" id="L206">        _submissionTime = task.submittedAt</span>
+<span class="nc" id="L207">        _scheduleTime = task.scheduledAt</span>
+<span class="nc" id="L208">        _finishTime = task.finishedAt</span>
+
+<span class="nc" id="L210">        _taskState = task.state</span>
+<span class="nc" id="L211">    }</span>
+
+    /**
+     * Finish the aggregation for this cycle.
+     */
+    override fun reset() {
+<span class="nc" id="L217">        previousUptime = _uptime</span>
+<span class="nc" id="L218">        previousDowntime = _downtime</span>
+<span class="nc" id="L219">        previousCpuActiveTime = _cpuActiveTime</span>
+<span class="nc" id="L220">        previousCpuIdleTime = _cpuIdleTime</span>
+<span class="nc" id="L221">        previousCpuStealTime = _cpuStealTime</span>
+<span class="nc" id="L222">        previousCpuLostTime = _cpuLostTime</span>
+
+<span class="nc" id="L224">        _host = null</span>
+<span class="nc" id="L225">        _cpuLimit = 0.0</span>
+<span class="nc" id="L226">    }</span>
+<span class="nc" id="L227">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

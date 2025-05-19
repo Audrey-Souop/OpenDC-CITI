@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BatteryAggregator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.compute.power.batteries</a> &gt; <span class="el_source">BatteryAggregator.java</span></div><h1>BatteryAggregator.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2025 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.compute.power.batteries;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import org.opendc.simulator.engine.engine.FlowEngine;
+import org.opendc.simulator.engine.graph.FlowConsumer;
+import org.opendc.simulator.engine.graph.FlowDistributor;
+import org.opendc.simulator.engine.graph.FlowEdge;
+import org.opendc.simulator.engine.graph.FlowNode;
+import org.opendc.simulator.engine.graph.FlowSupplier;
+
+public class BatteryAggregator extends FlowNode implements FlowConsumer, FlowSupplier {
+
+    private FlowEdge batteryEdge;
+    private FlowEdge powerSourceEdge;
+    private FlowEdge hostEdge;
+
+<span class="fc" id="L42">    private PowerSourceType powerSourceType = PowerSourceType.PowerSource;</span>
+
+    private double incomingDemand;
+    private double outgoingSupply;
+
+    private double incomingSupply;
+
+<span class="fc" id="L49">    private final ArrayList&lt;Double&gt; incomingSupplies = new ArrayList&lt;&gt;(Arrays.asList(0.0, 0.0));</span>
+<span class="fc" id="L50">    private final ArrayList&lt;Double&gt; outgoingDemands = new ArrayList&lt;&gt;(Arrays.asList(0.0, 0.0));</span>
+
+<span class="fc" id="L52">    private boolean outgoingDemandUpdateNeeded = false;</span>
+
+    /**
+     * Construct a new {@link FlowNode} instance.
+     *
+     * @param engine The {@link FlowEngine} this node belongs to.
+     */
+    public BatteryAggregator(FlowEngine engine, SimBattery battery, FlowDistributor powerSourceDistributor) {
+<span class="fc" id="L60">        super(engine);</span>
+
+<span class="fc" id="L62">        this.powerSourceEdge = new FlowEdge(this, powerSourceDistributor);</span>
+<span class="fc" id="L63">        this.powerSourceEdge.setSupplierIndex(0);</span>
+
+<span class="fc" id="L65">        this.batteryEdge = new FlowEdge(this, battery);</span>
+<span class="fc" id="L66">        this.batteryEdge.setSupplierIndex(1);</span>
+<span class="fc" id="L67">    }</span>
+
+    public void close() {
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if (this.batteryEdge == null) {</span>
+<span class="nc" id="L71">            return;</span>
+        }
+
+<span class="fc" id="L74">        this.batteryEdge = null;</span>
+<span class="fc" id="L75">        this.powerSourceEdge = null;</span>
+
+<span class="fc" id="L77">        this.closeNode();</span>
+<span class="fc" id="L78">    }</span>
+
+    @Override
+    public long onUpdate(long now) {
+
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (this.outgoingDemandUpdateNeeded) {</span>
+
+<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (this.powerSourceType == PowerSourceType.PowerSource) {</span>
+<span class="fc" id="L86">                this.pushOutgoingDemand(this.batteryEdge, 0.0f);</span>
+<span class="fc" id="L87">                this.pushOutgoingDemand(this.powerSourceEdge, this.incomingDemand);</span>
+            }
+
+<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (this.powerSourceType == PowerSourceType.Battery) {</span>
+<span class="fc" id="L91">                this.pushOutgoingDemand(this.powerSourceEdge, 0.0f);</span>
+<span class="fc" id="L92">                this.pushOutgoingDemand(this.batteryEdge, this.incomingDemand);</span>
+            }
+
+<span class="fc" id="L95">            this.outgoingDemandUpdateNeeded = false;</span>
+
+<span class="fc" id="L97">            this.invalidate();</span>
+
+<span class="fc" id="L99">            return Long.MAX_VALUE;</span>
+        }
+
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        if (this.hostEdge != null) {</span>
+<span class="fc" id="L103">            this.pushOutgoingSupply(this.hostEdge, this.incomingSupply);</span>
+        }
+
+<span class="fc" id="L106">        return Long.MAX_VALUE;</span>
+    }
+
+    @Override
+    public void handleIncomingDemand(FlowEdge consumerEdge, double newDemand) {
+<span class="fc" id="L111">        this.incomingDemand = newDemand;</span>
+
+<span class="fc" id="L113">        this.outgoingDemandUpdateNeeded = true;</span>
+<span class="fc" id="L114">        this.invalidate();</span>
+<span class="fc" id="L115">    }</span>
+
+    @Override
+    public void handleIncomingSupply(FlowEdge supplierEdge, double newSupply) {
+<span class="fc" id="L119">        int supplier_id = supplierEdge.getSupplierIndex();</span>
+
+<span class="fc" id="L121">        this.incomingSupply += newSupply - this.incomingSupplies.get(supplier_id);</span>
+
+<span class="fc" id="L123">        this.incomingSupplies.set(supplier_id, newSupply);</span>
+
+<span class="fc" id="L125">        this.invalidate();</span>
+<span class="fc" id="L126">    }</span>
+
+    @Override
+    public void pushOutgoingDemand(FlowEdge supplierEdge, double newDemand) {
+<span class="fc" id="L130">        supplierEdge.pushDemand(newDemand);</span>
+<span class="fc" id="L131">    }</span>
+
+    @Override
+<span class="fc" id="L134">    public void addSupplierEdge(FlowEdge supplierEdge) {}</span>
+
+    @Override
+    public void removeSupplierEdge(FlowEdge supplierEdge) {
+<span class="fc" id="L138">        this.close();</span>
+<span class="fc" id="L139">    }</span>
+
+    @Override
+    public void pushOutgoingSupply(FlowEdge consumerEdge, double newSupply) {
+<span class="fc" id="L143">        consumerEdge.pushSupply(newSupply);</span>
+<span class="fc" id="L144">    }</span>
+
+    @Override
+    public void addConsumerEdge(FlowEdge consumerEdge) {
+<span class="fc" id="L148">        this.hostEdge = consumerEdge;</span>
+<span class="fc" id="L149">    }</span>
+
+    @Override
+    public void removeConsumerEdge(FlowEdge consumerEdge) {
+<span class="nc" id="L153">        this.close();</span>
+<span class="nc" id="L154">    }</span>
+
+    public PowerSourceType getPowerSourceType() {
+<span class="nc" id="L157">        return powerSourceType;</span>
+    }
+
+    public void setPowerSourceType(PowerSourceType newPowerSourceType) {
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        if (this.powerSourceType == newPowerSourceType) {</span>
+<span class="fc" id="L162">            return;</span>
+        }
+
+<span class="fc" id="L165">        this.powerSourceType = newPowerSourceType;</span>
+
+<span class="fc" id="L167">        this.outgoingDemandUpdateNeeded = true;</span>
+
+<span class="fc" id="L169">        this.invalidate();</span>
+<span class="fc" id="L170">    }</span>
+
+    @Override
+    public double getCapacity() {
+<span class="fc" id="L174">        return 0;</span>
+    }
+
+    @Override
+    public Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; getConnectedEdges() {
+<span class="fc" id="L179">        List&lt;FlowEdge&gt; consumingEdges = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">        if (this.powerSourceEdge != null) {</span>
+<span class="nc" id="L181">            consumingEdges.add(this.batteryEdge);</span>
+        }
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">        if (this.batteryEdge != null) {</span>
+<span class="nc" id="L184">            consumingEdges.add(this.powerSourceEdge);</span>
+        }
+
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">        List&lt;FlowEdge&gt; supplyingEdges = this.hostEdge != null ? List.of(this.hostEdge) : List.of();</span>
+
+<span class="fc" id="L189">        return Map.of(</span>
+                FlowEdge.NodeType.CONSUMING, consumingEdges,
+                FlowEdge.NodeType.SUPPLYING, supplyingEdges);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

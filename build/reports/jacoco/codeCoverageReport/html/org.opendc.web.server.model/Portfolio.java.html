@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Portfolio.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.model</a> &gt; <span class="el_source">Portfolio.java</span></div><h1>Portfolio.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2023 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.model;
+
+import io.hypersistence.utils.hibernate.type.json.JsonType;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Parameters;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import java.util.HashSet;
+import java.util.Set;
+import org.hibernate.annotations.Type;
+import org.opendc.web.proto.Targets;
+
+/**
+ * A portfolio is the composition of multiple scenarios.
+ */
+@Entity
+@Table(
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = &quot;uk_portfolios_number&quot;,
+                    columnNames = {&quot;project_id&quot;, &quot;number&quot;})
+        },
+        indexes = {@Index(name = &quot;ux_portfolios_number&quot;, columnList = &quot;project_id, number&quot;)})
+@NamedQueries({
+    @NamedQuery(name = &quot;Portfolio.findByProject&quot;, query = &quot;SELECT p FROM Portfolio p WHERE p.project.id = :projectId&quot;),
+    @NamedQuery(
+            name = &quot;Portfolio.findOneByProject&quot;,
+            query = &quot;SELECT p FROM Portfolio p WHERE p.project.id = :projectId AND p.number = :number&quot;)
+})
+public class Portfolio extends PanacheEntityBase {
+
+    /**
+     * The main ID of a project.
+     * The value starts at 6 to account for the other 5 projects already made by the loading script.
+     */
+    @Id
+    @SequenceGenerator(name = &quot;portfolioSeq&quot;, sequenceName = &quot;portfolio_id_seq&quot;, allocationSize = 1, initialValue = 4)
+    @GeneratedValue(generator = &quot;portfolioSeq&quot;)
+    public Long id;
+
+    /**
+     * The {@link Project} this portfolio belongs to.
+     */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = &quot;project_id&quot;, nullable = false)
+    public Project project;
+
+    /**
+     * Unique number of the portfolio for the project.
+     */
+    @Column(nullable = false)
+    public int number;
+
+    /**
+     * The name of this portfolio.
+     */
+    @Column(nullable = false)
+    public String name;
+
+    /**
+     * The portfolio targets (metrics, repetitions).
+     */
+    @Column(columnDefinition = &quot;jsonb&quot;, nullable = false, updatable = false)
+    @Type(JsonType.class)
+    public Targets targets;
+
+    /**
+     * The scenarios in this portfolio.
+     */
+<span class="fc" id="L106">    @OneToMany(</span>
+            cascade = {CascadeType.ALL},
+            mappedBy = &quot;portfolio&quot;,
+            orphanRemoval = true)
+    @OrderBy(&quot;id ASC&quot;)
+    public Set&lt;Scenario&gt; scenarios = new HashSet&lt;&gt;();
+
+    /**
+     * Construct a {@link Portfolio} object.
+     */
+<span class="fc" id="L116">    public Portfolio(Project project, int number, String name, Targets targets) {</span>
+<span class="fc" id="L117">        this.project = project;</span>
+<span class="fc" id="L118">        this.number = number;</span>
+<span class="fc" id="L119">        this.name = name;</span>
+<span class="fc" id="L120">        this.targets = targets;</span>
+<span class="fc" id="L121">    }</span>
+
+    /**
+     * JPA constructor
+     */
+<span class="fc" id="L126">    protected Portfolio() {}</span>
+
+    /**
+     * Find all {@link Portfolio}s that belong to the specified project
+     *
+     * @param projectId The unique identifier of the project.
+     * @return The query of portfolios that belong to the specified project.
+     */
+    public static PanacheQuery&lt;Portfolio&gt; findByProject(long projectId) {
+<span class="fc" id="L135">        return find(&quot;#Portfolio.findByProject&quot;, Parameters.with(&quot;projectId&quot;, projectId));</span>
+    }
+
+    /**
+     * Find the {@link Portfolio} with the specified &lt;code&gt;number&lt;/code&gt; belonging to the specified project.
+     *
+     * @param projectId The unique identifier of the project.
+     * @param number The number of the scenario.
+     * @return The portfolio or &lt;code&gt;null&lt;/code&gt; if it does not exist.
+     */
+    public static Portfolio findByProject(long projectId, int number) {
+<span class="fc" id="L146">        return find(</span>
+                        &quot;#Portfolio.findOneByProject&quot;,
+<span class="fc" id="L148">                        Parameters.with(&quot;projectId&quot;, projectId).and(&quot;number&quot;, number))</span>
+<span class="fc" id="L149">                .firstResult();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

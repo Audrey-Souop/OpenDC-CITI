@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResourceStateRecordMaterializer.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.formats.opendc.parquet</a> &gt; <span class="el_source">ResourceStateRecordMaterializer.kt</span></div><h1>ResourceStateRecordMaterializer.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.formats.opendc.parquet
+
+import org.apache.parquet.io.api.Binary
+import org.apache.parquet.io.api.Converter
+import org.apache.parquet.io.api.GroupConverter
+import org.apache.parquet.io.api.PrimitiveConverter
+import org.apache.parquet.io.api.RecordMaterializer
+import org.apache.parquet.schema.MessageType
+import java.time.Duration
+import java.time.Instant
+
+/**
+ * A [RecordMaterializer] for [ResourceState] records.
+ */
+<span class="nc" id="L37">internal class ResourceStateRecordMaterializer(schema: MessageType) : RecordMaterializer&lt;ResourceState&gt;() {</span>
+    /**
+     * State of current record being read.
+     */
+<span class="nc" id="L41">    private var localId = &quot;&quot;</span>
+<span class="nc" id="L42">    private var localTimestamp = Instant.MIN</span>
+<span class="nc" id="L43">    private var localDuration = Duration.ZERO</span>
+    private var localCpuCount = 0
+    private var localCpuUsage = 0.0
+
+    /**
+     * Root converter for the record.
+     */
+    private val root =
+<span class="nc" id="L51">        object : GroupConverter() {</span>
+            /**
+             * The converters for the columns of the schema.
+             */
+            private val converters =
+<span class="nc" id="L56">                schema.fields.map { type -&gt;</span>
+<span class="nc bnc" id="L57" title="All 9 branches missed.">                    when (type.name) {</span>
+                        &quot;id&quot; -&gt;
+<span class="nc" id="L59">                            object : PrimitiveConverter() {</span>
+                                override fun addBinary(value: Binary) {
+<span class="nc" id="L61">                                    localId = value.toStringUsingUTF8()</span>
+<span class="nc" id="L62">                                }</span>
+                            }
+                        &quot;timestamp&quot;, &quot;time&quot; -&gt;
+<span class="nc" id="L65">                            object : PrimitiveConverter() {</span>
+                                override fun addLong(value: Long) {
+<span class="nc" id="L67">                                    localTimestamp = Instant.ofEpochMilli(value)</span>
+<span class="nc" id="L68">                                }</span>
+                            }
+                        &quot;duration&quot; -&gt;
+<span class="nc" id="L71">                            object : PrimitiveConverter() {</span>
+                                override fun addLong(value: Long) {
+<span class="nc" id="L73">                                    localDuration = Duration.ofMillis(value)</span>
+<span class="nc" id="L74">                                }</span>
+                            }
+                        &quot;cpu_count&quot;, &quot;cores&quot; -&gt;
+<span class="nc" id="L77">                            object : PrimitiveConverter() {</span>
+                                override fun addInt(value: Int) {
+<span class="nc" id="L79">                                    localCpuCount = value</span>
+<span class="nc" id="L80">                                }</span>
+                            }
+                        &quot;cpu_usage&quot;, &quot;cpuUsage&quot; -&gt;
+<span class="nc" id="L83">                            object : PrimitiveConverter() {</span>
+                                override fun addDouble(value: Double) {
+<span class="nc" id="L85">                                    localCpuUsage = value</span>
+<span class="nc" id="L86">                                }</span>
+                            }
+                        &quot;flops&quot; -&gt;
+<span class="nc" id="L89">                            object : PrimitiveConverter() {</span>
+                                override fun addLong(value: Long) {
+                                    // Ignore to support v1 format
+<span class="nc" id="L92">                                }</span>
+                            }
+<span class="nc" id="L94">                        else -&gt; error(&quot;Unknown column $type&quot;)</span>
+                    }
+                }
+
+            override fun start() {
+<span class="nc" id="L99">                localId = &quot;&quot;</span>
+<span class="nc" id="L100">                localTimestamp = Instant.MIN</span>
+<span class="nc" id="L101">                localDuration = Duration.ZERO</span>
+<span class="nc" id="L102">                localCpuCount = 0</span>
+<span class="nc" id="L103">                localCpuUsage = 0.0</span>
+<span class="nc" id="L104">            }</span>
+
+<span class="nc" id="L106">            override fun end() {}</span>
+
+<span class="nc" id="L108">            override fun getConverter(fieldIndex: Int): Converter = converters[fieldIndex]</span>
+        }
+
+<span class="nc" id="L111">    override fun getCurrentRecord(): ResourceState = ResourceState(localId, localTimestamp, localDuration, localCpuCount, localCpuUsage)</span>
+
+<span class="nc" id="L113">    override fun getRootConverter(): GroupConverter = root</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

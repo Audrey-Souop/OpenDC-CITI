@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="SWF TraceFormat" tests="4" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:37" hostname="ece-d6200-audu" time="0.013">
+  <properties/>
+  <testcase name="testTableExists()" classname="formats.swf.SwfTraceFormatTest" time="0.002"/>
+  <testcase name="testTableDoesNotExist()" classname="formats.swf.SwfTraceFormatTest" time="0.002"/>
+  <testcase name="testReader()" classname="formats.swf.SwfTraceFormatTest" time="0.005"/>
+  <testcase name="testTables()" classname="formats.swf.SwfTraceFormatTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

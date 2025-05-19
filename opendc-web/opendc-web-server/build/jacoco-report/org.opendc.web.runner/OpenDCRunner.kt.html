@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenDCRunner.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.runner</a> &gt; <span class="el_source">OpenDCRunner.kt</span></div><h1>OpenDCRunner.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.runner
+
+import mu.KotlinLogging
+import org.opendc.compute.failure.prefab.FailurePrefab
+import org.opendc.compute.failure.prefab.createFailureModelPrefab
+import org.opendc.compute.simulator.provisioner.Provisioner
+import org.opendc.compute.simulator.provisioner.registerComputeMonitor
+import org.opendc.compute.simulator.provisioner.setupComputeService
+import org.opendc.compute.simulator.provisioner.setupHosts
+import org.opendc.compute.simulator.scheduler.createPrefabComputeScheduler
+import org.opendc.compute.simulator.service.ComputeService
+import org.opendc.compute.topology.specs.ClusterSpec
+import org.opendc.compute.topology.specs.HostSpec
+import org.opendc.compute.topology.specs.PowerSourceSpec
+import org.opendc.compute.workload.ComputeWorkloadLoader
+import org.opendc.experiments.base.runner.replay
+import org.opendc.simulator.compute.cpu.CpuPowerModels
+import org.opendc.simulator.compute.models.CpuModel
+import org.opendc.simulator.compute.models.MachineModel
+import org.opendc.simulator.compute.models.MemoryUnit
+import org.opendc.simulator.kotlin.runSimulation
+import org.opendc.web.proto.runner.Job
+import org.opendc.web.proto.runner.Scenario
+import org.opendc.web.proto.runner.Topology
+import org.opendc.web.runner.internal.WebComputeMonitor
+import java.io.File
+import java.time.Duration
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.Random
+import java.util.concurrent.Executors
+import java.util.concurrent.ForkJoinPool
+import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory
+import java.util.concurrent.ForkJoinWorkerThread
+import java.util.concurrent.RecursiveAction
+import java.util.concurrent.RecursiveTask
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
+
+/**
+ * Class to execute the pending jobs via the OpenDC web API.
+ *
+ * @param manager The underlying [JobManager] to manage the available jobs.
+ * @param tracePath The directory where the traces are located.
+ * @param jobTimeout The maximum duration of a simulation job.
+ * @param pollInterval The interval to poll the API with.
+ * @param heartbeatInterval The interval to send a heartbeat to the API server.
+ */
+<span class="nc" id="L71">public class OpenDCRunner(</span>
+<span class="nc" id="L72">    private val manager: JobManager,</span>
+<span class="nc" id="L73">    private val tracePath: File,</span>
+<span class="nc" id="L74">    parallelism: Int = Runtime.getRuntime().availableProcessors(),</span>
+<span class="nc" id="L75">    private val jobTimeout: Duration = Duration.ofMinutes(10),</span>
+<span class="nc" id="L76">    private val pollInterval: Duration = Duration.ofSeconds(30),</span>
+<span class="nc" id="L77">    private val heartbeatInterval: Duration = Duration.ofMinutes(1),</span>
+) : Runnable {
+    /**
+     * Logging instance for this runner.
+     */
+<span class="nc" id="L82">    private val logger = KotlinLogging.logger {}</span>
+
+    /**
+     * Helper class to load the workloads.
+     */
+<span class="nc" id="L87">    private val workloadLoader = ComputeWorkloadLoader(tracePath)</span>
+
+    /**
+     * The [ForkJoinPool] that is used to execute the simulation jobs.
+     */
+    private val pool =
+<span class="nc" id="L93">        ForkJoinPool(parallelism, RunnerThreadFactory(Thread.currentThread().contextClassLoader), null, false)</span>
+
+    /**
+     * A [ScheduledExecutorService] to manage the heartbeat of simulation jobs as well as tracking the deadline of
+     * individual simulations.
+     */
+<span class="nc" id="L99">    private val scheduler = Executors.newSingleThreadScheduledExecutor()</span>
+
+    /**
+     * Start the runner process.
+     *
+     * This method will block until interrupted and poll the OpenDC API for new jobs to execute.
+     */
+    override fun run() {
+<span class="nc" id="L107">        try {</span>
+<span class="nc" id="L108">            while (true) {</span>
+<span class="nc" id="L109">                val job = manager.findNext()</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                if (job == null) {</span>
+<span class="nc" id="L111">                    Thread.sleep(pollInterval.toMillis())</span>
+<span class="nc" id="L112">                    continue</span>
+                }
+
+<span class="nc" id="L115">                val id = job.id</span>
+
+<span class="nc" id="L117">                logger.info { &quot;Found queued job $id: attempting to claim&quot; }</span>
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">                if (!manager.claim(id)) {</span>
+<span class="nc" id="L120">                    logger.info { &quot;Failed to claim scenario&quot; }</span>
+<span class="nc" id="L121">                    continue</span>
+                }
+
+<span class="nc" id="L124">                pool.submit(JobAction(job))</span>
+            }
+<span class="nc" id="L126">        } catch (_: InterruptedException) {</span>
+            // Gracefully exit when the thread is interrupted
+        } finally {
+<span class="nc" id="L129">            workloadLoader.reset()</span>
+
+<span class="nc" id="L131">            pool.shutdown()</span>
+<span class="nc" id="L132">            scheduler.shutdown()</span>
+
+<span class="nc" id="L134">            pool.awaitTermination(5, TimeUnit.SECONDS)</span>
+        }
+<span class="nc" id="L136">    }</span>
+
+    /**
+     * A [RecursiveAction] that runs a simulation job (consisting of possible multiple simulations).
+     *
+     * @param job The job to simulate.
+     */
+<span class="nc" id="L143">    private inner class JobAction(private val job: Job) : RecursiveAction() {</span>
+        override fun compute() {
+<span class="nc" id="L145">            val id = job.id</span>
+<span class="nc" id="L146">            val scenario = job.scenario</span>
+<span class="nc" id="L147">            val startTime = Instant.now()</span>
+<span class="nc" id="L148">            val currentThread = Thread.currentThread()</span>
+
+<span class="nc" id="L150">            val heartbeat =</span>
+<span class="nc" id="L151">                scheduler.scheduleWithFixedDelay(</span>
+                    {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">                        if (!manager.heartbeat(id, startTime.secondsSince())) {</span>
+<span class="nc" id="L154">                            currentThread.interrupt()</span>
+                        }
+<span class="nc" id="L156">                    },</span>
+<span class="nc" id="L157">                    0,</span>
+<span class="nc" id="L158">                    heartbeatInterval.toMillis(),</span>
+<span class="nc" id="L159">                    TimeUnit.MILLISECONDS,</span>
+                )
+
+<span class="nc" id="L162">            try {</span>
+<span class="nc" id="L163">                val topology = convertTopology(scenario.topology)</span>
+<span class="nc" id="L164">                val jobs =</span>
+<span class="nc" id="L165">                    (0 until scenario.portfolio.targets.repeats).map { repeat -&gt;</span>
+<span class="nc" id="L166">                        SimulationTask(</span>
+<span class="nc" id="L167">                            scenario,</span>
+<span class="nc" id="L168">                            repeat,</span>
+<span class="nc" id="L169">                            topology,</span>
+                        )
+                    }
+<span class="nc" id="L172">                val results = invokeAll(jobs).map { it.rawResult }</span>
+
+<span class="nc" id="L174">                heartbeat.cancel(true)</span>
+
+<span class="nc" id="L176">                val duration = startTime.secondsSince()</span>
+<span class="nc" id="L177">                logger.info { &quot;Finished simulation for job $id (in $duration seconds)&quot; }</span>
+
+<span class="nc" id="L179">                manager.finish(</span>
+<span class="nc" id="L180">                    id,</span>
+<span class="nc" id="L181">                    duration,</span>
+<span class="nc" id="L182">                    mapOf(</span>
+<span class="nc" id="L183">                        &quot;total_requested_burst&quot; to results.map { it.totalActiveTime + it.totalIdleTime },</span>
+<span class="nc" id="L184">                        &quot;total_granted_burst&quot; to results.map { it.totalActiveTime },</span>
+<span class="nc" id="L185">                        &quot;total_overcommitted_burst&quot; to results.map { it.totalStealTime },</span>
+<span class="nc" id="L186">                        &quot;total_interfered_burst&quot; to results.map { it.totalLostTime },</span>
+<span class="nc" id="L187">                        &quot;mean_cpu_usage&quot; to results.map { it.meanCpuUsage },</span>
+<span class="nc" id="L188">                        &quot;mean_cpu_demand&quot; to results.map { it.meanCpuDemand },</span>
+<span class="nc" id="L189">                        &quot;mean_num_deployed_images&quot; to results.map { it.meanNumDeployedImages },</span>
+<span class="nc" id="L190">                        &quot;max_num_deployed_images&quot; to results.map { it.maxNumDeployedImages },</span>
+<span class="nc" id="L191">                        &quot;total_power_draw&quot; to results.map { it.totalPowerDraw },</span>
+<span class="nc" id="L192">                        &quot;total_failure_slices&quot; to results.map { it.totalFailureSlices },</span>
+<span class="nc" id="L193">                        &quot;total_failure_vm_slices&quot; to results.map { it.totalFailureVmSlices },</span>
+<span class="nc" id="L194">                        &quot;total_vms_submitted&quot; to results.map { it.totalVmsSubmitted },</span>
+<span class="nc" id="L195">                        &quot;total_vms_queued&quot; to results.map { it.totalVmsQueued },</span>
+<span class="nc" id="L196">                        &quot;total_vms_finished&quot; to results.map { it.totalVmsFinished },</span>
+<span class="nc" id="L197">                        &quot;total_vms_failed&quot; to results.map { it.totalVmsFailed },</span>
+                    ),
+                )
+<span class="nc" id="L200">            } catch (e: Exception) {</span>
+                // Check whether the job failed due to exceeding its time budget
+<span class="nc bnc" id="L202" title="All 2 branches missed.">                if (Thread.interrupted()) {</span>
+<span class="nc" id="L203">                    logger.info { &quot;Simulation job $id exceeded time limit (${startTime.secondsSince()} seconds)&quot; }</span>
+                } else {
+<span class="nc" id="L205">                    logger.info(e) { &quot;Simulation job $id failed&quot; }</span>
+                }
+
+<span class="nc" id="L208">                try {</span>
+<span class="nc" id="L209">                    heartbeat.cancel(true)</span>
+<span class="nc" id="L210">                    manager.fail(id, startTime.secondsSince())</span>
+<span class="nc" id="L211">                } catch (e: Throwable) {</span>
+<span class="nc" id="L212">                    logger.error(e) { &quot;Failed to update job&quot; }</span>
+                }
+            }
+<span class="nc" id="L215">        }</span>
+
+        /**
+         * Calculate the seconds since the specified instant.
+         */
+        private fun Instant.secondsSince(): Int {
+<span class="nc" id="L221">            return ChronoUnit.SECONDS.between(this, Instant.now()).toInt()</span>
+        }
+    }
+
+    /**
+     * A [RecursiveTask] that simulates a single scenario.
+     *
+     * @param scenario The scenario to simulate.
+     * @param repeat The repeat number used to seed the simulation.
+     * @param topologyHosts The topology to simulate.
+     */
+<span class="nc" id="L232">    private inner class SimulationTask(</span>
+<span class="nc" id="L233">        private val scenario: Scenario,</span>
+<span class="nc" id="L234">        private val repeat: Int,</span>
+<span class="nc" id="L235">        private val topologyHosts: List&lt;HostSpec&gt;,</span>
+<span class="nc" id="L236">    ) : RecursiveTask&lt;WebComputeMonitor.Results&gt;() {</span>
+        override fun compute(): WebComputeMonitor.Results {
+<span class="nc" id="L238">            val monitor = WebComputeMonitor()</span>
+
+            // Schedule task that interrupts the simulation if it runs for too long.
+<span class="nc" id="L241">            val currentThread = Thread.currentThread()</span>
+<span class="nc" id="L242">            val interruptTask =</span>
+<span class="nc" id="L243">                scheduler.schedule({ currentThread.interrupt() }, jobTimeout.toMillis(), TimeUnit.MILLISECONDS)</span>
+
+<span class="nc" id="L245">            try {</span>
+<span class="nc" id="L246">                runSimulation(monitor)</span>
+            } finally {
+<span class="nc" id="L248">                interruptTask.cancel(false)</span>
+            }
+
+<span class="nc" id="L251">            return monitor.collectResults()</span>
+        }
+
+        /**
+         * Run a single simulation of the scenario.
+         */
+        private fun runSimulation(monitor: WebComputeMonitor) =
+<span class="nc" id="L258">            runSimulation {</span>
+<span class="nc" id="L259">                val serviceDomain = &quot;compute.opendc.org&quot;</span>
+<span class="nc" id="L260">                val seed = repeat.toLong()</span>
+
+<span class="nc" id="L262">                val scenario = scenario</span>
+
+<span class="nc" id="L264">                val powerSourceSpec =</span>
+<span class="nc" id="L265">                    PowerSourceSpec(</span>
+<span class="nc" id="L266">                        totalPower = Long.MAX_VALUE,</span>
+                    )
+<span class="nc" id="L268">                val topology = listOf(ClusterSpec(&quot;cluster&quot;, topologyHosts, powerSourceSpec))</span>
+
+<span class="nc" id="L270">                Provisioner(dispatcher, seed).use { provisioner -&gt;</span>
+
+//                    val workload =
+//                        trace(scenario.workload.trace.id).sampleByLoad(scenario.workload.samplingFraction)
+//                    val vms = workload.resolve(workloadLoader, Random(seed))
+
+<span class="nc" id="L276">                    val vms = workloadLoader.sampleByLoad(scenario.workload.samplingFraction)</span>
+<span class="nc bnc" id="L277" title="All 6 branches missed.">                    val startTime = vms.minOf { it.submissionTime }</span>
+
+<span class="nc" id="L279">                    provisioner.runSteps(</span>
+<span class="nc" id="L280">                        setupComputeService(</span>
+<span class="nc" id="L281">                            serviceDomain,</span>
+<span class="nc" id="L282">                            { createPrefabComputeScheduler(scenario.schedulerName, Random(it.seeder.nextLong()), timeSource) },</span>
+                        ),
+<span class="nc" id="L284">                        registerComputeMonitor(serviceDomain, monitor),</span>
+<span class="nc" id="L285">                        setupHosts(serviceDomain, topology, startTime),</span>
+                    )
+
+<span class="nc" id="L288">                    val service = provisioner.registry.resolve(serviceDomain, ComputeService::class.java)!!</span>
+
+<span class="nc" id="L290">                    val phenomena = scenario.phenomena</span>
+<span class="nc" id="L291">                    val failureModel =</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">                        if (phenomena.failures) {</span>
+<span class="nc" id="L293">                            createFailureModelPrefab(coroutineContext, timeSource, service, Random(seed), FailurePrefab.G5k06Exp)</span>
+                        } else {
+<span class="nc" id="L295">                            null</span>
+                        }
+
+                    // Run workload trace
+<span class="nc" id="L299">                    service.replay(timeSource, vms, seed = seed)</span>
+
+<span class="nc" id="L301">                    val serviceMetrics = service.getSchedulerStats()</span>
+<span class="nc" id="L302">                    logger.debug {</span>
+<span class="nc" id="L303">                        &quot;Scheduler &quot; +</span>
+<span class="nc" id="L304">                            &quot;Success=${serviceMetrics.attemptsSuccess} &quot; +</span>
+<span class="nc" id="L305">                            &quot;Failure=${serviceMetrics.attemptsFailure} &quot; +</span>
+<span class="nc" id="L306">                            &quot;Pending=${serviceMetrics.tasksPending} &quot; +</span>
+<span class="nc" id="L307">                            &quot;Active=${serviceMetrics.tasksActive}&quot;</span>
+                    }
+<span class="nc" id="L309">                }</span>
+<span class="nc" id="L310">            }</span>
+    }
+
+    /**
+     * Convert the specified [topology] into an [Topology] understood by OpenDC.
+     */
+    private fun convertTopology(topology: Topology): List&lt;HostSpec&gt; {
+<span class="nc" id="L317">        val res = mutableListOf&lt;HostSpec&gt;()</span>
+<span class="nc" id="L318">        val random = Random(0)</span>
+
+<span class="nc" id="L320">        val machines =</span>
+<span class="nc" id="L321">            topology.rooms.asSequence()</span>
+<span class="nc" id="L322">                .flatMap { room -&gt;</span>
+<span class="nc" id="L323">                    room.tiles.flatMap { tile -&gt;</span>
+<span class="nc" id="L324">                        val rack = tile.rack</span>
+<span class="nc bnc" id="L325" title="All 4 branches missed.">                        rack?.machines?.map { machine -&gt; rack to machine } ?: emptyList()</span>
+                    }
+                }
+
+<span class="nc bnc" id="L329" title="All 2 branches missed.">        for ((rack, machine) in machines) {</span>
+<span class="nc" id="L330">            val clusterId = rack.id</span>
+<span class="nc" id="L331">            val position = machine.position</span>
+
+<span class="nc" id="L333">            val processors =</span>
+<span class="nc" id="L334">                machine.cpus.map { cpu -&gt;</span>
+<span class="nc" id="L335">                    CpuModel(</span>
+<span class="nc" id="L336">                        0,</span>
+<span class="nc" id="L337">                        cpu.numberOfCores,</span>
+<span class="nc" id="L338">                        cpu.clockRateMhz,</span>
+<span class="nc" id="L339">                        &quot;Intel&quot;,</span>
+<span class="nc" id="L340">                        &quot;amd64&quot;,</span>
+<span class="nc" id="L341">                        cpu.name,</span>
+                    )
+                }
+
+<span class="nc" id="L345">            val memoryUnits =</span>
+<span class="nc" id="L346">                machine.memory.map { memory -&gt;</span>
+<span class="nc" id="L347">                    MemoryUnit(</span>
+<span class="nc" id="L348">                        &quot;Samsung&quot;,</span>
+<span class="nc" id="L349">                        memory.name,</span>
+<span class="nc" id="L350">                        memory.speedMbPerS,</span>
+<span class="nc" id="L351">                        memory.sizeMb.toLong(),</span>
+                    )
+                }
+
+<span class="nc bnc" id="L355" title="All 2 branches missed.">            val energyConsumptionW = machine.cpus.sumOf { it.energyConsumptionW }</span>
+<span class="nc" id="L356">            val powerModel = CpuPowerModels.linear(2 * energyConsumptionW, energyConsumptionW * 0.5)</span>
+
+<span class="nc" id="L358">            val spec =</span>
+<span class="nc" id="L359">                HostSpec(</span>
+<span class="nc" id="L360">                    &quot;node-$clusterId-$position&quot;,</span>
+<span class="nc" id="L361">                    clusterId,</span>
+<span class="nc" id="L362">                    MachineModel(processors, memoryUnits[0]),</span>
+<span class="nc" id="L363">                    powerModel,</span>
+                )
+
+<span class="nc" id="L366">            res += spec</span>
+        }
+
+<span class="nc" id="L369">        return res</span>
+    }
+
+    /**
+     * A custom [ForkJoinWorkerThreadFactory] that uses the [ClassLoader] of specified by the runner.
+     */
+<span class="nc" id="L375">    private class RunnerThreadFactory(private val classLoader: ClassLoader) : ForkJoinWorkerThreadFactory {</span>
+        override fun newThread(pool: ForkJoinPool): ForkJoinWorkerThread =
+<span class="nc" id="L377">            object : ForkJoinWorkerThread(pool) {</span>
+<span class="nc" id="L378">                init {</span>
+<span class="nc" id="L379">                    contextClassLoader = classLoader</span>
+<span class="nc" id="L380">                }</span>
+<span class="nc" id="L381">            }</span>
+    }
+<span class="nc" id="L383">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

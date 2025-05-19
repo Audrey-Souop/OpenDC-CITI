@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VirtualMachine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.compute.workload</a> &gt; <span class="el_source">VirtualMachine.java</span></div><h1>VirtualMachine.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.compute.workload;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import org.opendc.simulator.compute.machine.PerformanceCounters;
+import org.opendc.simulator.compute.machine.SimMachine;
+import org.opendc.simulator.engine.graph.FlowEdge;
+import org.opendc.simulator.engine.graph.FlowNode;
+import org.opendc.simulator.engine.graph.FlowSupplier;
+
+/**
+ * A {@link VirtualMachine} that composes multiple {@link SimWorkload}s.
+ */
+public final class VirtualMachine extends SimWorkload implements FlowSupplier {
+    private final LinkedList&lt;Workload&gt; workloads;
+    private int workloadIndex;
+
+    private SimWorkload activeWorkload;
+<span class="fc" id="L43">    private double cpuDemand = 0.0f;</span>
+<span class="fc" id="L44">    private double cpuSupply = 0.0f;</span>
+<span class="fc" id="L45">    private double d = 0.0f;</span>
+
+    private FlowEdge workloadEdge;
+    private FlowEdge machineEdge;
+
+<span class="fc" id="L50">    private double capacity = 0;</span>
+
+    private final long checkpointInterval;
+    private final long checkpointDuration;
+    private final double checkpointIntervalScaling;
+    private CheckpointModel checkpointModel;
+
+    private final ChainWorkload snapshot;
+
+    private long lastUpdate;
+<span class="fc" id="L60">    private final PerformanceCounters performanceCounters = new PerformanceCounters();</span>
+    private Consumer&lt;Exception&gt; completion;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Basic Getters and Setters
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public double getCapacity() {
+<span class="fc" id="L69">        return this.capacity;</span>
+    }
+
+    @Override
+    public ChainWorkload getSnapshot() {
+<span class="fc" id="L74">        return this.snapshot;</span>
+    }
+
+    @Override
+    public long getCheckpointInterval() {
+<span class="fc" id="L79">        return checkpointInterval;</span>
+    }
+
+    @Override
+    public long getCheckpointDuration() {
+<span class="fc" id="L84">        return checkpointDuration;</span>
+    }
+
+    @Override
+    public double getCheckpointIntervalScaling() {
+<span class="fc" id="L89">        return checkpointIntervalScaling;</span>
+    }
+
+    public PerformanceCounters getPerformanceCounters() {
+<span class="fc" id="L93">        return performanceCounters;</span>
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    VirtualMachine(FlowSupplier supplier, ChainWorkload workload) {
+<span class="fc" id="L101">        super(((FlowNode) supplier).getEngine());</span>
+
+<span class="fc" id="L103">        this.snapshot = workload;</span>
+
+<span class="fc" id="L105">        new FlowEdge(this, supplier);</span>
+
+<span class="fc" id="L107">        this.workloads = new LinkedList&lt;&gt;(workload.workloads());</span>
+<span class="fc" id="L108">        this.checkpointInterval = workload.checkpointInterval();</span>
+<span class="fc" id="L109">        this.checkpointDuration = workload.checkpointDuration();</span>
+<span class="fc" id="L110">        this.checkpointIntervalScaling = workload.checkpointIntervalScaling();</span>
+
+<span class="fc" id="L112">        this.lastUpdate = clock.millis();</span>
+
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (checkpointInterval &gt; 0) {</span>
+<span class="fc" id="L115">            this.createCheckpointModel();</span>
+        }
+
+<span class="fc" id="L118">        this.workloadIndex = -1;</span>
+
+<span class="fc" id="L120">        this.onStart();</span>
+<span class="fc" id="L121">    }</span>
+
+    VirtualMachine(FlowSupplier supplier, ChainWorkload workload, SimMachine machine, Consumer&lt;Exception&gt; completion) {
+<span class="fc" id="L124">        this(supplier, workload);</span>
+
+<span class="fc" id="L126">        this.capacity = machine.getCpu().getFrequency();</span>
+<span class="fc" id="L127">        this.d = 1 / machine.getCpu().getFrequency();</span>
+<span class="fc" id="L128">        this.completion = completion;</span>
+<span class="fc" id="L129">    }</span>
+
+    public Workload getNextWorkload() {
+<span class="fc" id="L132">        this.workloadIndex++;</span>
+<span class="fc" id="L133">        return workloads.pop();</span>
+    }
+
+    // TODO: Combine with Constructor
+    public void onStart() {
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if (this.workloads.isEmpty()) {</span>
+<span class="nc" id="L139">            return;</span>
+        }
+
+        // Create and start a checkpoint model if initiated
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (checkpointInterval &gt; 0) {</span>
+<span class="fc" id="L144">            this.checkpointModel.start();</span>
+        }
+
+<span class="fc" id="L147">        this.activeWorkload = this.getNextWorkload().startWorkload(this);</span>
+<span class="fc" id="L148">    }</span>
+
+    public void updateCounters(long now) {
+<span class="fc" id="L151">        long lastUpdate = this.lastUpdate;</span>
+<span class="fc" id="L152">        this.lastUpdate = now;</span>
+<span class="fc" id="L153">        long delta = now - lastUpdate;</span>
+
+<span class="fc" id="L155">        double cpuCapacity = 0.0f;</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (delta &gt; 0) {</span>
+<span class="fc" id="L157">            final double factor = this.d * delta;</span>
+
+<span class="fc" id="L159">            this.performanceCounters.addCpuActiveTime(Math.round(this.cpuSupply * factor));</span>
+<span class="fc" id="L160">            this.performanceCounters.setCpuIdleTime(Math.round((cpuCapacity - this.cpuSupply) * factor));</span>
+<span class="fc" id="L161">            this.performanceCounters.addCpuStealTime(Math.round((this.cpuDemand - this.cpuSupply) * factor));</span>
+        }
+
+<span class="fc" id="L164">        this.performanceCounters.setCpuDemand(this.cpuDemand);</span>
+<span class="fc" id="L165">        this.performanceCounters.setCpuSupply(this.cpuSupply);</span>
+<span class="fc" id="L166">        this.performanceCounters.setCpuCapacity(cpuCapacity);</span>
+<span class="fc" id="L167">    }</span>
+
+    @Override
+    public long onUpdate(long now) {
+<span class="fc" id="L171">        return Long.MAX_VALUE;</span>
+    }
+
+    @Override
+    public void stopWorkload() {
+<span class="fc" id="L176">        this.stopWorkload(null);</span>
+<span class="fc" id="L177">    }</span>
+
+<span class="fc" id="L179">    private Exception stopWorkloadCause = null;</span>
+
+    public void stopWorkload(Exception cause) {
+<span class="fc bfc" id="L182" title="All 2 branches covered.">        if (cause != null) {</span>
+<span class="fc" id="L183">            this.stopWorkloadCause = cause;</span>
+        }
+
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        if (this.checkpointModel != null) {</span>
+<span class="fc" id="L187">            this.checkpointModel.close();</span>
+<span class="fc" id="L188">            this.checkpointModel = null;</span>
+        }
+
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        if (this.activeWorkload != null) {</span>
+<span class="fc" id="L192">            this.activeWorkload.stopWorkload();</span>
+<span class="fc" id="L193">            this.activeWorkload = null;</span>
+        }
+
+<span class="fc" id="L196">        this.closeNode();</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">        if (this.completion != null) {</span>
+<span class="fc" id="L198">            this.completion.accept(stopWorkloadCause);</span>
+<span class="fc" id="L199">            this.completion = null;</span>
+        }
+<span class="fc" id="L201">    }</span>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Checkpoint related functionality
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void createCheckpointModel() {
+<span class="fc" id="L209">        this.checkpointModel = new CheckpointModel(this);</span>
+<span class="fc" id="L210">    }</span>
+
+    @Override
+    public void makeSnapshot(long now) {
+
+<span class="fc" id="L215">        this.snapshot.removeWorkloads(this.workloadIndex);</span>
+<span class="fc" id="L216">        this.workloadIndex = 0;</span>
+
+<span class="fc" id="L218">        activeWorkload.makeSnapshot(now);</span>
+<span class="fc" id="L219">    }</span>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // FlowGraph Related functionality
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Add connection to the active workload
+     *
+     * @param consumerEdge The edge to the workload
+     */
+    @Override
+    public void addConsumerEdge(FlowEdge consumerEdge) {
+<span class="fc" id="L232">        this.workloadEdge = consumerEdge;</span>
+<span class="fc" id="L233">    }</span>
+
+    /**
+     * Add Connection to the cpuMux
+     *
+     * @param supplierEdge The edge to the cpuMux
+     */
+    @Override
+    public void addSupplierEdge(FlowEdge supplierEdge) {
+<span class="fc" id="L242">        this.machineEdge = supplierEdge;</span>
+<span class="fc" id="L243">        this.capacity = supplierEdge.getCapacity();</span>
+<span class="fc" id="L244">    }</span>
+
+    /**
+     * Push demand to the cpuMux
+     *
+     * @param supplierEdge The edge to the cpuMux
+     * @param newDemand new demand to sent to the cpu
+     */
+    @Override
+    public void pushOutgoingDemand(FlowEdge supplierEdge, double newDemand) {
+
+<span class="fc" id="L255">        this.cpuDemand = newDemand;</span>
+<span class="fc" id="L256">        this.machineEdge.pushDemand(newDemand);</span>
+<span class="fc" id="L257">    }</span>
+
+    /**
+     * Push supply to the workload
+     *
+     * @param consumerEdge The edge to the cpuMux
+     * @param newSupply new supply to sent to the workload
+     */
+    @Override
+    public void pushOutgoingSupply(FlowEdge consumerEdge, double newSupply) {
+
+<span class="fc" id="L268">        this.cpuSupply = newSupply;</span>
+<span class="fc" id="L269">        this.workloadEdge.pushSupply(newSupply);</span>
+<span class="fc" id="L270">    }</span>
+
+    /**
+     * Handle new demand coming from the workload
+     *
+     * @param consumerEdge The edge to the workload
+     * @param newDemand new demand coming from the workload
+     */
+    @Override
+    public void handleIncomingDemand(FlowEdge consumerEdge, double newDemand) {
+<span class="fc" id="L280">        updateCounters(this.clock.millis());</span>
+
+<span class="fc" id="L282">        this.pushOutgoingDemand(this.machineEdge, newDemand);</span>
+<span class="fc" id="L283">    }</span>
+
+    /**
+     * Handle new supply coming from the cpuMux
+     *
+     * @param supplierEdge The edge to the cpuMux
+     * @param newSupply The new supply that is sent to the workload
+     */
+    @Override
+    public void handleIncomingSupply(FlowEdge supplierEdge, double newSupply) {
+<span class="fc" id="L293">        updateCounters(this.clock.millis());</span>
+
+<span class="fc" id="L295">        this.pushOutgoingSupply(this.machineEdge, newSupply);</span>
+<span class="fc" id="L296">    }</span>
+
+    /**
+     * Handle the removal of the workload.
+     * If there is a next workload available, start this workload
+     * Otherwise, close this SimChainWorkload
+     *
+     * @param consumerEdge The edge to the active workload
+     */
+    @Override
+    public void removeConsumerEdge(FlowEdge consumerEdge) {
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">        if (this.workloadEdge == null) {</span>
+<span class="nc" id="L308">            return;</span>
+        }
+
+        // Remove the connection to the active workload
+<span class="fc" id="L312">        this.activeWorkload = null;</span>
+<span class="fc" id="L313">        this.workloadEdge = null;</span>
+
+        // Start next workload
+<span class="pc bpc" id="L316" title="1 of 2 branches missed.">        if (!this.workloads.isEmpty()) {</span>
+<span class="nc" id="L317">            this.activeWorkload = getNextWorkload().startWorkload(this);</span>
+<span class="nc" id="L318">            return;</span>
+        }
+
+<span class="fc" id="L321">        this.stopWorkload();</span>
+<span class="fc" id="L322">    }</span>
+
+    /**
+     * Handle the removal of the connection to the cpuMux
+     * When this happens, close the SimChainWorkload
+     *
+     * @param supplierEdge The edge to the cpuMux
+     */
+    @Override
+    public void removeSupplierEdge(FlowEdge supplierEdge) {
+<span class="nc bnc" id="L332" title="All 2 branches missed.">        if (this.machineEdge == null) {</span>
+<span class="nc" id="L333">            return;</span>
+        }
+
+<span class="nc" id="L336">        this.stopWorkload();</span>
+<span class="nc" id="L337">    }</span>
+
+    @Override
+    public Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; getConnectedEdges() {
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">        List&lt;FlowEdge&gt; consumerEdges = (this.machineEdge != null) ? List.of(this.machineEdge) : List.of();</span>
+<span class="pc bpc" id="L342" title="1 of 2 branches missed.">        List&lt;FlowEdge&gt; supplierEdges = (this.workloadEdge != null) ? List.of(this.workloadEdge) : List.of();</span>
+
+<span class="fc" id="L344">        return Map.of(</span>
+                FlowEdge.NodeType.CONSUMING, consumerEdges,
+                FlowEdge.NodeType.SUPPLYING, supplierEdges);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CarbonModel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.compute.power</a> &gt; <span class="el_source">CarbonModel.java</span></div><h1>CarbonModel.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.compute.power;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.opendc.simulator.engine.engine.FlowEngine;
+import org.opendc.simulator.engine.graph.FlowEdge;
+import org.opendc.simulator.engine.graph.FlowNode;
+
+/**
+ * CarbonModel used to provide the Carbon Intensity of a {@link SimPowerSource}
+ * A CarbonModel is based on a list of {@link CarbonFragment} that define the carbon intensity at specific time frames.
+ */
+public class CarbonModel extends FlowNode {
+
+<span class="nc" id="L38">    private final ArrayList&lt;CarbonReceiver&gt; receivers = new ArrayList&lt;&gt;();</span>
+
+    private final long startTime; // The absolute timestamp on which the workload started
+
+    private final List&lt;CarbonFragment&gt; fragments;
+    private CarbonFragment current_fragment;
+
+    private int fragment_index;
+
+    /**
+     * Construct a CarbonModel
+     *
+     * @param engine The {@link FlowEngine} the node belongs to
+     * @param carbonFragments A list of Carbon Fragments defining the carbon intensity at different time frames
+     * @param startTime The start time of the simulation. This is used to go from relative time (used by the clock)
+     *                  to absolute time (used by carbon fragments).
+     */
+    public CarbonModel(FlowEngine engine, List&lt;CarbonFragment&gt; carbonFragments, long startTime) {
+<span class="nc" id="L56">        super(engine);</span>
+
+<span class="nc" id="L58">        this.startTime = startTime;</span>
+<span class="nc" id="L59">        this.fragments = carbonFragments;</span>
+
+<span class="nc" id="L61">        this.fragment_index = 0;</span>
+<span class="nc" id="L62">        this.current_fragment = this.fragments.get(this.fragment_index);</span>
+<span class="nc" id="L63">        this.pushCarbonIntensity(this.current_fragment.getCarbonIntensity());</span>
+<span class="nc" id="L64">    }</span>
+
+    public void close() {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        for (CarbonReceiver receiver : receivers) {</span>
+<span class="nc" id="L68">            receiver.removeCarbonModel(this);</span>
+<span class="nc" id="L69">        }</span>
+
+<span class="nc" id="L71">        receivers.clear();</span>
+
+<span class="nc" id="L73">        this.closeNode();</span>
+<span class="nc" id="L74">    }</span>
+
+    /**
+     * Convert the given relative time to the absolute time by adding the start of workload
+     */
+    private long getAbsoluteTime(long time) {
+<span class="nc" id="L80">        return time + startTime;</span>
+    }
+
+    /**
+     * Convert the given absolute time to the relative time by subtracting the start of workload
+     */
+    private long getRelativeTime(long time) {
+<span class="nc" id="L87">        return time - startTime;</span>
+    }
+
+    /**
+     * Traverse the fragments to find the fragment that matches the given absoluteTime
+     */
+    private void findCorrectFragment(long absoluteTime) {
+
+        // Traverse to the previous fragment, until you reach the correct fragment
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        while (absoluteTime &lt; this.current_fragment.getStartTime()) {</span>
+<span class="nc" id="L97">            this.current_fragment = fragments.get(--this.fragment_index);</span>
+        }
+
+        // Traverse to the next fragment, until you reach the correct fragment
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        while (absoluteTime &gt;= this.current_fragment.getEndTime()) {</span>
+<span class="nc" id="L102">            this.current_fragment = fragments.get(++this.fragment_index);</span>
+        }
+<span class="nc" id="L104">    }</span>
+
+    @Override
+    public long onUpdate(long now) {
+<span class="nc" id="L108">        long absolute_time = getAbsoluteTime(now);</span>
+
+        // Check if the current fragment is still the correct fragment,
+        // Otherwise, find the correct fragment.
+<span class="nc bnc" id="L112" title="All 4 branches missed.">        if ((absolute_time &lt; current_fragment.getStartTime()) || (absolute_time &gt;= current_fragment.getEndTime())) {</span>
+<span class="nc" id="L113">            this.findCorrectFragment(absolute_time);</span>
+
+<span class="nc" id="L115">            pushCarbonIntensity(current_fragment.getCarbonIntensity());</span>
+        }
+
+        // Update again at the end of this fragment
+<span class="nc" id="L119">        return getRelativeTime(current_fragment.getEndTime());</span>
+    }
+
+    private void pushCarbonIntensity(double carbonIntensity) {
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        for (CarbonReceiver receiver : this.receivers) {</span>
+<span class="nc" id="L124">            receiver.updateCarbonIntensity(carbonIntensity);</span>
+<span class="nc" id="L125">        }</span>
+<span class="nc" id="L126">    }</span>
+
+    public void addReceiver(CarbonReceiver receiver) {
+<span class="nc" id="L129">        this.receivers.add(receiver);</span>
+
+<span class="nc" id="L131">        receiver.setCarbonModel(this);</span>
+
+<span class="nc" id="L133">        receiver.updateCarbonIntensity(this.current_fragment.getCarbonIntensity());</span>
+<span class="nc" id="L134">    }</span>
+
+    public double[] getForecast(int forecastSize) {
+<span class="nc" id="L137">        return this.fragments</span>
+<span class="nc" id="L138">                .subList(</span>
+<span class="nc" id="L139">                        Math.min(this.fragment_index + 1, this.fragments.size() - 1),</span>
+<span class="nc" id="L140">                        Math.min(this.fragment_index + forecastSize, this.fragments.size()))</span>
+<span class="nc" id="L141">                .stream()</span>
+<span class="nc" id="L142">                .mapToDouble(CarbonFragment::getCarbonIntensity)</span>
+<span class="nc" id="L143">                .toArray();</span>
+    }
+
+    public static &lt;T, U&gt; List&lt;U&gt; castList(List&lt;T&gt; list, Class&lt;U&gt; clazz) {
+<span class="nc" id="L147">        List&lt;U&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        for (T element : list) {</span>
+<span class="nc" id="L149">            result.add(clazz.cast(element));</span>
+<span class="nc" id="L150">        }</span>
+<span class="nc" id="L151">        return result;</span>
+    }
+
+    @Override
+    public Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; getConnectedEdges() {
+<span class="nc" id="L156">        return Map.of();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

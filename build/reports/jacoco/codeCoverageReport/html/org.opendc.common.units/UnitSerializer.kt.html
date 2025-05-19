@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UnitSerializer.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.common.units</a> &gt; <span class="el_source">UnitSerializer.kt</span></div><h1>UnitSerializer.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+@file:OptIn(NonInlinableUnit::class)
+
+package org.opendc.common.units
+
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonTransformingSerializer
+import org.opendc.common.logger.logger
+
+/**
+ * Serializer for [T].
+ * @param[ifNumber] function invoked if the value to parse is a number without unit of measure.
+ * ```json
+ * // json e.g.
+ * &quot;value&quot;: 3
+ * // or
+ * &quot;value&quot;: &quot;3&quot;
+ * ```
+ * @param[serializerFun] function invoked when [T] needs to be serialized.
+ *
+ * @param[conditions] conditions used during the deserialization process.
+ * If the condition returns [T] then it is considered as the result of the deserialization.
+ * If the condition returns `null` the next condition is tested, until one
+ * satisfied condition is found, throws exception otherwise.
+ */
+<span class="fc" id="L55">internal open class UnitSerializer&lt;T : Unit&lt;T&gt;&gt;(</span>
+    ifNumber: (Number) -&gt; T,
+    serializerFun: Encoder.(T) -&gt; kotlin.Unit,
+    vararg conditions: String.() -&gt; T?,
+<span class="fc" id="L59">) : OnlyString&lt;T&gt;(</span>
+<span class="fc" id="L60">        object : KSerializer&lt;T&gt; {</span>
+<span class="pc" id="L61">            override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(&quot;unit-serializer&quot;, PrimitiveKind.STRING)</span>
+
+            override fun deserialize(decoder: Decoder): T {
+<span class="fc" id="L64">                val strField = decoder.decodeString()</span>
+<span class="fc" id="L65">                try {</span>
+                    // If the field is a number.
+<span class="fc" id="L67">                    return ifNumber(json.decodeFromString&lt;Double&gt;(strField))</span>
+<span class="nc" id="L68">                } catch (e: Exception) {</span>
+                    // No ops.
+                }
+
+<span class="nc" id="L72">                conditions.forEach { condition -&gt;</span>
+                    // If condition satisfied return result.
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                    strField.condition()?.let { return it }</span>
+<span class="nc" id="L75">                }</span>
+
+<span class="nc" id="L77">                throw RuntimeException(&quot;unable to parse unit of measure $strField&quot;)</span>
+            }
+
+            override fun serialize(
+                encoder: Encoder,
+                value: T,
+            ) {
+<span class="nc" id="L84">                serializerFun(encoder, value)</span>
+<span class="nc" id="L85">            }</span>
+        },
+    ) {
+    companion object {
+<span class="fc" id="L89">        val LOG by logger()</span>
+
+<span class="fc" id="L91">        val json = Json</span>
+
+        /**
+         * @return a lambda that can be passed as condition to [UnitSerializer] constructor.
+         */
+        fun &lt;T&gt; ifMatches(
+            regex: Regex,
+            block: MatchResult.() -&gt; T,
+        ): String.() -&gt; T? =
+<span class="nc" id="L100">            {</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                regex.matchEntire(this)?.block()</span>
+<span class="nc" id="L102">            }</span>
+
+        /**
+         * @return a lambda that can be passed as condition to [UnitSerializer] constructor.
+         */
+<span class="fc" id="L107">        fun &lt;T&gt; ifMatches(</span>
+            regexStr: String,
+<span class="fc" id="L109">            vararg options: RegexOption = emptyArray(),</span>
+            block: MatchResult.() -&gt; T,
+        ): String.() -&gt; T? =
+<span class="fc" id="L112">            {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">                Regex(regexStr, options.toSet()).matchEntire(this)?.block()</span>
+<span class="fc" id="L114">            }</span>
+
+        /**
+         * @return a lambda that can be passed as condition to [UnitSerializer] constructor.
+         */
+        fun &lt;T&gt; ifNoExc(block: String.() -&gt; T): String.() -&gt; T? =
+<span class="nc" id="L120">            {</span>
+<span class="nc" id="L121">                try {</span>
+<span class="nc" id="L122">                    block()</span>
+<span class="nc" id="L123">                } catch (_: Exception) {</span>
+<span class="nc" id="L124">                    null</span>
+                }
+<span class="nc" id="L126">            }</span>
+
+        // Constants that are used by multiple serializers to build consistent
+        // (and easy to change) regexes for deserialization.
+        // There is no guarantee that they are used with `IGNORE_CASE` option.
+
+        @JvmStatic
+<span class="fc" id="L133">        protected val NUM_GROUP = Regex(&quot;\\s*([\\de.-]+)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L136">        protected val BITS = Regex(&quot;\\s*(?:b|(?:bit|Bit)(?:|s))\\s?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L139">        protected val BYTES = Regex(&quot;\\s*(?:B|(?:byte|Byte)(?:|s))\\s?&quot;)</span>
+
+        @JvmStatic
+<span class="pc" id="L142">        protected val NANO = Regex(&quot;\\s*(?:n|nano|Nano)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="pc" id="L145">        protected val MICRO = Regex(&quot;\\s*(?:micro|Micro)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="pc" id="L148">        protected val MILLI = Regex(&quot;\\s*(?:m|milli|Milli)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L151">        protected val KILO = Regex(&quot;\\s*(?:K|Kilo|k|kilo)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L154">        protected val KIBI = Regex(&quot;\\s*(?:Ki|Kibi|ki|kibi)\\s?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L157">        protected val MEGA = Regex(&quot;\\s*(?:M|Mega|m|mega)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L160">        protected val MEBI = Regex(&quot;\\s*(?:Mi|Mebi|mi|mebi)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L163">        protected val GIGA = Regex(&quot;\\s*(?:G|Giga|g|giga)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L166">        protected val GIBI = Regex(&quot;\\s*(?:Gi|Gibi|gi|gibi)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L169">        protected val TERA = Regex(&quot;\\s*(?:T|Tera|t|tera)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L172">        protected val TEBI = Regex(&quot;\\s*(?:Ti|Tebi|ti|tebi)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="fc" id="L175">        protected val WATTS = Regex(&quot;\\s*(?:w|watts|W|Watts)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="pc" id="L178">        protected val PER = Regex(&quot;\\s*(?:p|per|/)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="pc" id="L181">        protected val SEC = Regex(&quot;\\s*(?:s|sec|Sec|second|Second)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="pc" id="L184">        protected val MIN = Regex(&quot;\\s*(?:m|min|Min|minute|Minute)\\s*?&quot;)</span>
+
+        @JvmStatic
+<span class="pc" id="L187">        protected val HOUR = Regex(&quot;\\s*(?:h|hour|Hour)\\s*?&quot;)</span>
+    }
+}
+
+/**
+ * Allows manipulating an abstract JSON representation of the class before serialization or deserialization.
+ * Maps a [JsonPrimitive] to its [String] representation.
+ *
+ * ```json
+ * // e.g.
+ * &quot;value&quot;: 3
+ * // for deserialization becomes
+ * &quot;value&quot;: &quot;3&quot;
+ */
+<span class="fc" id="L201">internal open class OnlyString&lt;T : Any&gt;(tSerial: KSerializer&lt;T&gt;) : JsonTransformingSerializer&lt;T&gt;(tSerial) {</span>
+<span class="fc" id="L202">    override fun transformDeserialize(element: JsonElement): JsonElement = JsonPrimitive(element.toString().trim('&quot;'))</span>
+}
+
+/**
+ * Kotlin's serialization plugin does not have a serializer for [Number].
+ * ```kotlin
+ * // This function allows, when the type inferred without
+ * // type parameter is Number, to replace
+ * Json.decodeFromString&lt;Double&gt;(str)
+ * // with
+ * Json.decNumFromStr(str)
+ *
+ * ```
+ */
+<span class="nc" id="L216">internal fun Json.decNumFromStr(str: String): Number = decodeFromString&lt;Double&gt;(str)</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

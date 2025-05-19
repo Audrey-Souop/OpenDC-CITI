@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TopologySpecs.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.topology.specs</a> &gt; <span class="el_source">TopologySpecs.kt</span></div><h1>TopologySpecs.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.topology.specs
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import org.opendc.common.units.DataSize
+import org.opendc.common.units.Frequency
+import org.opendc.common.units.Power
+import org.opendc.simulator.compute.power.batteries.BatteryAggregator
+import org.opendc.simulator.compute.power.batteries.SimBattery
+import org.opendc.simulator.compute.power.batteries.policy.BatteryPolicy
+import org.opendc.simulator.compute.power.batteries.policy.DoubleThresholdBatteryPolicy
+import org.opendc.simulator.compute.power.batteries.policy.RunningMeanBatteryPolicy
+import org.opendc.simulator.compute.power.batteries.policy.RunningMeanPlusBatteryPolicy
+import org.opendc.simulator.compute.power.batteries.policy.SingleThresholdBatteryPolicy
+import org.opendc.simulator.engine.engine.FlowEngine
+
+/**
+ * Definition of a Topology modeled in the simulation.
+ *
+ * @param clusters List of the clusters in this topology
+ */
+<span class="pc bpc" id="L44" title="3 of 8 branches missed.">@Serializable</span>
+<span class="nc" id="L45">public data class TopologySpec(</span>
+<span class="pc" id="L46">    val clusters: List&lt;ClusterJSONSpec&gt;,</span>
+<span class="nc" id="L47">    val schemaVersion: Int = 1,</span>
+<span class="pc" id="L48">)</span>
+
+/**
+ * Definition of a compute cluster modeled in the simulation.
+ *
+ * @param name The name of the cluster.
+ * @param hosts List of the different hosts (nodes) available in this cluster
+ * @param location Location of the cluster. This can impact the carbon intensity
+ */
+<span class="pc bpc" id="L57" title="4 of 12 branches missed.">@Serializable</span>
+<span class="nc" id="L58">public data class ClusterJSONSpec(</span>
+<span class="pc" id="L59">    val name: String = &quot;Cluster&quot;,</span>
+<span class="nc" id="L60">    val count: Int = 1,</span>
+<span class="pc" id="L61">    val hosts: List&lt;HostJSONSpec&gt;,</span>
+<span class="pc" id="L62">    val powerSource: PowerSourceJSONSpec = PowerSourceJSONSpec.DFLT,</span>
+<span class="pc" id="L63">    val battery: BatteryJSONSpec? = null,</span>
+<span class="nc" id="L64">    val location: String = &quot;NL&quot;,</span>
+<span class="pc" id="L65">)</span>
+
+/**
+ * Definition of a compute host modeled in the simulation.
+ *
+ * @param name The name of the host.
+ * @param cpu The CPU available in this cluster
+ * @param memory The amount of RAM memory available in Byte
+ * @param powerModel The power model used to determine the power draw of a host
+ * @param count The power model used to determine the power draw of a host
+ */
+<span class="pc bpc" id="L76" title="2 of 11 branches missed.">@Serializable</span>
+<span class="nc" id="L77">public data class HostJSONSpec(</span>
+<span class="pc" id="L78">    val name: String = &quot;Host&quot;,</span>
+<span class="pc" id="L79">    val cpu: CPUJSONSpec,</span>
+<span class="pc" id="L80">    val memory: MemoryJSONSpec,</span>
+<span class="pc" id="L81">    val powerModel: PowerModelSpec = PowerModelSpec.DFLT,</span>
+<span class="pc" id="L82">    val count: Int = 1,</span>
+<span class="pc" id="L83">)</span>
+
+/**
+ * Definition of a compute CPU modeled in the simulation.
+ *
+ * @param vendor The vendor of the storage device.
+ * @param modelName The model name of the device.
+ * @param arch The micro-architecture of the processor node.
+ * @param coreCount The number of cores in the CPU
+ * @param coreSpeed The speed of the cores
+ */
+<span class="pc bpc" id="L94" title="11 of 22 branches missed.">@Serializable</span>
+<span class="nc" id="L95">public data class CPUJSONSpec(</span>
+<span class="pc" id="L96">    val vendor: String = &quot;unknown&quot;,</span>
+<span class="pc" id="L97">    val modelName: String = &quot;unknown&quot;,</span>
+<span class="pc" id="L98">    val arch: String = &quot;unknown&quot;,</span>
+<span class="pc" id="L99">    val coreCount: Int,</span>
+<span class="pc" id="L100">    val coreSpeed: Frequency,</span>
+<span class="pc" id="L101">    val count: Int = 1,</span>
+<span class="pc" id="L102">)</span>
+
+/**
+ * Definition of a compute Memory modeled in the simulation.
+ *
+ * @param vendor The vendor of the storage device.
+ * @param modelName The model name of the device.
+ * @param arch The micro-architecture of the processor node.
+ * @param memorySpeed The speed of the cores
+ * @param memorySize The size of the memory Unit
+ */
+<span class="pc bpc" id="L113" title="11 of 21 branches missed.">@Serializable</span>
+<span class="nc" id="L114">public data class MemoryJSONSpec(</span>
+<span class="pc" id="L115">    val vendor: String = &quot;unknown&quot;,</span>
+<span class="pc" id="L116">    val modelName: String = &quot;unknown&quot;,</span>
+<span class="pc" id="L117">    val arch: String = &quot;unknown&quot;,</span>
+<span class="pc" id="L118">    val memorySpeed: Frequency = Frequency.ofMHz(-1),</span>
+<span class="pc" id="L119">    val memorySize: DataSize,</span>
+<span class="pc" id="L120">)</span>
+
+<span class="pc bpc" id="L122" title="6 of 17 branches missed.">@Serializable</span>
+<span class="fc" id="L123">public data class PowerModelSpec(</span>
+<span class="fc" id="L124">    val modelType: String,</span>
+<span class="pc" id="L125">    val power: Power = Power.ofWatts(400),</span>
+<span class="fc" id="L126">    val maxPower: Power,</span>
+<span class="fc" id="L127">    val idlePower: Power,</span>
+<span class="pc" id="L128">    val carbonTracePaths: String? = null,</span>
+) {
+<span class="fc" id="L130">    init {</span>
+<span class="pc bpc" id="L131" title="4 of 8 branches missed.">        require(maxPower &gt;= idlePower) { &quot;The max power of a power model can not be less than the idle power&quot; }</span>
+<span class="fc" id="L132">    }</span>
+
+<span class="nc" id="L134">    public companion object {</span>
+<span class="fc" id="L135">        public val DFLT: PowerModelSpec =</span>
+<span class="fc" id="L136">            PowerModelSpec(</span>
+<span class="fc" id="L137">                modelType = &quot;linear&quot;,</span>
+<span class="fc" id="L138">                power = Power.ofWatts(350),</span>
+<span class="fc" id="L139">                maxPower = Power.ofWatts(400.0),</span>
+<span class="fc" id="L140">                idlePower = Power.ofWatts(200.0),</span>
+            )
+    }
+<span class="fc" id="L143">}</span>
+
+/**
+ * Definition of a power source used for JSON input.
+ *
+ * @property vendor
+ * @property modelName
+ * @property arch
+ * @property totalPower
+ */
+<span class="pc bpc" id="L153" title="7 of 12 branches missed.">@Serializable</span>
+<span class="fc" id="L154">public data class PowerSourceJSONSpec(</span>
+<span class="fc" id="L155">    val name: String = &quot;PowerSource&quot;,</span>
+<span class="pc" id="L156">    val vendor: String = &quot;unknown&quot;,</span>
+<span class="pc" id="L157">    val modelName: String = &quot;unknown&quot;,</span>
+<span class="pc" id="L158">    val arch: String = &quot;unknown&quot;,</span>
+<span class="pc" id="L159">    val totalPower: Long = Long.MAX_VALUE,</span>
+<span class="fc" id="L160">    val carbonTracePath: String? = null,</span>
+) {
+<span class="nc" id="L162">    public companion object {</span>
+<span class="fc" id="L163">        public val DFLT: PowerSourceJSONSpec =</span>
+<span class="fc" id="L164">            PowerSourceJSONSpec(</span>
+<span class="fc" id="L165">                totalPower = Long.MAX_VALUE,</span>
+            )
+    }
+<span class="fc" id="L168">}</span>
+
+/**
+ * Definition of a battery used for JSON input.
+ *
+ * @property name The name of the battery
+ * @property capacity The capacity of the battery in kWh
+ * @property chargingSpeed The charging speed of the battery in J
+ * @property batteryPolicy The policy used to decide when the battery charges and discharges
+ * @property initialCharge The initial charge in the battery
+ * @property embodiedCarbon The embodied carbon needed to create the battery in gram
+ * @property expectedLifetime The expected lifetime of the battery in years
+ *
+ */
+<span class="pc bpc" id="L182" title="6 of 13 branches missed.">@Serializable</span>
+<span class="pc" id="L183">public data class BatteryJSONSpec(</span>
+<span class="pc" id="L184">    val name: String = &quot;Battery&quot;,</span>
+<span class="pc" id="L185">    var capacity: Double,</span>
+<span class="fc" id="L186">    val chargingSpeed: Double,</span>
+<span class="fc" id="L187">    val batteryPolicy: BatteryPolicyJSONSpec,</span>
+<span class="pc" id="L188">    var initialCharge: Double = 0.0,</span>
+<span class="pc" id="L189">    var embodiedCarbon: Double = 0.0,</span>
+<span class="pc" id="L190">    var expectedLifetime: Double = 0.0,</span>
+<span class="pc" id="L191">)</span>
+
+<span class="nc" id="L193">@Serializable</span>
+public sealed interface BatteryPolicyJSONSpec
+
+<span class="pc bpc" id="L196" title="2 of 7 branches missed.">@Serializable</span>
+@SerialName(&quot;single&quot;)
+<span class="nc" id="L198">public data class SingleBatteryPolicyJSONSpec(</span>
+<span class="pc" id="L199">    val carbonThreshold: Double,</span>
+<span class="fc" id="L200">) : BatteryPolicyJSONSpec</span>
+
+<span class="pc bnc" id="L202" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;double&quot;)
+<span class="nc" id="L204">public data class DoubleBatteryPolicyJSONSpec(</span>
+<span class="nc" id="L205">    val lowerThreshold: Double,</span>
+<span class="nc" id="L206">    val upperThreshold: Double,</span>
+<span class="fc" id="L207">) : BatteryPolicyJSONSpec</span>
+
+<span class="pc bnc" id="L209" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;runningMean&quot;)
+<span class="nc" id="L211">public data class RunningMeanPolicyJSONSpec(</span>
+<span class="nc" id="L212">    val startingThreshold: Double,</span>
+<span class="nc" id="L213">    val windowSize: Int,</span>
+<span class="fc" id="L214">) : BatteryPolicyJSONSpec</span>
+
+<span class="pc bnc" id="L216" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;runningMeanPlus&quot;)
+<span class="nc" id="L218">public data class RunningMeanPlusPolicyJSONSpec(</span>
+<span class="nc" id="L219">    val startingThreshold: Double,</span>
+<span class="nc" id="L220">    val windowSize: Int,</span>
+<span class="fc" id="L221">) : BatteryPolicyJSONSpec</span>
+
+<span class="pc bnc" id="L223" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;runningMedian&quot;)
+<span class="nc" id="L225">public data class RunningMedianPolicyJSONSpec(</span>
+<span class="nc" id="L226">    val startingThreshold: Double,</span>
+<span class="nc" id="L227">    val windowSize: Int,</span>
+<span class="fc" id="L228">) : BatteryPolicyJSONSpec</span>
+
+<span class="pc bnc" id="L230" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;runningQuartiles&quot;)
+<span class="nc" id="L232">public data class RunningQuartilesPolicyJSONSpec(</span>
+<span class="nc" id="L233">    val startingThreshold: Double,</span>
+<span class="nc" id="L234">    val windowSize: Int,</span>
+<span class="fc" id="L235">) : BatteryPolicyJSONSpec</span>
+
+public fun createSimBatteryPolicy(
+    batterySpec: BatteryPolicyJSONSpec,
+    engine: FlowEngine,
+    battery: SimBattery,
+    batteryAggregator: BatteryAggregator,
+): BatteryPolicy {
+<span class="fc" id="L243">    return when (batterySpec) {</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">        is SingleBatteryPolicyJSONSpec -&gt;</span>
+<span class="fc" id="L245">            SingleThresholdBatteryPolicy(</span>
+<span class="fc" id="L246">                engine,</span>
+<span class="fc" id="L247">                battery,</span>
+<span class="fc" id="L248">                batteryAggregator,</span>
+<span class="fc" id="L249">                batterySpec.carbonThreshold,</span>
+            )
+<span class="nc bnc" id="L251" title="All 2 branches missed.">        is DoubleBatteryPolicyJSONSpec -&gt;</span>
+<span class="nc" id="L252">            DoubleThresholdBatteryPolicy(</span>
+<span class="nc" id="L253">                engine,</span>
+<span class="nc" id="L254">                battery,</span>
+<span class="nc" id="L255">                batteryAggregator,</span>
+<span class="nc" id="L256">                batterySpec.lowerThreshold,</span>
+<span class="nc" id="L257">                batterySpec.upperThreshold,</span>
+            )
+<span class="nc bnc" id="L259" title="All 2 branches missed.">        is RunningMeanPolicyJSONSpec -&gt;</span>
+<span class="nc" id="L260">            RunningMeanBatteryPolicy(</span>
+<span class="nc" id="L261">                engine,</span>
+<span class="nc" id="L262">                battery,</span>
+<span class="nc" id="L263">                batteryAggregator,</span>
+<span class="nc" id="L264">                batterySpec.startingThreshold,</span>
+<span class="nc" id="L265">                batterySpec.windowSize,</span>
+            )
+<span class="nc bnc" id="L267" title="All 2 branches missed.">        is RunningMeanPlusPolicyJSONSpec -&gt;</span>
+<span class="nc" id="L268">            RunningMeanPlusBatteryPolicy(</span>
+<span class="nc" id="L269">                engine,</span>
+<span class="nc" id="L270">                battery,</span>
+<span class="nc" id="L271">                batteryAggregator,</span>
+<span class="nc" id="L272">                batterySpec.startingThreshold,</span>
+<span class="nc" id="L273">                batterySpec.windowSize,</span>
+            )
+<span class="nc" id="L275">        else -&gt; throw IllegalArgumentException(&quot;Unknown battery policy&quot;)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimBattery.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.compute.power.batteries</a> &gt; <span class="el_source">SimBattery.java</span></div><h1>SimBattery.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2025 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.compute.power.batteries;
+
+import java.util.List;
+import java.util.Map;
+import org.opendc.simulator.compute.power.batteries.policy.BatteryPolicy;
+import org.opendc.simulator.engine.engine.FlowEngine;
+import org.opendc.simulator.engine.graph.FlowConsumer;
+import org.opendc.simulator.engine.graph.FlowEdge;
+import org.opendc.simulator.engine.graph.FlowNode;
+import org.opendc.simulator.engine.graph.FlowSupplier;
+
+public class SimBattery extends FlowNode implements FlowConsumer, FlowSupplier {
+
+    private final double capacity;
+    private final double chargingSpeed;
+
+    private FlowEdge distributorEdge;
+    private FlowEdge aggregatorEdge;
+
+<span class="nc" id="L42">    private BatteryState batteryState = BatteryState.IDLE;</span>
+
+    private double charge;
+
+    private long lastUpdate;
+    private double incomingSupply;
+    private double incomingDemand;
+    private double outgoingDemand;
+    private double outgoingSupply;
+
+    private final String name;
+    private final String clusterName;
+    private final Double embodiedCarbonRate; // The rate of carbon emissions per millisecond
+<span class="nc" id="L55">    private Double embodiedCarbonEmission = 0.0;</span>
+
+    public Double getEmbodiedCarbonEmission() {
+<span class="nc" id="L58">        return embodiedCarbonEmission;</span>
+    }
+
+    public String getName() {
+<span class="nc" id="L62">        return name;</span>
+    }
+
+    public String getClusterName() {
+<span class="nc" id="L66">        return clusterName;</span>
+    }
+
+    public double getTotalEnergyUsage() {
+<span class="nc" id="L70">        return totalEnergyUsage;</span>
+    }
+
+    public void setTotalEnergyUsage(double totalEnergyUsage) {
+<span class="nc" id="L74">        this.totalEnergyUsage = totalEnergyUsage;</span>
+<span class="nc" id="L75">    }</span>
+
+    public double getOutgoingSupply() {
+<span class="nc" id="L78">        return outgoingSupply;</span>
+    }
+
+    public void setOutgoingSupply(double outgoingSupply) {
+<span class="nc" id="L82">        this.outgoingSupply = outgoingSupply;</span>
+<span class="nc" id="L83">    }</span>
+
+<span class="nc" id="L85">    private double totalEnergyUsage = 0.0f;</span>
+
+    public BatteryPolicy getBatteryPolicy() {
+<span class="nc" id="L88">        return batteryPolicy;</span>
+    }
+
+    public void setBatteryPolicy(BatteryPolicy batteryPolicy) {
+<span class="nc" id="L92">        this.batteryPolicy = batteryPolicy;</span>
+<span class="nc" id="L93">    }</span>
+
+    private BatteryPolicy batteryPolicy;
+
+    public BatteryState getBatteryState() {
+<span class="nc" id="L98">        return batteryState;</span>
+    }
+
+    public double getCharge() {
+<span class="nc" id="L102">        return charge;</span>
+    }
+
+    public void setCharge(double charge) {
+<span class="nc" id="L106">        this.charge = charge;</span>
+<span class="nc" id="L107">    }</span>
+
+    @Override
+    public double getCapacity() {
+<span class="nc" id="L111">        return this.capacity;</span>
+    }
+
+    public boolean isFull() {
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        return (this.charge &gt;= this.capacity);</span>
+    }
+
+    public boolean isEmpty() {
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        return (this.charge &lt;= 0.0);</span>
+    }
+
+    /**
+     * Construct a new {@link SimBattery} instance.
+     *
+     * @param engine The {@link FlowEngine} instance this battery is part of.
+     * @param capacity The capacity of the battery in kWh.
+     * @param chargingSpeed The charging speed of the battery in J.
+     * @param initialCharge The initial charge of the battery in kWh.
+     * @param name The name of the battery.
+     * @param clusterName The name of the cluster the battery is part of.
+     * @param totalEmbodiedCarbon The total embodied carbon used to manufacture the battery in kg.
+     * @param expectedLifeTime The expected lifetime of the battery in years.
+     */
+    public SimBattery(
+            FlowEngine engine,
+            double capacity,
+            double chargingSpeed,
+            double initialCharge,
+            String name,
+            String clusterName,
+            Double totalEmbodiedCarbon,
+            Double expectedLifeTime) {
+
+<span class="nc" id="L144">        super(engine);</span>
+<span class="nc" id="L145">        this.capacity = capacity * 3600000;</span>
+<span class="nc" id="L146">        this.chargingSpeed = chargingSpeed;</span>
+
+<span class="nc" id="L148">        this.charge = initialCharge * 3600000;</span>
+<span class="nc" id="L149">        this.name = name;</span>
+<span class="nc" id="L150">        this.clusterName = clusterName;</span>
+
+        // TODO: maybe change this to days instead of years?
+<span class="nc" id="L153">        this.embodiedCarbonRate =</span>
+<span class="nc" id="L154">                (totalEmbodiedCarbon * 1000) / (expectedLifeTime * 365.0 * 24.0 * 60.0 * 60.0 * 1000.0);</span>
+<span class="nc" id="L155">    }</span>
+
+    public void close() {
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (this.distributorEdge == null) {</span>
+<span class="nc" id="L159">            return;</span>
+        }
+
+<span class="nc" id="L162">        this.distributorEdge = null;</span>
+<span class="nc" id="L163">        this.aggregatorEdge = null;</span>
+
+<span class="nc" id="L165">        this.closeNode();</span>
+<span class="nc" id="L166">    }</span>
+
+    @Override
+    public long onUpdate(long now) {
+
+<span class="nc" id="L171">        this.updateCounters(now);</span>
+
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        if (this.batteryState == BatteryState.IDLE) {</span>
+<span class="nc" id="L174">            return Long.MAX_VALUE;</span>
+        }
+
+<span class="nc" id="L177">        long remainingTime = 0L;</span>
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        if (this.batteryState == BatteryState.CHARGING) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">            if (this.isFull()) {</span>
+<span class="nc" id="L181">                this.batteryPolicy.invalidate();</span>
+<span class="nc" id="L182">                return Long.MAX_VALUE;</span>
+            }
+
+<span class="nc" id="L185">            remainingTime = this.calculateRemainingTime();</span>
+        }
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        if (this.batteryState == BatteryState.DISCHARGING) {</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">            if (this.isEmpty()) {</span>
+<span class="nc" id="L190">                this.batteryPolicy.invalidate();</span>
+<span class="nc" id="L191">                return Long.MAX_VALUE;</span>
+            }
+
+<span class="nc" id="L194">            this.pushOutgoingSupply(this.aggregatorEdge, this.incomingDemand);</span>
+<span class="nc" id="L195">            remainingTime = this.calculateRemainingTime();</span>
+        }
+
+<span class="nc" id="L198">        long nextUpdate = now + remainingTime;</span>
+
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        if (nextUpdate &lt; 0) {</span>
+<span class="nc" id="L201">            nextUpdate = Long.MAX_VALUE;</span>
+        }
+<span class="nc" id="L203">        return nextUpdate;</span>
+    }
+
+    public void updateCounters(long now) {
+<span class="nc" id="L207">        long lastUpdate = this.lastUpdate;</span>
+<span class="nc" id="L208">        this.lastUpdate = now;</span>
+
+<span class="nc" id="L210">        long passedTime = now - lastUpdate;</span>
+
+<span class="nc" id="L212">        this.embodiedCarbonEmission += this.embodiedCarbonRate * passedTime;</span>
+
+<span class="nc" id="L214">        this.updateCharge(passedTime);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        if (passedTime &gt; 0) {</span>
+<span class="nc" id="L216">            double energyUsage = (this.outgoingSupply * passedTime * 0.001);</span>
+
+<span class="nc" id="L218">            this.totalEnergyUsage += energyUsage;</span>
+        }
+<span class="nc" id="L220">    }</span>
+
+    public void updateCounters() {
+<span class="nc" id="L223">        updateCounters(clock.millis());</span>
+<span class="nc" id="L224">    }</span>
+
+    private void updateCharge(long passedTime) {
+<span class="nc bnc" id="L227" title="All 2 branches missed.">        if (this.batteryState == BatteryState.CHARGING) {</span>
+<span class="nc" id="L228">            this.charge += this.incomingSupply * (passedTime / 1000.0);</span>
+        }
+
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        if (this.batteryState == BatteryState.DISCHARGING) {</span>
+<span class="nc" id="L232">            this.charge -= this.outgoingSupply * (passedTime / 1000.0);</span>
+        }
+<span class="nc" id="L234">    }</span>
+
+    private long calculateRemainingTime() {
+<span class="nc bnc" id="L237" title="All 4 branches missed.">        if ((this.batteryState == BatteryState.CHARGING) &amp;&amp; (this.incomingSupply &gt; 0.0)) {</span>
+<span class="nc" id="L238">            double remainingCharge = this.capacity - this.charge;</span>
+<span class="nc" id="L239">            return (long) Math.ceil((remainingCharge / this.incomingSupply) * 1000);</span>
+        }
+
+<span class="nc bnc" id="L242" title="All 4 branches missed.">        if ((this.batteryState == BatteryState.DISCHARGING) &amp;&amp; (this.outgoingSupply &gt; 0.0)) {</span>
+<span class="nc" id="L243">            return (long) Math.ceil((this.charge / this.outgoingSupply) * 1000);</span>
+        }
+
+<span class="nc" id="L246">        return Long.MAX_VALUE;</span>
+    }
+
+    public void setBatteryState(BatteryState newBatteryState) {
+<span class="nc bnc" id="L250" title="All 2 branches missed.">        if (newBatteryState == this.batteryState) {</span>
+<span class="nc" id="L251">            return;</span>
+        }
+
+<span class="nc" id="L254">        long now = this.clock.millis();</span>
+
+<span class="nc" id="L256">        updateCounters(now);</span>
+
+<span class="nc" id="L258">        this.batteryState = newBatteryState;</span>
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">        if (this.batteryState == BatteryState.IDLE) {</span>
+<span class="nc" id="L261">            this.pushOutgoingDemand(this.distributorEdge, 0.0f);</span>
+<span class="nc" id="L262">            this.pushOutgoingSupply(this.distributorEdge, 0.0f);</span>
+        }
+
+<span class="nc bnc" id="L265" title="All 2 branches missed.">        if (this.batteryState == BatteryState.CHARGING) {</span>
+<span class="nc" id="L266">            this.pushOutgoingDemand(this.distributorEdge, this.chargingSpeed);</span>
+<span class="nc" id="L267">            this.pushOutgoingSupply(this.aggregatorEdge, 0.0f);</span>
+        }
+
+<span class="nc bnc" id="L270" title="All 2 branches missed.">        if (this.batteryState == BatteryState.DISCHARGING) {</span>
+<span class="nc" id="L271">            this.pushOutgoingDemand(this.distributorEdge, 0.0f);</span>
+        }
+
+<span class="nc" id="L274">        this.invalidate();</span>
+<span class="nc" id="L275">    }</span>
+
+    @Override
+    public void handleIncomingSupply(FlowEdge supplierEdge, double newSupply) {
+<span class="nc" id="L279">        this.incomingSupply = newSupply;</span>
+
+<span class="nc" id="L281">        this.invalidate();</span>
+<span class="nc" id="L282">    }</span>
+
+    @Override
+    public void pushOutgoingDemand(FlowEdge supplierEdge, double newDemand) {
+<span class="nc" id="L286">        this.outgoingDemand = newDemand;</span>
+
+<span class="nc" id="L288">        this.distributorEdge.pushDemand(newDemand);</span>
+<span class="nc" id="L289">    }</span>
+
+    @Override
+    public void addSupplierEdge(FlowEdge supplierEdge) {
+<span class="nc" id="L293">        this.distributorEdge = supplierEdge;</span>
+<span class="nc" id="L294">    }</span>
+
+    @Override
+    public void removeSupplierEdge(FlowEdge supplierEdge) {
+<span class="nc" id="L298">        this.close();</span>
+<span class="nc" id="L299">    }</span>
+
+    @Override
+    public void handleIncomingDemand(FlowEdge consumerEdge, double newDemand) {
+<span class="nc" id="L303">        this.incomingDemand = newDemand;</span>
+
+<span class="nc" id="L305">        this.invalidate();</span>
+<span class="nc" id="L306">    }</span>
+
+    @Override
+    public void pushOutgoingSupply(FlowEdge consumerEdge, double newSupply) {
+<span class="nc" id="L310">        this.outgoingSupply = newSupply;</span>
+
+<span class="nc" id="L312">        this.aggregatorEdge.pushSupply(newSupply);</span>
+<span class="nc" id="L313">    }</span>
+
+    @Override
+    public void addConsumerEdge(FlowEdge consumerEdge) {
+<span class="nc" id="L317">        this.aggregatorEdge = consumerEdge;</span>
+<span class="nc" id="L318">    }</span>
+
+    @Override
+    public void removeConsumerEdge(FlowEdge consumerEdge) {
+<span class="nc" id="L322">        this.close();</span>
+<span class="nc" id="L323">    }</span>
+
+    @Override
+    public Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; getConnectedEdges() {
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        List&lt;FlowEdge&gt; consumingEdges = (this.distributorEdge != null) ? List.of(this.distributorEdge) : List.of();</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">        List&lt;FlowEdge&gt; supplyingEdges = (this.aggregatorEdge != null) ? List.of(this.aggregatorEdge) : List.of();</span>
+
+<span class="nc" id="L330">        return Map.of(</span>
+                FlowEdge.NodeType.CONSUMING, consumingEdges,
+                FlowEdge.NodeType.SUPPLYING, supplyingEdges);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

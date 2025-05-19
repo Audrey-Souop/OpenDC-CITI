@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Timeshifter.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.scheduler.timeshift</a> &gt; <span class="el_source">Timeshifter.kt</span></div><h1>Timeshifter.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2025 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.scheduler.timeshift
+
+import org.opendc.simulator.compute.power.CarbonModel
+import org.opendc.simulator.compute.power.CarbonReceiver
+import java.time.InstantSource
+import java.util.LinkedList
+import kotlin.math.roundToInt
+
+public interface Timeshifter : CarbonReceiver {
+    public val windowSize: Int
+    public val clock: InstantSource
+    public val forecast: Boolean
+    public val shortForecastThreshold: Double
+    public val longForecastThreshold: Double
+    public val forecastSize: Int
+
+    public val pastCarbonIntensities: LinkedList&lt;Double&gt;
+    public var carbonRunningSum: Double
+    public var shortLowCarbon: Boolean // Low carbon regime for short tasks (&lt; 2 hours)
+    public var longLowCarbon: Boolean // Low carbon regime for long tasks (&gt;= hours)
+    public var carbonMod: CarbonModel?
+
+    /**
+     Compare current carbon intensity to the chosen quantile from the [forecastSize]
+     number of intensity forecasts
+     */
+    override fun updateCarbonIntensity(newCarbonIntensity: Double) {
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (!forecast) {</span>
+<span class="fc" id="L51">            noForecastUpdateCarbonIntensity(newCarbonIntensity)</span>
+<span class="fc" id="L52">            return</span>
+        }
+
+<span class="nc" id="L55">        val forecast = carbonMod!!.getForecast(forecastSize)</span>
+<span class="nc" id="L56">        val localForecastSize = forecast.size</span>
+
+<span class="nc" id="L58">        val shortQuantileIndex = (localForecastSize * shortForecastThreshold).roundToInt()</span>
+<span class="nc" id="L59">        val shortCarbonIntensity = forecast.sorted()[shortQuantileIndex]</span>
+<span class="nc" id="L60">        val longQuantileIndex = (localForecastSize * longForecastThreshold).roundToInt()</span>
+<span class="nc" id="L61">        val longCarbonIntensity = forecast.sorted()[longQuantileIndex]</span>
+
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        shortLowCarbon = newCarbonIntensity &lt; shortCarbonIntensity</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        longLowCarbon = newCarbonIntensity &lt; longCarbonIntensity</span>
+<span class="nc" id="L65">    }</span>
+
+    /**
+     Compare current carbon intensity to the moving average of the past [windowSize]
+     number of intensity updates
+     */
+    private fun noForecastUpdateCarbonIntensity(newCarbonIntensity: Double) {
+<span class="fc" id="L72">        val previousCarbonIntensity =</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            if (this.pastCarbonIntensities.isEmpty()) {</span>
+<span class="fc" id="L74">                0.0</span>
+            } else {
+<span class="fc" id="L76">                this.pastCarbonIntensities.last()</span>
+            }
+<span class="fc" id="L78">        this.pastCarbonIntensities.addLast(newCarbonIntensity)</span>
+<span class="fc" id="L79">        this.carbonRunningSum += newCarbonIntensity</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (this.pastCarbonIntensities.size &gt; this.windowSize) {</span>
+<span class="nc" id="L81">            this.carbonRunningSum -= this.pastCarbonIntensities.removeFirst()</span>
+        }
+
+<span class="fc" id="L84">        val thresholdCarbonIntensity = this.carbonRunningSum / this.pastCarbonIntensities.size</span>
+
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        shortLowCarbon = (newCarbonIntensity &lt; thresholdCarbonIntensity) &amp;&amp;</span>
+<span class="pc bnc" id="L87" title="All 2 branches missed.">            (newCarbonIntensity &gt; previousCarbonIntensity)</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        longLowCarbon = (newCarbonIntensity &lt; thresholdCarbonIntensity)</span>
+<span class="fc" id="L89">    }</span>
+
+    override fun setCarbonModel(carbonModel: CarbonModel?) {
+<span class="nc" id="L92">        this.carbonMod = carbonModel</span>
+<span class="nc" id="L93">    }</span>
+
+<span class="nc" id="L95">    override fun removeCarbonModel(carbonModel: CarbonModel?) {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="TableReader for Tasks" tests="7" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:37" hostname="ece-d6200-audu" time="0.008">
+  <properties/>
+  <testcase name="testReadWithoutNextRow()" classname="formats.swf.SwfTraceFormatTest$TasksTableReaderTest" time="0.001"/>
+  <testcase name="testReadAfterFinish()" classname="formats.swf.SwfTraceFormatTest$TasksTableReaderTest" time="0.001"/>
+  <testcase name="testReadFully()" classname="formats.swf.SwfTraceFormatTest$TasksTableReaderTest" time="0.001"/>
+  <testcase name="testVerifyNullColumns()" classname="formats.swf.SwfTraceFormatTest$TasksTableReaderTest" time="0.001"/>
+  <testcase name="testResolve()" classname="formats.swf.SwfTraceFormatTest$TasksTableReaderTest" time="0.0"/>
+  <testcase name="testResolveEmpty()" classname="formats.swf.SwfTraceFormatTest$TasksTableReaderTest" time="0.0"/>
+  <testcase name="testReadNonExistentColumns()" classname="formats.swf.SwfTraceFormatTest$TasksTableReaderTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

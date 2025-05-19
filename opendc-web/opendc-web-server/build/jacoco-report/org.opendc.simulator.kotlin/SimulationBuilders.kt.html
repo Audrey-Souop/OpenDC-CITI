@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimulationBuilders.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.kotlin</a> &gt; <span class="el_source">SimulationBuilders.kt</span></div><h1>SimulationBuilders.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.kotlin
+
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import org.opendc.common.DispatcherProvider
+import org.opendc.common.asCoroutineDispatcher
+import org.opendc.simulator.SimulationDispatcher
+import java.time.InstantSource
+import kotlin.coroutines.ContinuationInterceptor
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+
+/**
+ * Executes [body] as a simulation in a new coroutine.
+ *
+ * This function behaves similarly to [runBlocking], with the difference that the code that it runs will skip delays.
+ * This allows to use [delay] in without causing the simulation to take more time than necessary.
+ *
+ * ```
+ * @Test
+ * fun exampleSimulation() = runSimulation {
+ *     val deferred = async {
+ *         delay(1_000)
+ *         async {
+ *             delay(1_000)
+ *         }.await()
+ *     }
+ *
+ *     deferred.await() // result available immediately
+ * }
+ * ```
+ *
+ * The simulation is run in a single thread, unless other [CoroutineDispatcher] are used for child coroutines.
+ * Because of this, child coroutines are not executed in parallel to [body].
+ * In order for the spawned-off asynchronous code to actually be executed, one must either [yield] or suspend the
+ * body some other way, or use commands that control scheduling (see [SimulationDispatcher]).
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+<span class="nc" id="L66">public fun runSimulation(</span>
+<span class="nc" id="L67">    context: CoroutineContext = EmptyCoroutineContext,</span>
+<span class="nc" id="L68">    scheduler: SimulationDispatcher = SimulationDispatcher(),</span>
+    body: suspend SimulationCoroutineScope.() -&gt; Unit,
+) {
+<span class="nc" id="L71">    val (safeContext, job, dispatcher) = context.checkArguments(scheduler)</span>
+<span class="nc" id="L72">    val startingJobs = job.activeJobs()</span>
+<span class="nc" id="L73">    val scope = SimulationCoroutineScope(safeContext)</span>
+<span class="nc" id="L74">    val deferred =</span>
+<span class="nc" id="L75">        scope.async {</span>
+<span class="nc" id="L76">            body(scope)</span>
+<span class="nc" id="L77">        }</span>
+<span class="nc" id="L78">    dispatcher.advanceUntilIdle()</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">    deferred.getCompletionExceptionOrNull()?.let {</span>
+<span class="nc" id="L80">        throw it</span>
+    }
+<span class="nc" id="L82">    val endingJobs = job.activeJobs()</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">    if ((endingJobs - startingJobs).isNotEmpty()) {</span>
+<span class="nc" id="L84">        throw IllegalStateException(&quot;Test finished with active jobs: $endingJobs&quot;)</span>
+    }
+<span class="nc" id="L86">}</span>
+
+/**
+ * Convenience method for calling [runSimulation] on an existing [SimulationCoroutineScope].
+ */
+public fun SimulationCoroutineScope.runSimulation(block: suspend SimulationCoroutineScope.() -&gt; Unit): Unit =
+<span class="nc" id="L92">    runSimulation(coroutineContext, dispatcher, block)</span>
+
+private fun CoroutineContext.checkArguments(scheduler: SimulationDispatcher): Triple&lt;CoroutineContext, Job, SimulationController&gt; {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">    val job = get(Job) ?: SupervisorJob()</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">    val dispatcher = get(ContinuationInterceptor) ?: scheduler.asCoroutineDispatcher()</span>
+<span class="nc" id="L97">    val simulationDispatcher = dispatcher.asSimulationDispatcher()</span>
+<span class="nc" id="L98">    return Triple(this + dispatcher + job, job, simulationDispatcher.asController())</span>
+}
+
+private fun Job.activeJobs(): Set&lt;Job&gt; {
+<span class="nc" id="L102">    return children.filter { it.isActive }.toSet()</span>
+}
+
+/**
+ * Convert a [ContinuationInterceptor] into a [SimulationDispatcher] if possible.
+ */
+internal fun ContinuationInterceptor.asSimulationDispatcher(): SimulationDispatcher {
+<span class="nc" id="L109">    val provider =</span>
+<span class="nc bnc" id="L110" title="All 4 branches missed.">        this as? DispatcherProvider ?: throw IllegalArgumentException(</span>
+<span class="nc" id="L111">            &quot;DispatcherProvider such as SimulatorCoroutineDispatcher as the ContinuationInterceptor(Dispatcher) is required&quot;,</span>
+        )
+
+<span class="nc bnc" id="L114" title="All 4 branches missed.">    return provider.dispatcher as? SimulationDispatcher ?: throw IllegalArgumentException(&quot;Active dispatcher is not a SimulationDispatcher&quot;)</span>
+}
+
+/**
+ * Helper method to convert a [SimulationDispatcher] into a [SimulationController].
+ */
+internal fun SimulationDispatcher.asController(): SimulationController {
+<span class="nc" id="L121">    return object : SimulationController {</span>
+        override val dispatcher: SimulationDispatcher
+<span class="nc" id="L123">            get() = this@asController</span>
+
+        override val timeSource: InstantSource
+<span class="nc" id="L126">            get() = this@asController.timeSource</span>
+
+        override fun advanceUntilIdle() {
+<span class="nc" id="L129">            dispatcher.advanceUntilIdle()</span>
+<span class="nc" id="L130">        }</span>
+
+        override fun advanceBy(delayMs: Long) {
+<span class="nc" id="L133">            dispatcher.advanceBy(delayMs)</span>
+<span class="nc" id="L134">        }</span>
+
+        override fun runCurrent() {
+<span class="nc" id="L137">            dispatcher.runCurrent()</span>
+<span class="nc" id="L138">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

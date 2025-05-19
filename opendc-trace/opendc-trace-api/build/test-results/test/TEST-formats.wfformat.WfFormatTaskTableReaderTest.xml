@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="formats.wfformat.WfFormatTaskTableReaderTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:37" hostname="ece-d6200-audu" time="0.029">
+  <properties/>
+  <testcase name="testJobsInvalidSecondEntry()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.004"/>
+  <testcase name="testEmptyInput()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.0"/>
+  <testcase name="testJobsNullType()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.001"/>
+  <testcase name="testJobsInvalidParentsItem()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.002"/>
+  <testcase name="testWorkflowArrayType()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.001"/>
+  <testcase name="testJobsInvalidChildType()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.001"/>
+  <testcase name="testTopLevelArrayInput()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.001"/>
+  <testcase name="testNoWorkflow()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.002"/>
+  <testcase name="testJobsValidChildType()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.001"/>
+  <testcase name="testWorkflowNullType()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.001"/>
+  <testcase name="testJobsInvalidParents()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.001"/>
+  <testcase name="testJobsObjectType()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.004"/>
+  <testcase name="testNoJobs()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.001"/>
+  <testcase name="testJobsValidParents()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.001"/>
+  <testcase name="testDuplicateJobsArray()" classname="formats.wfformat.WfFormatTaskTableReaderTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

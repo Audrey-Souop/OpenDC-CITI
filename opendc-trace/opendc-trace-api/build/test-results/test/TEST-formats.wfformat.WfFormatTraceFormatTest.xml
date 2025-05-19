@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="WfFormat TraceFormat" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:37" hostname="ece-d6200-audu" time="0.025">
+  <properties/>
+  <testcase name="testTableExists()" classname="formats.wfformat.WfFormatTraceFormatTest" time="0.001"/>
+  <testcase name="testTableReader()" classname="formats.wfformat.WfFormatTraceFormatTest" time="0.007"/>
+  <testcase name="testTableReaderFull()" classname="formats.wfformat.WfFormatTraceFormatTest" time="0.01"/>
+  <testcase name="testTableDoesNotExist()" classname="formats.wfformat.WfFormatTraceFormatTest" time="0.001"/>
+  <testcase name="testTables()" classname="formats.wfformat.WfFormatTraceFormatTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

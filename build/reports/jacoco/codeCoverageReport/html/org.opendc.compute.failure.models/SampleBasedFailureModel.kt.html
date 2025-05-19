@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SampleBasedFailureModel.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.failure.models</a> &gt; <span class="el_source">SampleBasedFailureModel.kt</span></div><h1>SampleBasedFailureModel.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.failure.models
+
+import kotlinx.coroutines.delay
+import org.apache.commons.math3.distribution.RealDistribution
+import org.opendc.compute.simulator.service.ComputeService
+import java.time.InstantSource
+import java.util.random.RandomGenerator
+import kotlin.coroutines.CoroutineContext
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToLong
+
+/**
+ * Sample based failure model
+ *
+ * @property context
+ * @property clock
+ * @property service
+ * @property random
+ * @property iatSampler A distribution from which the time until the next fault is sampled in ms
+ * @property durationSampler A distribution from which the duration of a fault is sampled in s
+ * @property nohSampler A distribution from which the number of hosts that fault is sampled.
+ */
+<span class="nc" id="L46">public class SampleBasedFailureModel(</span>
+    context: CoroutineContext,
+    clock: InstantSource,
+    service: ComputeService,
+    random: RandomGenerator,
+<span class="nc" id="L51">    private val iatSampler: RealDistribution,</span>
+<span class="nc" id="L52">    private val durationSampler: RealDistribution,</span>
+<span class="nc" id="L53">    private val nohSampler: RealDistribution,</span>
+<span class="nc" id="L54">) : FailureModel(context, clock, service, random) {</span>
+    override suspend fun runInjector() {
+<span class="nc" id="L56">        while (true) {</span>
+<span class="nc" id="L57">            val iatSample = max(0.0, iatSampler.sample())</span>
+<span class="nc" id="L58">            val intervalDuration = (iatSample * 3.6e6).roundToLong()</span>
+
+            // Handle long overflow
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            if (clock.millis() + intervalDuration &lt;= 0) {</span>
+<span class="nc" id="L62">                return</span>
+            }
+
+<span class="nc" id="L65">            delay(intervalDuration)</span>
+
+<span class="nc" id="L67">            val numberOfHosts = min(1.0, max(0.0, nohSampler.sample()))</span>
+<span class="nc" id="L68">            val victims = victimSelector.select(hosts, numberOfHosts)</span>
+
+<span class="nc" id="L70">            val durationSample = max(0.0, durationSampler.sample())</span>
+<span class="nc" id="L71">            val faultDuration = (durationSample * 3.6e6).toLong()</span>
+<span class="nc" id="L72">            fault.apply(victims, faultDuration)</span>
+
+<span class="nc" id="L74">            break</span>
+        }
+<span class="nc" id="L76">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

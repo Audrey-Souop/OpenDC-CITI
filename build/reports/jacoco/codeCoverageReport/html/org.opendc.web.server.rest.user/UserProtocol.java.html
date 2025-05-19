@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserProtocol.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.rest.user</a> &gt; <span class="el_source">UserProtocol.java</span></div><h1>UserProtocol.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2023 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.rest.user;
+
+import org.opendc.web.server.model.Job;
+import org.opendc.web.server.model.Portfolio;
+import org.opendc.web.server.model.Project;
+import org.opendc.web.server.model.ProjectAuthorization;
+import org.opendc.web.server.model.Scenario;
+import org.opendc.web.server.model.Topology;
+import org.opendc.web.server.rest.BaseProtocol;
+
+/**
+ * DTO-conversions for the user protocol.
+ */
+public final class UserProtocol {
+    /**
+     * Private constructor to prevent instantiation of class.
+     */
+    private UserProtocol() {}
+
+    /**
+     * Convert a {@link ProjectAuthorization} entity into a {@link Project} DTO.
+     */
+    public static org.opendc.web.proto.user.Project toDto(ProjectAuthorization auth) {
+<span class="fc" id="L46">        Project project = auth.project;</span>
+<span class="fc" id="L47">        return new org.opendc.web.proto.user.Project(</span>
+<span class="fc" id="L48">                project.id, project.name, project.createdAt, project.updatedAt, auth.role);</span>
+    }
+
+    /**
+     * Convert a {@link Portfolio} entity into a {@link org.opendc.web.proto.user.Portfolio} DTO.
+     */
+    public static org.opendc.web.proto.user.Portfolio toDto(Portfolio portfolio, ProjectAuthorization auth) {
+<span class="fc" id="L55">        return new org.opendc.web.proto.user.Portfolio(</span>
+<span class="fc" id="L56">                portfolio.id,</span>
+                portfolio.number,
+<span class="fc" id="L58">                toDto(auth),</span>
+                portfolio.name,
+                portfolio.targets,
+<span class="fc" id="L61">                portfolio.scenarios.stream().map(UserProtocol::toSummaryDto).toList());</span>
+    }
+
+    /**
+     * Convert a {@link Portfolio} entity into a {@link org.opendc.web.proto.user.Portfolio.Summary} DTO.
+     */
+    public static org.opendc.web.proto.user.Portfolio.Summary toSummaryDto(Portfolio portfolio) {
+<span class="fc" id="L68">        return new org.opendc.web.proto.user.Portfolio.Summary(</span>
+<span class="fc" id="L69">                portfolio.id, portfolio.number, portfolio.name, portfolio.targets);</span>
+    }
+
+    /**
+     * Convert a {@link Topology} entity into a {@link org.opendc.web.proto.user.Topology} DTO.
+     */
+    public static org.opendc.web.proto.user.Topology toDto(Topology topology, ProjectAuthorization auth) {
+<span class="fc" id="L76">        return new org.opendc.web.proto.user.Topology(</span>
+<span class="fc" id="L77">                topology.id,</span>
+                topology.number,
+<span class="fc" id="L79">                toDto(auth),</span>
+                topology.name,
+                topology.rooms,
+                topology.createdAt,
+                topology.updatedAt);
+    }
+
+    /**
+     * Convert a {@link Topology} entity into a {@link org.opendc.web.proto.user.Topology.Summary} DTO.
+     */
+    public static org.opendc.web.proto.user.Topology.Summary toSummaryDto(Topology topology) {
+<span class="fc" id="L90">        return new org.opendc.web.proto.user.Topology.Summary(</span>
+<span class="fc" id="L91">                topology.id, topology.number, topology.name, topology.createdAt, topology.updatedAt);</span>
+    }
+
+    /**
+     * Convert a {@link Scenario} entity into a {@link org.opendc.web.proto.user.Scenario} DTO.
+     */
+    public static org.opendc.web.proto.user.Scenario toDto(Scenario scenario, ProjectAuthorization auth) {
+<span class="fc" id="L98">        return new org.opendc.web.proto.user.Scenario(</span>
+<span class="fc" id="L99">                scenario.id,</span>
+                scenario.number,
+<span class="fc" id="L101">                toDto(auth),</span>
+<span class="fc" id="L102">                toSummaryDto(scenario.portfolio),</span>
+                scenario.name,
+<span class="fc" id="L104">                BaseProtocol.toDto(scenario.workload),</span>
+<span class="fc" id="L105">                toSummaryDto(scenario.topology),</span>
+                scenario.phenomena,
+                scenario.schedulerName,
+<span class="fc" id="L108">                scenario.jobs.stream().map(UserProtocol::toDto).toList());</span>
+    }
+
+    /**
+     * Convert a {@link Scenario} entity into a {@link org.opendc.web.proto.user.Scenario.Summary} DTO.
+     */
+    public static org.opendc.web.proto.user.Scenario.Summary toSummaryDto(Scenario scenario) {
+<span class="fc" id="L115">        return new org.opendc.web.proto.user.Scenario.Summary(</span>
+<span class="fc" id="L116">                scenario.id,</span>
+                scenario.number,
+                scenario.name,
+<span class="fc" id="L119">                BaseProtocol.toDto(scenario.workload),</span>
+<span class="fc" id="L120">                toSummaryDto(scenario.topology),</span>
+                scenario.phenomena,
+                scenario.schedulerName,
+<span class="fc" id="L123">                scenario.jobs.stream().map(UserProtocol::toDto).toList());</span>
+    }
+
+    /**
+     * Convert a {@link Job} entity into a {@link org.opendc.web.proto.user.Job} DTO.
+     */
+    public static org.opendc.web.proto.user.Job toDto(Job job) {
+<span class="fc" id="L130">        return new org.opendc.web.proto.user.Job(job.id, job.state, job.createdAt, job.updatedAt, job.results);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

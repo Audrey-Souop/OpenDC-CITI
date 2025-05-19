@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FlowEdge.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.engine.graph</a> &gt; <span class="el_source">FlowEdge.java</span></div><h1>FlowEdge.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.engine.graph;
+
+/**
+ * An edge that connects two FlowStages.
+ * A connection between FlowStages always consist of a FlowStage that demands
+ * something, and a FlowStage that Delivers something
+ * For instance, this could be the connection between a workload, and its machine
+ */
+public class FlowEdge {
+    private FlowConsumer consumer;
+    private FlowSupplier supplier;
+
+<span class="fc" id="L35">    private int consumerIndex = -1;</span>
+<span class="fc" id="L36">    private int supplierIndex = -1;</span>
+
+<span class="fc" id="L38">    private double demand = 0.0;</span>
+<span class="fc" id="L39">    private double supply = 0.0;</span>
+
+    private double capacity;
+
+<span class="fc" id="L43">    public enum NodeType {</span>
+<span class="fc" id="L44">        CONSUMING,</span>
+<span class="fc" id="L45">        SUPPLYING</span>
+    }
+
+<span class="fc" id="L48">    public FlowEdge(FlowConsumer consumer, FlowSupplier supplier) {</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if (!(consumer instanceof FlowNode)) {</span>
+<span class="nc" id="L50">            throw new IllegalArgumentException(&quot;Flow consumer is not a FlowNode&quot;);</span>
+        }
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if (!(supplier instanceof FlowNode)) {</span>
+<span class="nc" id="L53">            throw new IllegalArgumentException(&quot;Flow consumer is not a FlowNode&quot;);</span>
+        }
+
+<span class="fc" id="L56">        this.consumer = consumer;</span>
+<span class="fc" id="L57">        this.supplier = supplier;</span>
+
+<span class="fc" id="L59">        this.capacity = supplier.getCapacity();</span>
+
+<span class="fc" id="L61">        this.consumer.addSupplierEdge(this);</span>
+<span class="fc" id="L62">        this.supplier.addConsumerEdge(this);</span>
+<span class="fc" id="L63">    }</span>
+
+    public void close() {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (this.consumer != null) {</span>
+<span class="nc" id="L67">            this.consumer.removeSupplierEdge(this);</span>
+<span class="nc" id="L68">            this.consumer = null;</span>
+        }
+
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        if (this.supplier != null) {</span>
+<span class="nc" id="L72">            this.supplier.removeConsumerEdge(this);</span>
+<span class="nc" id="L73">            this.supplier = null;</span>
+        }
+<span class="nc" id="L75">    }</span>
+
+    /**
+     * Close the edge of the specified node type.
+     *
+     * @param nodeType The type of connected node that is being closed.
+     */
+    public void close(NodeType nodeType) {
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (nodeType == NodeType.CONSUMING) {</span>
+<span class="fc" id="L84">            this.consumer = null;</span>
+<span class="fc" id="L85">            this.supplier.removeConsumerEdge(this);</span>
+<span class="fc" id="L86">            this.supplier = null;</span>
+        }
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (nodeType == NodeType.SUPPLYING) {</span>
+<span class="fc" id="L89">            this.supplier = null;</span>
+<span class="fc" id="L90">            this.consumer.removeSupplierEdge(this);</span>
+<span class="fc" id="L91">            this.consumer = null;</span>
+        }
+<span class="fc" id="L93">    }</span>
+
+    public FlowConsumer getConsumer() {
+<span class="nc" id="L96">        return consumer;</span>
+    }
+
+    public FlowSupplier getSupplier() {
+<span class="nc" id="L100">        return supplier;</span>
+    }
+
+    public double getCapacity() {
+<span class="fc" id="L104">        return capacity;</span>
+    }
+
+    public double getDemand() {
+<span class="fc" id="L108">        return this.demand;</span>
+    }
+
+    public double getSupply() {
+<span class="nc" id="L112">        return this.supply;</span>
+    }
+
+    public int getConsumerIndex() {
+<span class="fc" id="L116">        return consumerIndex;</span>
+    }
+
+    public void setConsumerIndex(int consumerIndex) {
+<span class="fc" id="L120">        this.consumerIndex = consumerIndex;</span>
+<span class="fc" id="L121">    }</span>
+
+    public int getSupplierIndex() {
+<span class="fc" id="L124">        return supplierIndex;</span>
+    }
+
+    public void setSupplierIndex(int supplierIndex) {
+<span class="fc" id="L128">        this.supplierIndex = supplierIndex;</span>
+<span class="fc" id="L129">    }</span>
+
+    /**
+     * Push new demand from the Consumer to the Supplier
+     */
+    public void pushDemand(double newDemand, boolean forceThrough) {
+<span class="pc bpc" id="L135" title="1 of 4 branches missed.">        if ((newDemand == this.demand) &amp;&amp; !forceThrough) {</span>
+<span class="fc" id="L136">            return;</span>
+        }
+
+<span class="fc" id="L139">        this.demand = newDemand;</span>
+<span class="fc" id="L140">        this.supplier.handleIncomingDemand(this, newDemand);</span>
+<span class="fc" id="L141">    }</span>
+
+    /**
+     * Push new demand from the Consumer to the Supplier
+     */
+    public void pushDemand(double newDemand) {
+<span class="fc" id="L147">        this.pushDemand(newDemand, false);</span>
+<span class="fc" id="L148">    }</span>
+
+    /**
+     * Push new supply from the Supplier to the Consumer
+     */
+    public void pushSupply(double newSupply, boolean forceThrough) {
+<span class="fc bfc" id="L154" title="All 4 branches covered.">        if ((newSupply == this.supply) &amp;&amp; !forceThrough) {</span>
+<span class="fc" id="L155">            return;</span>
+        }
+
+<span class="fc" id="L158">        this.supply = newSupply;</span>
+<span class="fc" id="L159">        this.consumer.handleIncomingSupply(this, newSupply);</span>
+<span class="fc" id="L160">    }</span>
+
+    /**
+     * Push new supply from the Supplier to the Consumer
+     */
+    public void pushSupply(double newSupply) {
+<span class="fc" id="L166">        this.pushSupply(newSupply, false);</span>
+<span class="fc" id="L167">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

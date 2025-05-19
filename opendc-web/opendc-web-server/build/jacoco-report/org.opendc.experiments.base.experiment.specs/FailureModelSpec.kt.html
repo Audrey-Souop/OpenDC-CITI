@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FailureModelSpec.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.experiments.base.experiment.specs</a> &gt; <span class="el_source">FailureModelSpec.kt</span></div><h1>FailureModelSpec.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.experiments.base.experiment.specs
+
+/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import org.apache.commons.math3.distribution.ConstantRealDistribution
+import org.apache.commons.math3.distribution.ExponentialDistribution
+import org.apache.commons.math3.distribution.GammaDistribution
+import org.apache.commons.math3.distribution.LogNormalDistribution
+import org.apache.commons.math3.distribution.NormalDistribution
+import org.apache.commons.math3.distribution.ParetoDistribution
+import org.apache.commons.math3.distribution.RealDistribution
+import org.apache.commons.math3.distribution.UniformRealDistribution
+import org.apache.commons.math3.distribution.WeibullDistribution
+import org.apache.commons.math3.random.Well19937c
+import org.opendc.compute.failure.models.FailureModel
+import org.opendc.compute.failure.models.SampleBasedFailureModel
+import org.opendc.compute.failure.models.TraceBasedFailureModel
+import org.opendc.compute.failure.prefab.FailurePrefab
+import org.opendc.compute.failure.prefab.createFailureModelPrefab
+import org.opendc.compute.simulator.service.ComputeService
+import java.io.File
+import java.time.InstantSource
+import kotlin.coroutines.CoroutineContext
+
+/**
+ * Specifications of the different Failure models
+ * There are three types of Specs that can be used by using their SerialName as the type.
+ *
+ * @constructor Create empty Failure model spec
+ */
+
+<span class="nc" id="L76">@Serializable</span>
+public sealed interface FailureModelSpec {
+    public var name: String
+}
+
+<span class="nc bnc" id="L81" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;no&quot;)
+<span class="nc" id="L83">public data class NoFailureModel(</span>
+<span class="nc" id="L84">    override var name: String = &quot;no failure model&quot;,</span>
+<span class="nc" id="L85">) : FailureModelSpec</span>
+
+/**
+ * A failure model spec for failure models based on a failure trace.
+ *
+ * @property pathToFile Path to the parquet file that contains the failure trace
+ */
+<span class="nc bnc" id="L92" title="All 10 branches missed.">@Serializable</span>
+@SerialName(&quot;trace-based&quot;)
+<span class="nc" id="L94">public data class TraceBasedFailureModelSpec(</span>
+<span class="nc" id="L95">    public val pathToFile: String,</span>
+<span class="nc" id="L96">    public val startPoint: Double = 0.0,</span>
+<span class="nc" id="L97">    public val repeat: Boolean = true,</span>
+) : FailureModelSpec {
+<span class="nc" id="L99">    override var name: String = File(pathToFile).nameWithoutExtension</span>
+
+<span class="nc" id="L101">    init {</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        require(File(pathToFile).exists()) { &quot;Path to file $pathToFile does not exist&quot; }</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">        require(startPoint &lt; 1.0) { &quot;Starting point must be smaller than 1.0&quot; }</span>
+<span class="nc bnc" id="L104" title="All 4 branches missed.">        require(startPoint &gt;= 0.0) { &quot;Starting point must be equal or larger than 0.0&quot; }</span>
+<span class="nc" id="L105">    }</span>
+<span class="nc" id="L106">}</span>
+
+/**
+ * A specification for a failure model that is already present in OpenDC.
+ *
+ * @property prefabName The name of the prefab. It needs to be valid [FailurePrefab]
+ */
+<span class="nc bnc" id="L113" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;prefab&quot;)
+<span class="nc" id="L115">public data class PrefabFailureModelSpec(</span>
+<span class="nc" id="L116">    public val prefabName: FailurePrefab,</span>
+) : FailureModelSpec {
+<span class="nc" id="L118">    override var name: String = prefabName.toString()</span>
+<span class="nc" id="L119">}</span>
+
+/**
+ * Specification of a custom failure model that is defined by three distributions to sample from.
+ * Distributions are defined using a [DistributionSpec].
+ *
+ * @property iatSampler Sampler for the time between failures defined in hours
+ * @property durationSampler Sampler for the time of a failure defined in hours
+ * @property nohSampler Sampler for ratio of hosts that fail defined as a double between 0.0 and 1.0
+ * @constructor Create empty Custom failure model spec
+ */
+<span class="nc bnc" id="L130" title="All 10 branches missed.">@Serializable</span>
+@SerialName(&quot;custom&quot;)
+<span class="nc" id="L132">public data class CustomFailureModelSpec(</span>
+<span class="nc" id="L133">    public val iatSampler: DistributionSpec,</span>
+<span class="nc" id="L134">    public val durationSampler: DistributionSpec,</span>
+<span class="nc" id="L135">    public val nohSampler: DistributionSpec,</span>
+) : FailureModelSpec {
+<span class="nc" id="L137">    override var name: String = &quot;custom&quot;</span>
+<span class="nc" id="L138">}</span>
+
+/**
+ * Specifications of the different Distributions that can used to create a [CustomFailureModelSpec]
+ * All [DistributionSpec]s have a different definition based on the variables they need to function.
+ * Available [DistributionSpec] are:
+ * - [ConstantDistributionSpec]
+ * - [ExponentialDistributionSpec]
+ * - [GammaDistributionSpec]
+ * - [LogNormalDistributionSpec]
+ * - [ParetoDistributionSpec]
+ * - [UniformDistributionSpec]
+ * - [WeibullDistributionSpec]
+*/
+
+<span class="nc" id="L153">@Serializable</span>
+public sealed interface DistributionSpec
+
+<span class="nc bnc" id="L156" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;constant&quot;)
+<span class="nc" id="L158">public data class ConstantDistributionSpec(</span>
+<span class="nc" id="L159">    public val value: Double,</span>
+) : DistributionSpec {
+<span class="nc" id="L161">    init {</span>
+<span class="nc bnc" id="L162" title="All 4 branches missed.">        require(value &gt; 0.0) { &quot;Value must be greater than 0.0&quot; }</span>
+<span class="nc" id="L163">    }</span>
+<span class="nc" id="L164">}</span>
+
+<span class="nc bnc" id="L166" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;exponential&quot;)
+<span class="nc" id="L168">public data class ExponentialDistributionSpec(</span>
+<span class="nc" id="L169">    public val mean: Double,</span>
+<span class="nc" id="L170">) : DistributionSpec</span>
+
+<span class="nc bnc" id="L172" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;gamma&quot;)
+<span class="nc" id="L174">public data class GammaDistributionSpec(</span>
+<span class="nc" id="L175">    public val shape: Double,</span>
+<span class="nc" id="L176">    public val scale: Double,</span>
+<span class="nc" id="L177">) : DistributionSpec</span>
+
+<span class="nc bnc" id="L179" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;log-normal&quot;)
+<span class="nc" id="L181">public data class LogNormalDistributionSpec(</span>
+<span class="nc" id="L182">    public val scale: Double,</span>
+<span class="nc" id="L183">    public val shape: Double,</span>
+<span class="nc" id="L184">) : DistributionSpec</span>
+
+<span class="nc bnc" id="L186" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;normal&quot;)
+<span class="nc" id="L188">public data class NormalDistributionSpec(</span>
+<span class="nc" id="L189">    public val mean: Double,</span>
+<span class="nc" id="L190">    public val std: Double,</span>
+<span class="nc" id="L191">) : DistributionSpec</span>
+
+<span class="nc bnc" id="L193" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;pareto&quot;)
+<span class="nc" id="L195">public data class ParetoDistributionSpec(</span>
+<span class="nc" id="L196">    public val scale: Double,</span>
+<span class="nc" id="L197">    public val shape: Double,</span>
+<span class="nc" id="L198">) : DistributionSpec</span>
+
+<span class="nc bnc" id="L200" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;uniform&quot;)
+<span class="nc" id="L202">public data class UniformDistributionSpec(</span>
+<span class="nc" id="L203">    public val upper: Double,</span>
+<span class="nc" id="L204">    public val lower: Double,</span>
+) : DistributionSpec {
+<span class="nc" id="L206">    init {</span>
+<span class="nc bnc" id="L207" title="All 4 branches missed.">        require(upper &gt; lower) { &quot;Upper bound must be greater than the lower bound&quot; }</span>
+<span class="nc" id="L208">    }</span>
+<span class="nc" id="L209">}</span>
+
+<span class="nc bnc" id="L211" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;weibull&quot;)
+<span class="nc" id="L213">public data class WeibullDistributionSpec(</span>
+<span class="nc" id="L214">    public val alpha: Double,</span>
+<span class="nc" id="L215">    public val beta: Double,</span>
+<span class="nc" id="L216">) : DistributionSpec</span>
+
+/**
+ * Create a [FailureModel] based on the provided [FailureModelSpec]
+ *
+ * @param context
+ * @param clock
+ * @param service
+ * @param random
+ * @param failureModelSpec
+ * @return
+ */
+public fun createFailureModel(
+    context: CoroutineContext,
+    clock: InstantSource,
+    service: ComputeService,
+    random: java.util.random.RandomGenerator,
+    failureModelSpec: FailureModelSpec?,
+): FailureModel? {
+<span class="nc" id="L235">    return when (failureModelSpec) {</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">        is PrefabFailureModelSpec -&gt; createFailureModel(context, clock, service, random, failureModelSpec)</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">        is CustomFailureModelSpec -&gt; createFailureModel(context, clock, service, random, failureModelSpec)</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        is TraceBasedFailureModelSpec -&gt; createFailureModel(context, clock, service, random, failureModelSpec)</span>
+<span class="nc" id="L239">        else -&gt; null</span>
+    }
+}
+
+/**
+ * Create [FailureModel] based on the provided [PrefabFailureModelSpec]
+ *
+ * @param context
+ * @param clock
+ * @param service
+ * @param random
+ * @param failureModel
+ * @return
+ */
+public fun createFailureModel(
+    context: CoroutineContext,
+    clock: InstantSource,
+    service: ComputeService,
+    random: java.util.random.RandomGenerator,
+    failureModel: PrefabFailureModelSpec,
+): FailureModel {
+<span class="nc" id="L260">    return createFailureModelPrefab(context, clock, service, random, failureModel.prefabName)</span>
+}
+
+/**
+ * Create [FailureModel] based on the provided [TraceBasedFailureModel]
+ *
+ * @param context
+ * @param clock
+ * @param service
+ * @param random
+ * @param failureModel
+ * @return
+ */
+public fun createFailureModel(
+    context: CoroutineContext,
+    clock: InstantSource,
+    service: ComputeService,
+    random: java.util.random.RandomGenerator,
+    failureModel: TraceBasedFailureModelSpec,
+): FailureModel {
+<span class="nc" id="L280">    return TraceBasedFailureModel(context, clock, service, random, failureModel.pathToFile, failureModel.startPoint, failureModel.repeat)</span>
+}
+
+/**
+ * Create [FailureModel] based on the provided [CustomFailureModelSpec]
+ *
+ * @param context
+ * @param clock
+ * @param service
+ * @param random
+ * @param failureModel
+ * @return
+ */
+public fun createFailureModel(
+    context: CoroutineContext,
+    clock: InstantSource,
+    service: ComputeService,
+    random: java.util.random.RandomGenerator,
+    failureModel: CustomFailureModelSpec,
+): FailureModel {
+<span class="nc" id="L300">    val rng: org.apache.commons.math3.random.RandomGenerator = Well19937c(random.nextLong())</span>
+
+<span class="nc" id="L302">    val iatSampler = createSampler(rng, failureModel.iatSampler)</span>
+<span class="nc" id="L303">    val durationSampler = createSampler(rng, failureModel.durationSampler)</span>
+<span class="nc" id="L304">    val nohSampler = createSampler(rng, failureModel.nohSampler)</span>
+
+<span class="nc" id="L306">    return SampleBasedFailureModel(context, clock, service, random, iatSampler, durationSampler, nohSampler)</span>
+}
+
+/**
+ * Create a [RealDistribution] to sample from based on the provided [DistributionSpec]
+ *
+ * @param rng
+ * @param distributionSpec
+ * @return
+ */
+public fun createSampler(
+    rng: org.apache.commons.math3.random.RandomGenerator,
+    distributionSpec: DistributionSpec,
+): RealDistribution {
+<span class="nc" id="L320">    return when (distributionSpec) {</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">        is ConstantDistributionSpec -&gt; ConstantRealDistribution(distributionSpec.value)</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">        is ExponentialDistributionSpec -&gt; ExponentialDistribution(rng, distributionSpec.mean)</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">        is GammaDistributionSpec -&gt; GammaDistribution(rng, distributionSpec.shape, distributionSpec.scale)</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">        is LogNormalDistributionSpec -&gt; LogNormalDistribution(rng, distributionSpec.scale, distributionSpec.shape)</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">        is NormalDistributionSpec -&gt; NormalDistribution(rng, distributionSpec.mean, distributionSpec.std)</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">        is ParetoDistributionSpec -&gt; ParetoDistribution(rng, distributionSpec.scale, distributionSpec.shape)</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        is UniformDistributionSpec -&gt; UniformRealDistribution(rng, distributionSpec.lower, distributionSpec.upper)</span>
+<span class="nc" id="L328">        is WeibullDistributionSpec -&gt; WeibullDistribution(rng, distributionSpec.alpha, distributionSpec.beta)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

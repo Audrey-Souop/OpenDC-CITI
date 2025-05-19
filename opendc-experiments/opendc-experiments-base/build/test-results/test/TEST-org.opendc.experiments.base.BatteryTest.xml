@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.experiments.base.BatteryTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2025-05-17T00:17:18" hostname="ece-d6200-audu" time="3.244">
+  <properties/>
+  <testcase name="testBattery1()" classname="org.opendc.experiments.base.BatteryTest" time="1.646"/>
+  <testcase name="testBattery2()" classname="org.opendc.experiments.base.BatteryTest" time="0.014"/>
+  <testcase name="testBattery3()" classname="org.opendc.experiments.base.BatteryTest" time="0.015"/>
+  <testcase name="testBattery4()" classname="org.opendc.experiments.base.BatteryTest" time="0.012"/>
+  <testcase name="testBattery5()" classname="org.opendc.experiments.base.BatteryTest" time="0.025"/>
+  <testcase name="testBattery6()" classname="org.opendc.experiments.base.BatteryTest" time="1.48"/>
+  <testcase name="testBattery7()" classname="org.opendc.experiments.base.BatteryTest" time="0.031"/>
+  <testcase name="testBattery8()" classname="org.opendc.experiments.base.BatteryTest" time="0.018"/>
+  <system-out><![CDATA[[9000.0, 9000.0, 9000.0, 9000.0, 9000.0, 6000.0, 6000.0, 6000.0, 6000.0, 6000.0, 9000.0, 9000.0, 9000.0, 9000.0, 9000.0, 9000.0, 750.0]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

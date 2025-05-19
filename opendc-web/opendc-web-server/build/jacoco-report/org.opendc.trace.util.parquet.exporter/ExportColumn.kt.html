@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExportColumn.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.util.parquet.exporter</a> &gt; <span class="el_source">ExportColumn.kt</span></div><h1>ExportColumn.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.util.parquet.exporter
+
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import org.apache.parquet.schema.LogicalTypeAnnotation
+import org.apache.parquet.schema.PrimitiveType
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.DOUBLE
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT32
+import org.apache.parquet.schema.Type
+import org.opendc.common.logger.logger
+import org.slf4j.Logger
+import kotlin.reflect.KClass
+
+/**
+ * A column that can be used to build a parquet schema to export [T] records.
+ *
+ * See [columnSerializer] for deserialization of this class.
+ *
+ * ```kotlin
+ * class Foo: Exportable&lt;Foo&gt; {
+ * ...
+ * val MY_FIELD = ExportColumn&lt;Foo&gt;(
+ *      field = Types.required(PrimitiveType.PrimitiveTypeName.DOUBLE).named(&quot;my_field_name&quot;)
+ * ) { exportable: Foo -&gt; addDouble(exportable.getMyValue()) }
+ * ```
+ *
+ * @param[field]
+ * The apache parquet field, it includes information such as:
+ * - Required (not)
+ * - Field name
+ * - [PrimitiveType] (e.g. [INT32], [DOUBLE] etc.)
+ * - [LogicalTypeAnnotation] (e.g. TIMESTAMP, etc.)
+ *
+ * @param[getValue]
+ * Retrieves the value to be exported from the [Exportable] of [T] passed as param.
+ * The value returned needs to match the expected [PrimitiveType] defined in the field.
+ *
+ * A second type parameter could have been added to the class to enforce the correct type at compile time,
+ * however it would have added too much complexity to the interface. `ExportColumn&lt;Exportable&gt;` -&gt; `ExportColumn&lt;Exportable, *&gt;`
+ *
+ * @param[regex] The pattern used to determine whether a string refers to this column.
+ * The default one matches the column name with either underscores or blank
+ * spaces between words in a case-insensitive manner.
+ *
+ * @param[exportableClass]
+ * The [KClass] of the [Exportable]. Used for intuitive lof messages. This class
+ * can be instantiated with inline constructor [Companion.invoke] without providing this parameter.
+ */
+<span class="nc" id="L73">public class ExportColumn&lt;T : Exportable&gt;</span>
+    @PublishedApi
+<span class="nc" id="L75">    internal constructor(</span>
+<span class="nc" id="L76">        public val field: Type,</span>
+<span class="nc" id="L77">        @PublishedApi internal val regex: Regex,</span>
+<span class="nc" id="L78">        @PublishedApi internal val exportableClass: KClass&lt;T&gt;,</span>
+<span class="nc" id="L79">        internal val getValue: (T) -&gt; Any?,</span>
+    ) {
+        /**
+         * The name of the column (e.g. &quot;timestamp&quot;).
+         */
+<span class="nc" id="L84">        public val name: String by lazy { field.name }</span>
+
+        /**
+         * The primitive type of the field (e.g. INT32).
+         */
+<span class="nc" id="L89">        public val primitiveTypeName: PrimitiveTypeName by lazy { field.asPrimitiveType().primitiveTypeName }</span>
+
+<span class="nc" id="L91">        init {</span>
+            // Adds the column among those that can be deserialized.
+<span class="nc" id="L93">            addField(this)</span>
+<span class="nc" id="L94">        }</span>
+
+<span class="nc" id="L96">        override fun toString(): String = &quot;[ExportColumn: name=$name, exportable=${exportableClass.simpleName}]&quot;</span>
+
+        public companion object {
+            @PublishedApi
+<span class="nc" id="L100">            internal val LOG: Logger by logger()</span>
+
+            /**
+             * Reified constructor, needed to store [T] class without providing it as parameter.
+             */
+<span class="nc" id="L105">            public inline operator fun &lt;reified T : Exportable&gt; invoke(</span>
+                field: Type,
+<span class="nc" id="L107">                regex: Regex = Regex(&quot;\\s*(?:${field.name}|${field.name.replace('_', ' ')})\\s*&quot;, RegexOption.IGNORE_CASE),</span>
+                noinline getValue: (T) -&gt; Any?,
+            ): ExportColumn&lt;T&gt; =
+<span class="nc" id="L110">                ExportColumn(</span>
+<span class="nc" id="L111">                    field = field,</span>
+<span class="nc" id="L112">                    getValue = getValue,</span>
+                    exportableClass = T::class,
+<span class="nc" id="L114">                    regex = regex,</span>
+<span class="nc" id="L115">                )</span>
+
+            /**
+             * All the columns that have been instantiated. They are added in `init` block.
+             * Keep in mind that in order to deserialize to a column, that column needs to be loaded by the jvm.
+             */
+            @PublishedApi
+<span class="nc" id="L122">            internal val allColumns: MutableSet&lt;ExportColumn&lt;*&gt;&gt; = mutableSetOf()</span>
+
+            @PublishedApi
+<span class="nc" id="L125">            internal val allColumnsLock: Mutex = Mutex()</span>
+
+            /**
+             * Function invoked in the `init` block of each [ExportColumn].
+             * Adds the column to those that can be deserialized.
+             */
+            private fun &lt;T : Exportable&gt; addField(column: ExportColumn&lt;T&gt;): Unit =
+<span class="nc" id="L132">                runBlocking {</span>
+<span class="nc" id="L133">                    allColumnsLock.withLock { allColumns.add(column) }</span>
+<span class="nc" id="L134">                }</span>
+
+            /**
+             * @return the [ExportColumn] whose [ExportColumn.regex] matches [columnName] **and**
+             * whose generic type ([Exportable]) is [T] if any, `null` otherwise.
+             *
+             * This method needs to be inlined and reified cause of runtime type erasure
+             * that does not allow to type check the generic class parameter.
+             */
+            @Suppress(&quot;UNCHECKED_CAST&quot;) // I do not know why it is needed since the cast is nullable.
+            @PublishedApi
+            internal inline fun &lt;reified T : Exportable&gt; matchingColOrNull(columnName: String): ExportColumn&lt;T&gt;? =
+<span class="nc" id="L146">                runBlocking {</span>
+<span class="nc" id="L147">                    val allColumns = allColumnsLock.withLock { allColumns.toSet() }</span>
+
+<span class="nc" id="L149">                    allColumns.forEach { column -&gt;</span>
+                        // If it is an ExportColumn of same type.
+<span class="nc bnc" id="L151" title="All 4 branches missed.">                        if (column.exportableClass == T::class) {</span>
+                            // Just a smart cast that always succeeds at runtime cause
+                            // of type erasure but is needed at compile time.
+<span class="nc bnc" id="L154" title="All 4 branches missed.">                            (column as? ExportColumn&lt;T&gt;)</span>
+<span class="nc bnc" id="L155" title="All 4 branches missed.">                                ?.regex</span>
+                                // If fieldName matches the field regex.
+<span class="nc bnc" id="L157" title="All 4 branches missed.">                                ?.matchEntire(columnName)</span>
+<span class="nc bnc" id="L158" title="All 4 branches missed.">                                ?.let { return@runBlocking column }</span>
+                        }
+<span class="nc" id="L160">                    }</span>
+
+<span class="nc" id="L162">                    null</span>
+                }
+
+            /**
+             * Returns all [ExportColumn]s of type [T] that have been loaded up until now.
+             */
+            @Suppress(&quot;UNCHECKED_CAST&quot;)
+            public inline fun &lt;reified T : Exportable&gt; getAllLoadedColumns(): List&lt;ExportColumn&lt;T&gt;&gt; =
+<span class="nc" id="L170">                runBlocking {</span>
+<span class="nc" id="L171">                    allColumnsLock.withLock { allColumns.filter { it.exportableClass == T::class } as List&lt;ExportColumn&lt;T&gt;&gt; }</span>
+                }
+        }
+    }
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

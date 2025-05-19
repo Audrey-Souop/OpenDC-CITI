@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimulationDispatcher.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator</a> &gt; <span class="el_source">SimulationDispatcher.java</span></div><h1>SimulationDispatcher.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator;
+
+import java.time.Instant;
+import java.time.InstantSource;
+import org.opendc.common.Dispatcher;
+import org.opendc.common.DispatcherHandle;
+
+/**
+ * A {@link Dispatcher} used by simulations to manage execution of (future) tasks, providing a controllable (virtual)
+ * clock to skip over delays.
+ *
+ * &lt;p&gt;
+ * The dispatcher can be queried to advance the time (via {@link #advanceBy}), run all the scheduled tasks advancing the
+ * virtual time as needed (via {@link #advanceUntilIdle}), or run the tasks that are scheduled to run as soon as
+ * possible but have not yet been dispatched (via {@link #runCurrent}). These methods execute the pending tasks using
+ * a single thread.
+ *
+ * &lt;p&gt;
+ * This class is not thread-safe and must not be used concurrently by multiple threads.
+ */
+public final class SimulationDispatcher implements Dispatcher {
+    /**
+     * The {@link TaskQueue} containing the pending tasks.
+     */
+<span class="nc" id="L47">    private final TaskQueue queue = new TaskQueue();</span>
+
+    /**
+     * The current time of the scheduler in milliseconds since epoch.
+     */
+    private long currentTime;
+
+    /**
+     * A counter to establish total order on the events that happen at the same virtual time.
+     */
+<span class="nc" id="L57">    private int count = 0;</span>
+
+    /**
+     * The {@link InstantSource} instance linked to this scheduler.
+     */
+<span class="nc" id="L62">    private final SimulationClock timeSource = new SimulationClock(this);</span>
+
+    /**
+     * Construct a {@link SimulationDispatcher} instance with the specified initial time.
+     *
+     * @param initialTimeMs The initial virtual time of the scheduler in milliseconds since epoch.
+     */
+<span class="nc" id="L69">    public SimulationDispatcher(long initialTimeMs) {</span>
+<span class="nc" id="L70">        this.currentTime = initialTimeMs;</span>
+<span class="nc" id="L71">    }</span>
+
+    /**
+     * Construct a {@link SimulationDispatcher} instance with the initial time set to UNIX Epoch 0.
+     */
+    public SimulationDispatcher() {
+<span class="nc" id="L77">        this(0);</span>
+<span class="nc" id="L78">    }</span>
+
+    /**
+     * Return the current virtual timestamp of the dispatcher (in milliseconds since epoch).
+     *
+     * @return A long value representing the virtual timestamp of the dispatcher in milliseconds since epoch.
+     */
+    public long getCurrentTime() {
+<span class="nc" id="L86">        return currentTime;</span>
+    }
+
+    /**
+     * Return the virtual time source associated with this dispatcher.
+     *
+     * @return A {@link InstantSource} tracking the virtual time of the dispatcher.
+     */
+    @Override
+    public InstantSource getTimeSource() {
+<span class="nc" id="L96">        return timeSource;</span>
+    }
+
+    @Override
+    public void schedule(long delayMs, Runnable command) {
+<span class="nc" id="L101">        internalSchedule(delayMs, command);</span>
+<span class="nc" id="L102">    }</span>
+
+    @Override
+    public DispatcherHandle scheduleCancellable(long delayMs, Runnable command) {
+<span class="nc" id="L106">        long target = currentTime + delayMs;</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (target &lt; 0) {</span>
+<span class="nc" id="L108">            target = Long.MAX_VALUE;</span>
+        }
+
+<span class="nc" id="L111">        long deadline = target;</span>
+<span class="nc" id="L112">        int id = internalSchedule(delayMs, command);</span>
+<span class="nc" id="L113">        return () -&gt; internalCancel(deadline, id);</span>
+    }
+
+    /**
+     * Run the enqueued tasks in the specified order, advancing the virtual time as needed until there are no more
+     * tasks in the queue of this scheduler.
+     */
+    public void advanceUntilIdle() {
+<span class="nc" id="L121">        final TaskQueue queue = this.queue;</span>
+
+        while (true) {
+<span class="nc" id="L124">            long deadline = queue.peekDeadline();</span>
+<span class="nc" id="L125">            Runnable task = queue.poll();</span>
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            if (task == null) {</span>
+<span class="nc" id="L128">                break;</span>
+            }
+
+<span class="nc" id="L131">            currentTime = deadline;</span>
+<span class="nc" id="L132">            task.run();</span>
+<span class="nc" id="L133">        }</span>
+<span class="nc" id="L134">    }</span>
+
+    /**
+     * Move the virtual clock of this dispatcher forward by the specified amount, running the scheduled tasks in the
+     * meantime.
+     *
+     * @param delayMs The amount of time to move the virtual clock forward (in milliseconds).
+     * @throws IllegalStateException if passed a negative &lt;code&gt;delay&lt;/code&gt;.
+     */
+    public void advanceBy(long delayMs) {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (delayMs &lt; 0) {</span>
+<span class="nc" id="L145">            throw new IllegalArgumentException(&quot;Can not advance time by a negative delay: &quot; + delayMs + &quot; ms&quot;);</span>
+        }
+
+<span class="nc" id="L148">        long target = currentTime + delayMs;</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (target &lt; 0) {</span>
+<span class="nc" id="L150">            target = Long.MAX_VALUE;</span>
+        }
+
+<span class="nc" id="L153">        final TaskQueue queue = this.queue;</span>
+        long deadline;
+
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        while ((deadline = queue.peekDeadline()) &lt; target) {</span>
+<span class="nc" id="L157">            Runnable task = queue.poll(); // Cannot be null since while condition is always false on an empty queue</span>
+
+<span class="nc" id="L159">            task.run();</span>
+<span class="nc" id="L160">            currentTime = deadline;</span>
+<span class="nc" id="L161">        }</span>
+
+<span class="nc" id="L163">        currentTime = target;</span>
+<span class="nc" id="L164">    }</span>
+
+    /**
+     * Execute the tasks that are scheduled to execute at this moment of virtual time.
+     */
+    public void runCurrent() {
+<span class="nc" id="L170">        final TaskQueue queue = this.queue;</span>
+<span class="nc" id="L171">        long currentTime = this.currentTime;</span>
+
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        while (queue.peekDeadline() == currentTime) {</span>
+<span class="nc" id="L174">            Runnable task = queue.poll();</span>
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">            if (task == null) {</span>
+<span class="nc" id="L177">                break;</span>
+            }
+
+<span class="nc" id="L180">            task.run();</span>
+<span class="nc" id="L181">        }</span>
+<span class="nc" id="L182">    }</span>
+
+    /**
+     * Schedule a &lt;code&gt;task&lt;/code&gt; that executes after the specified &lt;code&gt;delayMs&lt;/code&gt;.
+     *
+     * @param delayMs The time from now until the execution of the task (in milliseconds).
+     * @param task The task to execute after the delay.
+     * @return The identifier of the task that can be used together with the timestamp of the task to cancel it.
+     */
+    private int internalSchedule(long delayMs, Runnable task) {
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (delayMs &lt; 0) {</span>
+<span class="nc" id="L193">            throw new IllegalArgumentException(</span>
+                    &quot;Attempted scheduling an event earlier in time (delay &quot; + delayMs + &quot; ms)&quot;);
+        }
+
+<span class="nc" id="L197">        long target = currentTime + delayMs;</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        if (target &lt; 0) {</span>
+<span class="nc" id="L199">            target = Long.MAX_VALUE;</span>
+        }
+
+<span class="nc" id="L202">        int id = count++;</span>
+<span class="nc" id="L203">        queue.add(target, id, task);</span>
+<span class="nc" id="L204">        return id;</span>
+    }
+
+    /**
+     * Cancel a pending task.
+     *
+     * @param deadline The deadline of the task.
+     * @param id The identifier of the task (returned by {@link #internalSchedule(long, Runnable)}).
+     * @return A boolean indicating whether a task was actually cancelled.
+     */
+    private boolean internalCancel(long deadline, int id) {
+<span class="nc" id="L215">        return queue.remove(deadline, id);</span>
+    }
+
+    /**
+     * A {@link InstantSource} implementation for a {@link SimulationDispatcher}.
+     */
+    private static class SimulationClock implements InstantSource {
+        private final SimulationDispatcher dispatcher;
+
+<span class="nc" id="L224">        SimulationClock(SimulationDispatcher dispatcher) {</span>
+<span class="nc" id="L225">            this.dispatcher = dispatcher;</span>
+<span class="nc" id="L226">        }</span>
+
+        @Override
+        public Instant instant() {
+<span class="nc" id="L230">            return Instant.ofEpochMilli(dispatcher.currentTime);</span>
+        }
+
+        @Override
+        public long millis() {
+<span class="nc" id="L235">            return dispatcher.currentTime;</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="nc" id="L240">            return &quot;SimulationDispatcher.InstantSource[time=&quot; + millis() + &quot;ms]&quot;;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

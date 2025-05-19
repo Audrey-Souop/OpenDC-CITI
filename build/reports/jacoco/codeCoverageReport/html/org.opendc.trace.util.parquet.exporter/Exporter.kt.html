@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Exporter.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.util.parquet.exporter</a> &gt; <span class="el_source">Exporter.kt</span></div><h1>Exporter.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.util.parquet.exporter
+
+import org.apache.hadoop.conf.Configuration
+import org.apache.parquet.hadoop.api.WriteSupport
+import org.apache.parquet.io.api.RecordConsumer
+import org.apache.parquet.schema.MessageType
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.BINARY
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.BOOLEAN
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.DOUBLE
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.FLOAT
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT32
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT64
+import org.apache.parquet.schema.Type
+import org.apache.parquet.schema.Types
+import org.opendc.trace.util.parquet.ParquetDataWriter
+import java.io.File
+
+public class Exporter&lt;T : Exportable&gt;
+    @PublishedApi
+<span class="nc" id="L42">    internal constructor(</span>
+        outputFile: File,
+        writeSupp: WriteSupport&lt;T&gt;,
+        bufferSize: Int,
+<span class="nc" id="L46">    ) : ParquetDataWriter&lt;T&gt;(</span>
+<span class="nc" id="L47">            path = outputFile,</span>
+<span class="nc" id="L48">            writeSupport = writeSupp,</span>
+<span class="nc" id="L49">            bufferSize = bufferSize,</span>
+        ) {
+        public companion object {
+            /**
+             * Reified constructor that allows to use the runtime [Class.getSimpleName] name of [T] as the schema name.
+             * @param[outputFile]   the output file where the [Exportable]s will be written.
+             * @param[columns]       the columns that will be included in the output parquet file.
+             * @param[schemaName]   the name of the schema of the output parquet file.
+             */
+<span class="nc" id="L58">            public inline operator fun &lt;reified T : Exportable&gt; invoke(</span>
+                outputFile: File,
+<span class="nc" id="L60">                vararg columns: ExportColumn&lt;T&gt; = emptyArray(),</span>
+<span class="nc" id="L61">                schemaName: String? = null,</span>
+<span class="nc" id="L62">                bufferSize: Int = 4096,</span>
+            ): Exporter&lt;T&gt; =
+<span class="nc" id="L64">                Exporter(</span>
+<span class="nc" id="L65">                    outputFile = outputFile,</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">                    writeSupp = writeSuppFor(columns.toSet(), schemaName = schemaName ?: T::class.simpleName ?: &quot;unknown&quot;),</span>
+<span class="nc" id="L67">                    bufferSize = bufferSize,</span>
+<span class="nc" id="L68">                )</span>
+
+            /**
+             * Reified constructor that allows to use the runtime [Class.getSimpleName] name of [T] as the schema name.
+             * @param[outputFile]   the output file where the [Exportable]s will be written.
+             * @param[columns]       the columns that will be included in the output parquet file.
+             * @param[schemaName]   the name of the schema of the output parquet file.
+             */
+<span class="nc" id="L76">            public inline operator fun &lt;reified T : Exportable&gt; invoke(</span>
+                outputFile: File,
+<span class="nc" id="L78">                columns: Collection&lt;ExportColumn&lt;T&gt;&gt; = emptySet(),</span>
+<span class="nc" id="L79">                schemaName: String? = null,</span>
+<span class="nc" id="L80">                bufferSize: Int = 4096,</span>
+            ): Exporter&lt;T&gt; =
+<span class="nc" id="L82">                Exporter(</span>
+<span class="nc" id="L83">                    outputFile = outputFile,</span>
+<span class="nc bnc" id="L84" title="All 4 branches missed.">                    writeSupp = writeSuppFor(columns.toSet(), schemaName = schemaName ?: T::class.simpleName ?: &quot;unknown&quot;),</span>
+<span class="nc" id="L85">                    bufferSize = bufferSize,</span>
+<span class="nc" id="L86">                )</span>
+
+            /**
+             * @return an anonymous [WriteSupport] for [T] with only the columns included in [columns].
+             */
+            @PublishedApi
+            internal fun &lt;T : Exportable&gt; writeSuppFor(
+                columns: Set&lt;ExportColumn&lt;T&gt;&gt;,
+                schemaName: String,
+            ): WriteSupport&lt;T&gt; =
+<span class="nc" id="L96">                object : WriteSupport&lt;T&gt;() {</span>
+                    private lateinit var cons: RecordConsumer
+
+                    private val schema: MessageType =
+                        Types
+<span class="nc" id="L101">                            .buildMessage()</span>
+<span class="nc" id="L102">                            .addFields(*columns.map { it.field }.toTypedArray())</span>
+<span class="nc" id="L103">                            .named(schemaName)</span>
+
+<span class="nc" id="L105">                    override fun init(configuration: Configuration): WriteContext = WriteContext(schema, emptyMap())</span>
+
+                    override fun prepareForWrite(recordConsumer: RecordConsumer) {
+<span class="nc" id="L108">                        cons = recordConsumer</span>
+<span class="nc" id="L109">                    }</span>
+
+                    override fun write(record: T) =
+<span class="nc" id="L112">                        with(cons) {</span>
+<span class="nc" id="L113">                            startMessage()</span>
+
+<span class="nc" id="L115">                            columns.forEachIndexed { idx, column -&gt;</span>
+                                fun &lt;T&gt; Any.castedOrThrow(): T {
+                                    @Suppress(&quot;UNCHECKED_CAST&quot;)
+<span class="nc bnc" id="L118" title="All 4 branches missed.">                                    return (this as? T) ?: throw TypeCastException(</span>
+<span class="nc" id="L119">                                        &quot;attempt to add value of type ${this::class} to export &quot; +</span>
+<span class="nc" id="L120">                                            &quot;field $column which requires a different type&quot;,</span>
+                                    )
+                                }
+<span class="nc" id="L123">                                val valueToAdd: Any =</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                                    column.getValue(</span>
+<span class="nc" id="L125">                                        record,</span>
+<span class="nc" id="L126">                                    ) ?: let {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                                        if (column.field.isRepetition(Type.Repetition.OPTIONAL)) {</span>
+<span class="nc" id="L128">                                            return@forEachIndexed</span>
+                                        } else {
+<span class="nc" id="L130">                                            throw RuntimeException(&quot;trying to insert null value in required column $column&quot;)</span>
+                                        }
+                                    }
+
+<span class="nc" id="L134">                                startField(column.name, idx)</span>
+<span class="nc bnc" id="L135" title="All 7 branches missed.">                                when (column.primitiveTypeName) {</span>
+<span class="nc" id="L136">                                    INT32 -&gt; addInteger(valueToAdd.castedOrThrow())</span>
+<span class="nc" id="L137">                                    INT64 -&gt; addLong(valueToAdd.castedOrThrow())</span>
+<span class="nc" id="L138">                                    DOUBLE -&gt; addDouble(valueToAdd.castedOrThrow())</span>
+<span class="nc" id="L139">                                    BINARY -&gt; addBinary(valueToAdd.castedOrThrow())</span>
+<span class="nc" id="L140">                                    FLOAT -&gt; addFloat(valueToAdd.castedOrThrow())</span>
+<span class="nc" id="L141">                                    BOOLEAN -&gt; addBoolean(valueToAdd.castedOrThrow())</span>
+<span class="nc" id="L142">                                    else -&gt; throw RuntimeException(</span>
+<span class="nc" id="L143">                                        &quot;parquet primitive type name '${column.primitiveTypeName} is not supported&quot;,</span>
+                                    )
+                                }
+<span class="nc" id="L146">                                endField(column.name, idx)</span>
+<span class="nc" id="L147">                            }</span>
+
+<span class="nc" id="L149">                            cons.endMessage()</span>
+<span class="nc" id="L150">                        }</span>
+<span class="nc" id="L151">                }</span>
+        }
+    }
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

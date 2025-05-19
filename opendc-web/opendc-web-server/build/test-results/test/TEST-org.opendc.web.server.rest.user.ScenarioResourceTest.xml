@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.web.server.rest.user.ScenarioResourceTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2025-05-17T00:28:09" hostname="ece-d6200-audu" time="0.1">
+  <properties/>
+  <testcase name="testGetExistingUnauthorized()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.007"/>
+  <testcase name="testDeleteNonExistent()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.007"/>
+  <testcase name="testGetAllUnauthorized()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.005"/>
+  <testcase name="testGetNonExisting()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.006"/>
+  <testcase name="testGetExisting()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.016"/>
+  <testcase name="testGetWithoutToken()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.006"/>
+  <testcase name="testDeleteAsViewer()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.007"/>
+  <testcase name="testDelete()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.012"/>
+  <testcase name="testGetAll()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.016"/>
+  <testcase name="testDeleteUnauthorized()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.007"/>
+  <testcase name="testGetInvalidToken()" classname="org.opendc.web.server.rest.user.ScenarioResourceTest" time="0.004"/>
+  <system-out><![CDATA[Hibernate: 
+    select
+        pa1_0.project_id,
+        pa1_0.user_name,
+        pa1_0.role 
+    from
+        ProjectAuthorization pa1_0 
+    where
+        (
+            pa1_0.project_id, pa1_0.user_name
+        ) in ((?, ?))
+Hibernate: 
+    select
+        pa1_0.project_id,
+        pa1_0.user_name,
+        pa1_0.role 
+    from
+        ProjectAuthorization pa1_0 
+    where
+        (
+            pa1_0.project_id, pa1_0.user_name
+        ) in ((?, ?))
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.name,
+        s1_0.number,
+        s1_0.phenomena,
+        s1_0.portfolio_id,
+        s1_0.project_id,
+        s1_0.scheduler_name,
+        s1_0.topology_id,
+        s1_0.sampling_fraction,
+        s1_0.trace_id 
+    from
+        Scenario s1_0 
+    where
+        s1_0.project_id=? 
+        and s1_0.number=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        pa1_0.project_id,
+        pa1_0.user_name,
+        pa1_0.role 
+    from
+        ProjectAuthorization pa1_0 
+    where
+        (
+            pa1_0.project_id, pa1_0.user_name
+        ) in ((?, ?))
+Hibernate: 
+    select
+        pa1_0.project_id,
+        pa1_0.user_name,
+        pa1_0.role 
+    from
+        ProjectAuthorization pa1_0 
+    where
+        (
+            pa1_0.project_id, pa1_0.user_name
+        ) in ((?, ?))
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.name,
+        s1_0.number,
+        s1_0.phenomena,
+        s1_0.portfolio_id,
+        s1_0.project_id,
+        s1_0.scheduler_name,
+        s1_0.topology_id,
+        s1_0.sampling_fraction,
+        s1_0.trace_id 
+    from
+        Scenario s1_0 
+    where
+        s1_0.project_id=? 
+        and s1_0.number=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        pa1_0.project_id,
+        pa1_0.user_name,
+        pa1_0.role 
+    from
+        ProjectAuthorization pa1_0 
+    where
+        (
+            pa1_0.project_id, pa1_0.user_name
+        ) in ((?, ?))
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.name,
+        s1_0.number,
+        s1_0.phenomena,
+        s1_0.portfolio_id,
+        s1_0.project_id,
+        s1_0.scheduler_name,
+        s1_0.topology_id,
+        s1_0.sampling_fraction,
+        s1_0.trace_id 
+    from
+        Scenario s1_0 
+    where
+        s1_0.project_id=? 
+        and s1_0.number=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.name,
+        p1_0.number,
+        p1_0.project_id,
+        p2_0.id,
+        p2_0.created_at,
+        p2_0.name,
+        p2_0.portfolios_created,
+        p2_0.scenarios_created,
+        p2_0.topologies_created,
+        p2_0.updated_at,
+        p1_0.targets 
+    from
+        Portfolio p1_0 
+    join
+        Project p2_0 
+            on p2_0.id=p1_0.project_id 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        t1_0.id,
+        t1_0.created_at,
+        t1_0.name,
+        t1_0.number,
+        t1_0.project_id,
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.name,
+        p1_0.portfolios_created,
+        p1_0.scenarios_created,
+        p1_0.topologies_created,
+        p1_0.updated_at,
+        t1_0.rooms,
+        t1_0.updated_at 
+    from
+        Topology t1_0 
+    join
+        Project p1_0 
+            on p1_0.id=t1_0.project_id 
+    where
+        t1_0.id=?
+Hibernate: 
+    select
+        t1_0.id,
+        t1_0.name,
+        t1_0.type 
+    from
+        Trace t1_0 
+    where
+        t1_0.id=?
+Hibernate: 
+    select
+        j1_0.scenario_id,
+        j1_0.id,
+        j1_0.created_at,
+        j1_0.created_by,
+        j1_0.repeats,
+        j1_0.results,
+        j1_0.runtime,
+        j1_0.state,
+        j1_0.updated_at 
+    from
+        Job j1_0 
+    where
+        j1_0.scenario_id=?
+Hibernate: 
+    select
+        pa1_0.project_id,
+        pa1_0.user_name,
+        pa1_0.role 
+    from
+        ProjectAuthorization pa1_0 
+    where
+        (
+            pa1_0.project_id, pa1_0.user_name
+        ) in ((?, ?))
+Hibernate: 
+    select
+        pa1_0.project_id,
+        pa1_0.user_name,
+        pa1_0.role 
+    from
+        ProjectAuthorization pa1_0 
+    where
+        (
+            pa1_0.project_id, pa1_0.user_name
+        ) in ((?, ?))
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.name,
+        s1_0.number,
+        s1_0.phenomena,
+        s1_0.portfolio_id,
+        s1_0.project_id,
+        s1_0.scheduler_name,
+        s1_0.topology_id,
+        s1_0.sampling_fraction,
+        s1_0.trace_id 
+    from
+        Scenario s1_0 
+    where
+        s1_0.project_id=? 
+        and s1_0.number=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.name,
+        p1_0.number,
+        p1_0.project_id,
+        p2_0.id,
+        p2_0.created_at,
+        p2_0.name,
+        p2_0.portfolios_created,
+        p2_0.scenarios_created,
+        p2_0.topologies_created,
+        p2_0.updated_at,
+        p1_0.targets 
+    from
+        Portfolio p1_0 
+    join
+        Project p2_0 
+            on p2_0.id=p1_0.project_id 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        t1_0.id,
+        t1_0.created_at,
+        t1_0.name,
+        t1_0.number,
+        t1_0.project_id,
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.name,
+        p1_0.portfolios_created,
+        p1_0.scenarios_created,
+        p1_0.topologies_created,
+        p1_0.updated_at,
+        t1_0.rooms,
+        t1_0.updated_at 
+    from
+        Topology t1_0 
+    join
+        Project p1_0 
+            on p1_0.id=t1_0.project_id 
+    where
+        t1_0.id=?
+Hibernate: 
+    select
+        t1_0.id,
+        t1_0.name,
+        t1_0.type 
+    from
+        Trace t1_0 
+    where
+        t1_0.id=?
+Hibernate: 
+    select
+        j1_0.scenario_id,
+        j1_0.id,
+        j1_0.created_at,
+        j1_0.created_by,
+        j1_0.repeats,
+        j1_0.results,
+        j1_0.runtime,
+        j1_0.state,
+        j1_0.updated_at 
+    from
+        Job j1_0 
+    where
+        j1_0.scenario_id=?
+Hibernate: 
+    delete 
+    from
+        Job 
+    where
+        id=?
+Hibernate: 
+    delete 
+    from
+        Job 
+    where
+        id=?
+Hibernate: 
+    delete 
+    from
+        Scenario 
+    where
+        id=?
+Hibernate: 
+    select
+        pa1_0.project_id,
+        pa1_0.user_name,
+        pa1_0.role 
+    from
+        ProjectAuthorization pa1_0 
+    where
+        (
+            pa1_0.project_id, pa1_0.user_name
+        ) in ((?, ?))
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.name,
+        s1_0.number,
+        s1_0.phenomena,
+        s1_0.portfolio_id,
+        s1_0.project_id,
+        s1_0.scheduler_name,
+        s1_0.topology_id,
+        s1_0.sampling_fraction,
+        s1_0.trace_id 
+    from
+        Scenario s1_0 
+    where
+        s1_0.project_id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.name,
+        p1_0.number,
+        p1_0.project_id,
+        p2_0.id,
+        p2_0.created_at,
+        p2_0.name,
+        p2_0.portfolios_created,
+        p2_0.scenarios_created,
+        p2_0.topologies_created,
+        p2_0.updated_at,
+        p1_0.targets 
+    from
+        Portfolio p1_0 
+    join
+        Project p2_0 
+            on p2_0.id=p1_0.project_id 
+    where
+        p1_0.id=?
+Hibernate: 
+    select
+        t1_0.id,
+        t1_0.created_at,
+        t1_0.name,
+        t1_0.number,
+        t1_0.project_id,
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.name,
+        p1_0.portfolios_created,
+        p1_0.scenarios_created,
+        p1_0.topologies_created,
+        p1_0.updated_at,
+        t1_0.rooms,
+        t1_0.updated_at 
+    from
+        Topology t1_0 
+    join
+        Project p1_0 
+            on p1_0.id=t1_0.project_id 
+    where
+        t1_0.id in (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    select
+        t1_0.id,
+        t1_0.name,
+        t1_0.type 
+    from
+        Trace t1_0 
+    where
+        t1_0.id=?
+Hibernate: 
+    select
+        j1_0.scenario_id,
+        j1_0.id,
+        j1_0.created_at,
+        j1_0.created_by,
+        j1_0.repeats,
+        j1_0.results,
+        j1_0.runtime,
+        j1_0.state,
+        j1_0.updated_at 
+    from
+        Job j1_0 
+    where
+        j1_0.scenario_id in (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    select
+        pa1_0.project_id,
+        pa1_0.user_name,
+        pa1_0.role 
+    from
+        ProjectAuthorization pa1_0 
+    where
+        (
+            pa1_0.project_id, pa1_0.user_name
+        ) in ((?, ?))
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

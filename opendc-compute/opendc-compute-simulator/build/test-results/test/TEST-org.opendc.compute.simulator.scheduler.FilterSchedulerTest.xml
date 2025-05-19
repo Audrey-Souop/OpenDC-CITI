@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" tests="18" skipped="0" failures="0" errors="0" timestamp="2025-05-17T00:17:11" hostname="ece-d6200-audu" time="4.973">
+  <properties/>
+  <testcase name="testHostIsDown()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="4.045"/>
+  <testcase name="testRamFilter()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.081"/>
+  <testcase name="testInvalidSubsetSize()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.004"/>
+  <testcase name="testAntiAffinityFilter()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.558"/>
+  <testcase name="testRamWeigher()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.032"/>
+  <testcase name="testNoFiltersAndSchedulersRandom()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.02"/>
+  <testcase name="testAffinityFilter()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.061"/>
+  <testcase name="testCoreRamWeigher()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.023"/>
+  <testcase name="testInstanceCountFilter()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.02"/>
+  <testcase name="testInstanceCountWeigher()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.018"/>
+  <testcase name="testHostIsUp()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.008"/>
+  <testcase name="testVCpuCapacityFilter()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.017"/>
+  <testcase name="testRamFilterOvercommit()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.008"/>
+  <testcase name="testNoFiltersAndSchedulers()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.009"/>
+  <testcase name="testVCpuFilterOvercommit()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.009"/>
+  <testcase name="testVCpuFilter()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.013"/>
+  <testcase name="testNoHosts()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.007"/>
+  <testcase name="testVCpuWeigher()" classname="org.opendc.compute.simulator.scheduler.FilterSchedulerTest" time="0.013"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J: Class path contains multiple SLF4J providers.
+SLF4J: Found provider [org.slf4j.simple.SimpleServiceProvider@878537d]
+SLF4J: Found provider [org.apache.logging.slf4j.SLF4JServiceProvider@4455f57d]
+SLF4J: See https://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual provider is of type [org.slf4j.simple.SimpleServiceProvider@878537d]
+WARNING: A Java agent has been loaded dynamically (/home/UFAD/audreycyriell.mo/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.14.6/46e2545d7a97b6ccb195621650c5957279eb4812/byte-buddy-agent-1.14.6.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

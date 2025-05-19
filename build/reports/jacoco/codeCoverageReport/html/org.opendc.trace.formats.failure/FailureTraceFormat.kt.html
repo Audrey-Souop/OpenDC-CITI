@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FailureTraceFormat.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.formats.failure</a> &gt; <span class="el_source">FailureTraceFormat.kt</span></div><h1>FailureTraceFormat.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.formats.failure
+
+import org.opendc.trace.TableColumn
+import org.opendc.trace.TableColumnType
+import org.opendc.trace.TableReader
+import org.opendc.trace.TableWriter
+import org.opendc.trace.conv.FAILURE_DURATION
+import org.opendc.trace.conv.FAILURE_INTENSITY
+import org.opendc.trace.conv.FAILURE_INTERVAL
+import org.opendc.trace.conv.TABLE_FAILURES
+import org.opendc.trace.formats.failure.parquet.FailureReadSupport
+import org.opendc.trace.spi.TableDetails
+import org.opendc.trace.spi.TraceFormat
+import org.opendc.trace.util.parquet.LocalParquetReader
+import java.nio.file.Path
+
+/**
+ * A [TraceFormat] implementation for the Failure Intensity trace.
+ */
+<span class="fc" id="L42">public class FailureTraceFormat : TraceFormat {</span>
+<span class="pc" id="L43">    override val name: String = &quot;failure&quot;</span>
+
+    override fun create(path: Path) {
+<span class="nc" id="L46">        throw UnsupportedOperationException(&quot;Writing not supported for this format&quot;)</span>
+    }
+
+<span class="fc" id="L49">    override fun getTables(path: Path): List&lt;String&gt; = listOf(TABLE_FAILURES)</span>
+
+    override fun getDetails(
+        path: Path,
+        table: String,
+    ): TableDetails {
+<span class="fc" id="L55">        return when (table) {</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">            TABLE_FAILURES -&gt;</span>
+<span class="fc" id="L57">                TableDetails(</span>
+<span class="fc" id="L58">                    listOf(</span>
+<span class="fc" id="L59">                        TableColumn(FAILURE_INTERVAL, TableColumnType.Long),</span>
+<span class="fc" id="L60">                        TableColumn(FAILURE_DURATION, TableColumnType.Long),</span>
+<span class="fc" id="L61">                        TableColumn(FAILURE_INTENSITY, TableColumnType.Double),</span>
+                    ),
+                )
+<span class="nc" id="L64">            else -&gt; throw IllegalArgumentException(&quot;Table $table not supported&quot;)</span>
+        }
+    }
+
+    override fun newReader(
+        path: Path,
+        table: String,
+        projection: List&lt;String&gt;?,
+    ): TableReader {
+<span class="fc" id="L73">        return when (table) {</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">            TABLE_FAILURES -&gt; {</span>
+<span class="fc" id="L75">                val reader = LocalParquetReader(path, FailureReadSupport(projection))</span>
+<span class="fc" id="L76">                FailureTableReader(reader)</span>
+            }
+<span class="nc" id="L78">            else -&gt; throw IllegalArgumentException(&quot;Table $table not supported&quot;)</span>
+        }
+    }
+
+    override fun newWriter(
+        path: Path,
+        table: String,
+    ): TableWriter {
+<span class="nc" id="L86">        throw UnsupportedOperationException(&quot;Writing not supported for this format&quot;)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

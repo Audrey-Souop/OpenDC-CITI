@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DfltTaskExportColumns.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.telemetry.parquet</a> &gt; <span class="el_source">DfltTaskExportColumns.kt</span></div><h1>DfltTaskExportColumns.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.telemetry.parquet
+
+import org.apache.parquet.io.api.Binary
+import org.apache.parquet.schema.LogicalTypeAnnotation
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.BINARY
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.FLOAT
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT32
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT64
+import org.apache.parquet.schema.Types
+import org.opendc.compute.simulator.telemetry.table.task.TaskTableReader
+import org.opendc.trace.util.parquet.exporter.ExportColumn
+
+/**
+ * This object wraps the [ExportColumn]s to solves ambiguity for field
+ * names that are included in more than 1 exportable
+ *
+ * Additionally, it allows to load all the fields at once by just its symbol,
+ * so that these columns can be deserialized. Additional fields can be added
+ * from anywhere, and they are deserializable as long as they are loaded by the jvm.
+ *
+ * ```kotlin
+ * ...
+ * // Loads the column
+ * DfltTaskExportColumns
+ * ...
+ * ```
+ */
+public object DfltTaskExportColumns {
+<span class="nc" id="L51">    public val TIMESTAMP: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L52">        ExportColumn(</span>
+<span class="nc" id="L53">            field = Types.required(INT64).named(&quot;timestamp&quot;),</span>
+<span class="nc" id="L54">        ) { it.timestamp.toEpochMilli() }</span>
+
+<span class="nc" id="L56">    public val TIMESTAMP_ABS: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L57">        ExportColumn(</span>
+<span class="nc" id="L58">            field = Types.required(INT64).named(&quot;timestamp_absolute&quot;),</span>
+<span class="nc" id="L59">        ) { it.timestampAbsolute.toEpochMilli() }</span>
+
+<span class="nc" id="L61">    public val TASK_ID: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L62">        ExportColumn(</span>
+            field =
+<span class="nc" id="L64">                Types.required(BINARY)</span>
+<span class="nc" id="L65">                    .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="nc" id="L66">                    .named(&quot;task_id&quot;),</span>
+<span class="nc" id="L67">        ) { Binary.fromString(it.taskInfo.id) }</span>
+
+<span class="nc" id="L69">    public val TASK_NAME: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L70">        ExportColumn(</span>
+            field =
+<span class="nc" id="L72">                Types.required(BINARY)</span>
+<span class="nc" id="L73">                    .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="nc" id="L74">                    .named(&quot;task_name&quot;),</span>
+<span class="nc" id="L75">        ) { Binary.fromString(it.taskInfo.name) }</span>
+
+<span class="nc" id="L77">    public val CPU_COUNT: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L78">        ExportColumn(</span>
+<span class="nc" id="L79">            field = Types.required(INT32).named(&quot;cpu_count&quot;),</span>
+<span class="nc" id="L80">        ) { it.taskInfo.cpuCount }</span>
+
+<span class="nc" id="L82">    public val MEM_CAPACITY: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L83">        ExportColumn(</span>
+<span class="nc" id="L84">            field = Types.required(INT64).named(&quot;mem_capacity&quot;),</span>
+<span class="nc" id="L85">        ) { it.taskInfo.memCapacity }</span>
+
+<span class="nc" id="L87">    public val CPU_LIMIT: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L88">        ExportColumn(</span>
+<span class="nc" id="L89">            field = Types.required(FLOAT).named(&quot;cpu_limit&quot;),</span>
+<span class="nc" id="L90">        ) { it.cpuLimit }</span>
+
+<span class="nc" id="L92">    public val CPU_USAGE: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L93">        ExportColumn(</span>
+<span class="nc" id="L94">            field = Types.required(FLOAT).named(&quot;cpu_usage&quot;),</span>
+<span class="nc" id="L95">        ) { it.cpuUsage }</span>
+
+<span class="nc" id="L97">    public val CPU_DEMAND: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L98">        ExportColumn(</span>
+<span class="nc" id="L99">            field = Types.required(FLOAT).named(&quot;cpu_demand&quot;),</span>
+<span class="nc" id="L100">        ) { it.cpuDemand }</span>
+
+<span class="nc" id="L102">    public val CPU_TIME_ACTIVE: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L103">        ExportColumn(</span>
+<span class="nc" id="L104">            field = Types.required(INT64).named(&quot;cpu_time_active&quot;),</span>
+<span class="nc" id="L105">        ) { it.cpuActiveTime }</span>
+
+<span class="nc" id="L107">    public val CPU_TIME_IDLE: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L108">        ExportColumn(</span>
+<span class="nc" id="L109">            field = Types.required(INT64).named(&quot;cpu_time_idle&quot;),</span>
+<span class="nc" id="L110">        ) { it.cpuIdleTime }</span>
+
+<span class="nc" id="L112">    public val CPU_TIME_STEAL: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L113">        ExportColumn(</span>
+<span class="nc" id="L114">            field = Types.required(INT64).named(&quot;cpu_time_steal&quot;),</span>
+<span class="nc" id="L115">        ) { it.cpuStealTime }</span>
+
+<span class="nc" id="L117">    public val CPU_TIME_LOST: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L118">        ExportColumn(</span>
+<span class="nc" id="L119">            field = Types.required(INT64).named(&quot;cpu_time_lost&quot;),</span>
+<span class="nc" id="L120">        ) { it.cpuLostTime }</span>
+
+<span class="nc" id="L122">    public val UP_TIME: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L123">        ExportColumn(</span>
+<span class="nc" id="L124">            field = Types.required(INT64).named(&quot;uptime&quot;),</span>
+<span class="nc" id="L125">        ) { it.uptime }</span>
+
+<span class="nc" id="L127">    public val DOWN_TIME: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L128">        ExportColumn(</span>
+<span class="nc" id="L129">            field = Types.required(INT64).named(&quot;downtime&quot;),</span>
+<span class="nc" id="L130">        ) { it.downtime }</span>
+
+<span class="nc" id="L132">    public val NUM_FAILURES: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L133">        ExportColumn(</span>
+<span class="nc" id="L134">            field = Types.required(INT64).named(&quot;num_failures&quot;),</span>
+<span class="nc" id="L135">        ) { it.numFailures }</span>
+
+<span class="nc" id="L137">    public val NUM_PAUSES: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L138">        ExportColumn(</span>
+<span class="nc" id="L139">            field = Types.required(INT64).named(&quot;num_pauses&quot;),</span>
+<span class="nc" id="L140">        ) { it.numPauses }</span>
+
+<span class="nc" id="L142">    public val SCHEDULE_TIME: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L143">        ExportColumn(</span>
+<span class="nc" id="L144">            field = Types.optional(INT64).named(&quot;schedule_time&quot;),</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        ) { it.scheduleTime?.toEpochMilli() }</span>
+
+<span class="nc" id="L147">    public val SUBMISSION_TIME: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L148">        ExportColumn(</span>
+<span class="nc" id="L149">            field = Types.optional(INT64).named(&quot;submission_time&quot;),</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">        ) { it.submissionTime?.toEpochMilli() }</span>
+
+<span class="nc" id="L152">    public val FINISH_TIME: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L153">        ExportColumn(</span>
+<span class="nc" id="L154">            field = Types.optional(INT64).named(&quot;finish_time&quot;),</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        ) { it.finishTime?.toEpochMilli() }</span>
+
+<span class="nc" id="L157">    public val TASK_STATE: ExportColumn&lt;TaskTableReader&gt; =</span>
+<span class="nc" id="L158">        ExportColumn(</span>
+            field =
+<span class="nc" id="L160">                Types.optional(BINARY)</span>
+<span class="nc" id="L161">                    .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="nc" id="L162">                    .named(&quot;task_state&quot;),</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        ) { Binary.fromString(it.taskState?.name) }</span>
+
+    /**
+     * The columns that are always included in the output file.
+     */
+<span class="nc" id="L168">    internal val BASE_EXPORT_COLUMNS =</span>
+<span class="nc" id="L169">        setOf(</span>
+<span class="nc" id="L170">            TIMESTAMP_ABS,</span>
+<span class="nc" id="L171">            TIMESTAMP,</span>
+<span class="nc" id="L172">            TASK_ID,</span>
+<span class="nc" id="L173">            TASK_NAME,</span>
+        )
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

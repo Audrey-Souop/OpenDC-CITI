@@ -1,0 +1,26 @@
+  
+                                      
+  
+                                                                               
+                                                                                
+                                                                               
+                                                                            
+                                                                        
+                                                           
+  
+                                                                                 
+                                                  
+  
+                                                                             
+                                                                           
+                                                                              
+                                                                         
+                                                                                
+                                                                                
+            
+   
+
+plugins {
+    `java-library`
+    jacoco
+}

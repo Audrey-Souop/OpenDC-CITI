@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenDCUiProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.ui.deployment</a> &gt; <span class="el_source">OpenDCUiProcessor.java</span></div><h1>OpenDCUiProcessor.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.ui.deployment;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.deployment.annotations.BuildProducer;
+import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.ExecutionTime;
+import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
+import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
+import io.quarkus.maven.dependency.GACT;
+import io.quarkus.maven.dependency.ResolvedDependency;
+import io.quarkus.paths.PathVisit;
+import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
+import io.quarkus.vertx.http.deployment.RouteBuildItem;
+import io.quarkus.vertx.http.deployment.webjar.WebJarBuildItem;
+import io.quarkus.vertx.http.deployment.webjar.WebJarResourcesFilter;
+import io.quarkus.vertx.http.deployment.webjar.WebJarResultsBuildItem;
+import io.vertx.core.Handler;
+import io.vertx.ext.web.RoutingContext;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.function.BooleanSupplier;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.opendc.web.ui.runtime.OpenDCUiRecorder;
+import org.opendc.web.ui.runtime.OpenDCUiRuntimeConfig;
+
+/**
+ * Build processor for the OpenDC web UI Quarkus extension.
+ */
+<span class="nc" id="L57">public class OpenDCUiProcessor {</span>
+
+    private static final String FEATURE = &quot;opendc-ui&quot;;
+<span class="nc" id="L60">    private static final GACT OPENDC_UI_WEBJAR_ARTIFACT_KEY = new GACT(&quot;org.opendc.web&quot;, &quot;opendc-web-ui&quot;, null, &quot;jar&quot;);</span>
+    private static final String OPENDC_UI_WEBJAR_STATIC_RESOURCES_PATH = &quot;META-INF/resources/opendc-web-ui&quot;;
+<span class="nc" id="L62">    private static final Pattern PATH_PARAM_PATTERN = Pattern.compile(&quot;\\[(\\w+)]&quot;);</span>
+
+<span class="nc" id="L64">    private final ObjectMapper objectMapper = new ObjectMapper();</span>
+
+    /**
+     * Provide the {@link FeatureBuildItem} for this Quarkus extension.
+     */
+    @BuildStep(onlyIf = IsIncluded.class)
+    public FeatureBuildItem feature() {
+<span class="nc" id="L71">        return new FeatureBuildItem(FEATURE);</span>
+    }
+
+    /**
+     * Build the WebJar that is used to serve the Next.js resources.
+     */
+    @BuildStep(onlyIf = IsIncluded.class)
+    public WebJarBuildItem buildWebJar(OpenDCUiConfig config) {
+<span class="nc" id="L79">        return WebJarBuildItem.builder()</span>
+<span class="nc" id="L80">                .artifactKey(OPENDC_UI_WEBJAR_ARTIFACT_KEY)</span>
+<span class="nc" id="L81">                .root(OPENDC_UI_WEBJAR_STATIC_RESOURCES_PATH)</span>
+<span class="nc" id="L82">                .onlyCopyNonArtifactFiles(false)</span>
+<span class="nc" id="L83">                .useDefaultQuarkusBranding(false)</span>
+<span class="nc" id="L84">                .filter(new InsertVariablesResourcesFilter(config))</span>
+<span class="nc" id="L85">                .build();</span>
+    }
+
+    /**
+     * Build the Next.js routes based on the route manifest generated by it.
+     */
+    @BuildStep(onlyIf = IsIncluded.class)
+    public OpenDCUiRoutingBuildItem buildRoutes(CurateOutcomeBuildItem curateOutcomeBuildItem) throws IOException {
+<span class="nc" id="L93">        ResolvedDependency dependency = getAppArtifact(curateOutcomeBuildItem, OPENDC_UI_WEBJAR_ARTIFACT_KEY);</span>
+<span class="nc" id="L94">        PathVisit visit = dependency</span>
+<span class="nc" id="L95">                .getContentTree()</span>
+<span class="nc" id="L96">                .apply(OPENDC_UI_WEBJAR_STATIC_RESOURCES_PATH + &quot;/routes-manifest.json&quot;, v -&gt; v);</span>
+
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (visit == null) {</span>
+<span class="nc" id="L99">            throw new FileNotFoundException(&quot;Cannot find routes-manifest.json&quot;);</span>
+        }
+
+<span class="nc" id="L102">        JsonNode routeManifest = objectMapper.readTree(visit.getUrl());</span>
+
+<span class="nc" id="L104">        var pages = new ArrayList&lt;OpenDCUiRoutingBuildItem.Page&gt;();</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        for (Iterator&lt;JsonNode&gt; it = routeManifest.get(&quot;staticRoutes&quot;).elements(); it.hasNext(); ) {</span>
+<span class="nc" id="L106">            JsonNode route = it.next();</span>
+
+<span class="nc" id="L108">            String page = route.get(&quot;page&quot;).asText();</span>
+
+            // Static routes do not have any path parameters
+<span class="nc" id="L111">            pages.add(new OpenDCUiRoutingBuildItem.Page(page, page));</span>
+<span class="nc" id="L112">        }</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        for (Iterator&lt;JsonNode&gt; it = routeManifest.get(&quot;dynamicRoutes&quot;).elements(); it.hasNext(); ) {</span>
+<span class="nc" id="L115">            JsonNode route = it.next();</span>
+
+<span class="nc" id="L117">            String page = route.get(&quot;page&quot;).asText();</span>
+<span class="nc" id="L118">            String path = PATH_PARAM_PATTERN.matcher(page).replaceAll(r -&gt; &quot;:&quot; + r.group(1));</span>
+
+<span class="nc" id="L120">            pages.add(new OpenDCUiRoutingBuildItem.Page(path, page));</span>
+<span class="nc" id="L121">        }</span>
+
+<span class="nc" id="L123">        var redirects = new ArrayList&lt;OpenDCUiRoutingBuildItem.Redirect&gt;();</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        for (Iterator&lt;JsonNode&gt; it = routeManifest.get(&quot;redirects&quot;).elements(); it.hasNext(); ) {</span>
+<span class="nc" id="L125">            JsonNode redirect = it.next();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            if (redirect.has(&quot;internal&quot;)) {</span>
+<span class="nc" id="L127">                continue;</span>
+            }
+
+<span class="nc" id="L130">            int statusCode = redirect.get(&quot;statusCode&quot;).asInt();</span>
+<span class="nc" id="L131">            String path = redirect.get(&quot;source&quot;).asText();</span>
+<span class="nc" id="L132">            String destination = redirect.get(&quot;destination&quot;).asText();</span>
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            if (path.isEmpty()) {</span>
+<span class="nc" id="L135">                path = &quot;/&quot;;</span>
+            }
+
+<span class="nc" id="L138">            redirects.add(new OpenDCUiRoutingBuildItem.Redirect(path, destination, statusCode));</span>
+<span class="nc" id="L139">        }</span>
+
+<span class="nc" id="L141">        var custom404 = routeManifest.get(&quot;pages404&quot;).asBoolean();</span>
+<span class="nc" id="L142">        return new OpenDCUiRoutingBuildItem(pages, redirects, custom404);</span>
+    }
+
+    /**
+     * Register the HTTP handles for the OpenDC web UI.
+     */
+    @BuildStep(onlyIf = IsIncluded.class)
+    @Record(ExecutionTime.RUNTIME_INIT)
+    public void registerOpenDCUiHandler(
+            OpenDCUiRecorder recorder,
+            BuildProducer&lt;RouteBuildItem&gt; routes,
+            HttpRootPathBuildItem httpRootPathBuildItem,
+            WebJarResultsBuildItem webJarResultsBuildItem,
+            OpenDCUiRoutingBuildItem openDCUiBuildItem,
+            OpenDCUiRuntimeConfig runtimeConfig,
+            ShutdownContextBuildItem shutdownContext) {
+
+<span class="nc" id="L159">        WebJarResultsBuildItem.WebJarResult result =</span>
+<span class="nc" id="L160">                webJarResultsBuildItem.byArtifactKey(OPENDC_UI_WEBJAR_ARTIFACT_KEY);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (result == null) {</span>
+<span class="nc" id="L162">            return;</span>
+        }
+
+<span class="nc" id="L165">        String basePath = httpRootPathBuildItem.getRootPath();</span>
+<span class="nc" id="L166">        String finalDestination = result.getFinalDestination();</span>
+
+        /* Construct dynamic routes */
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        for (var redirect : openDCUiBuildItem.getRedirects()) {</span>
+            String destination =
+<span class="nc bnc" id="L171" title="All 2 branches missed.">                    basePath.equals(&quot;/&quot;) ? redirect.getDestination() : basePath + redirect.getDestination();</span>
+
+<span class="nc" id="L173">            routes.produce(httpRootPathBuildItem</span>
+<span class="nc" id="L174">                    .routeBuilder()</span>
+<span class="nc" id="L175">                    .route(basePath + redirect.getPath())</span>
+<span class="nc" id="L176">                    .handler(recorder.redirectHandler(destination, redirect.getStatusCode(), runtimeConfig))</span>
+<span class="nc" id="L177">                    .build());</span>
+<span class="nc" id="L178">        }</span>
+
+<span class="nc bnc" id="L180" title="All 2 branches missed.">        for (var page : openDCUiBuildItem.getPages()) {</span>
+<span class="nc" id="L181">            routes.produce(httpRootPathBuildItem</span>
+<span class="nc" id="L182">                    .routeBuilder()</span>
+<span class="nc" id="L183">                    .route(basePath + page.getPath())</span>
+<span class="nc" id="L184">                    .handler(recorder.pageHandler(finalDestination, page.getName(), runtimeConfig))</span>
+<span class="nc" id="L185">                    .build());</span>
+<span class="nc" id="L186">        }</span>
+
+        /* Construct static routes */
+<span class="nc" id="L189">        Handler&lt;RoutingContext&gt; staticHandler = recorder.staticHandler(</span>
+<span class="nc" id="L190">                finalDestination, basePath, result.getWebRootConfigurations(), runtimeConfig, shutdownContext);</span>
+
+<span class="nc" id="L192">        routes.produce(httpRootPathBuildItem</span>
+<span class="nc" id="L193">                .routeBuilder()</span>
+<span class="nc" id="L194">                .route(&quot;*&quot;)</span>
+<span class="nc" id="L195">                .handler(staticHandler)</span>
+<span class="nc" id="L196">                .build());</span>
+<span class="nc" id="L197">    }</span>
+
+    /**
+     * A {@link WebJarResourcesFilter} that instantiates the variables in the web jar resource.
+     */
+    private static class InsertVariablesResourcesFilter implements WebJarResourcesFilter {
+
+        private static final String HTML = &quot;.html&quot;;
+        private static final String CSS = &quot;.css&quot;;
+        private static final String JS = &quot;.js&quot;;
+
+        private final OpenDCUiConfig config;
+
+<span class="nc" id="L210">        public InsertVariablesResourcesFilter(OpenDCUiConfig config) {</span>
+<span class="nc" id="L211">            this.config = config;</span>
+<span class="nc" id="L212">        }</span>
+
+        @Override
+        public FilterResult apply(String fileName, InputStream stream) throws IOException {
+<span class="nc bnc" id="L216" title="All 2 branches missed.">            if (stream == null) {</span>
+<span class="nc" id="L217">                return new FilterResult(null, false);</span>
+            }
+
+            // Allow replacement of variables in HTML, CSS, and JavaScript files
+<span class="nc bnc" id="L221" title="All 6 branches missed.">            if (fileName.endsWith(HTML) || fileName.endsWith(CSS) || fileName.endsWith(JS)) {</span>
+<span class="nc" id="L222">                byte[] oldContentBytes = stream.readAllBytes();</span>
+<span class="nc" id="L223">                String oldContents = new String(oldContentBytes);</span>
+<span class="nc" id="L224">                String contents = substituteVariables(oldContents, this::substitute);</span>
+
+<span class="nc bnc" id="L226" title="All 4 branches missed.">                boolean changed = contents.length() != oldContents.length() || !contents.equals(oldContents);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">                if (changed) {</span>
+<span class="nc" id="L228">                    return new FilterResult(new ByteArrayInputStream(contents.getBytes()), true);</span>
+                } else {
+<span class="nc" id="L230">                    return new FilterResult(new ByteArrayInputStream(oldContentBytes), false);</span>
+                }
+            }
+
+<span class="nc" id="L234">            return new FilterResult(stream, false);</span>
+        }
+
+        private String substitute(String var) {
+<span class="nc bnc" id="L238" title="All 6 branches missed.">            switch (var) {</span>
+                case &quot;NEXT_PUBLIC_API_BASE_URL&quot;:
+<span class="nc" id="L240">                    return config.apiBaseUrl;</span>
+                case &quot;NEXT_PUBLIC_SENTRY_DSN&quot;:
+<span class="nc" id="L242">                    return config.sentryDsn.orElse(&quot;&quot;);</span>
+                case &quot;NEXT_PUBLIC_AUTH0_DOMAIN&quot;:
+<span class="nc" id="L244">                    return config.auth.domain.orElse(&quot;&quot;);</span>
+                case &quot;NEXT_PUBLIC_AUTH0_CLIENT_ID&quot;:
+<span class="nc" id="L246">                    return config.auth.clientId.orElse(&quot;&quot;);</span>
+                case &quot;NEXT_PUBLIC_AUTH0_AUDIENCE&quot;:
+<span class="nc" id="L248">                    return config.auth.audience.orElse(&quot;&quot;);</span>
+                default:
+<span class="nc" id="L250">                    return null;</span>
+            }
+        }
+
+        /**
+         * Pattern to match variables in the OpenDC web UI sources specified using the following format: &quot;%%VAR_NAME%%&quot;.
+         * &lt;p&gt;
+         * Be aware that to properly handle Next.js base path, we need to also match a possible forward slash in front
+         * of the variable.
+         */
+<span class="nc" id="L260">        private static final Pattern PATTERN = Pattern.compile(&quot;%%(\\w+)%%&quot;);</span>
+
+        /**
+         * Helper method to substitute variables in the OpenDC web UI.
+         */
+        private static String substituteVariables(String contents, Function&lt;String, String&gt; substitute) {
+<span class="nc" id="L266">            Matcher m = PATTERN.matcher(contents);</span>
+<span class="nc" id="L267">            StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc bnc" id="L269" title="All 2 branches missed.">            while (m.find()) {</span>
+<span class="nc" id="L270">                String group = m.group(1);</span>
+<span class="nc" id="L271">                String val = substitute.apply(group);</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">                m.appendReplacement(sb, val != null ? val : group);</span>
+<span class="nc" id="L273">            }</span>
+
+<span class="nc" id="L275">            m.appendTail(sb);</span>
+<span class="nc" id="L276">            return sb.toString();</span>
+        }
+    }
+
+    /**
+     * A {@link BooleanSupplier} to determine if the OpenDC web UI extension should be included.
+     */
+    private static class IsIncluded implements BooleanSupplier {
+        OpenDCUiConfig config;
+
+        @Override
+        public boolean getAsBoolean() {
+<span class="nc" id="L288">            return config.include;</span>
+        }
+    }
+
+    private static ResolvedDependency getAppArtifact(CurateOutcomeBuildItem curateOutcomeBuildItem, GACT artifactKey) {
+        for (ResolvedDependency dep :
+<span class="nc bnc" id="L294" title="All 2 branches missed.">                curateOutcomeBuildItem.getApplicationModel().getDependencies()) {</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">            if (dep.getKey().equals(artifactKey)) {</span>
+<span class="nc" id="L296">                return dep;</span>
+            }
+<span class="nc" id="L298">        }</span>
+<span class="nc" id="L299">        throw new RuntimeException(&quot;Could not find artifact &quot; + artifactKey + &quot; among the application dependencies&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

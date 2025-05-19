@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResourceStateWriteSupport.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.formats.opendc.parquet</a> &gt; <span class="el_source">ResourceStateWriteSupport.kt</span></div><h1>ResourceStateWriteSupport.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.formats.opendc.parquet
+
+import org.apache.hadoop.conf.Configuration
+import org.apache.parquet.hadoop.api.WriteSupport
+import org.apache.parquet.io.api.Binary
+import org.apache.parquet.io.api.RecordConsumer
+import org.apache.parquet.schema.LogicalTypeAnnotation
+import org.apache.parquet.schema.MessageType
+import org.apache.parquet.schema.PrimitiveType
+import org.apache.parquet.schema.Types
+
+/**
+ * Support for writing [Resource] instances to Parquet format.
+ */
+<span class="fc" id="L37">internal class ResourceStateWriteSupport : WriteSupport&lt;ResourceState&gt;() {</span>
+    /**
+     * The current active record consumer.
+     */
+    private lateinit var recordConsumer: RecordConsumer
+
+    override fun init(configuration: Configuration): WriteContext {
+<span class="fc" id="L44">        return WriteContext(WRITE_SCHEMA, emptyMap())</span>
+    }
+
+    override fun prepareForWrite(recordConsumer: RecordConsumer) {
+<span class="fc" id="L48">        this.recordConsumer = recordConsumer</span>
+<span class="fc" id="L49">    }</span>
+
+    override fun write(record: ResourceState) {
+<span class="fc" id="L52">        write(recordConsumer, record)</span>
+<span class="fc" id="L53">    }</span>
+
+    private fun write(
+        consumer: RecordConsumer,
+        record: ResourceState,
+    ) {
+<span class="fc" id="L59">        consumer.startMessage()</span>
+
+<span class="fc" id="L61">        consumer.startField(&quot;id&quot;, 0)</span>
+<span class="fc" id="L62">        consumer.addBinary(Binary.fromCharSequence(record.id))</span>
+<span class="fc" id="L63">        consumer.endField(&quot;id&quot;, 0)</span>
+
+<span class="fc" id="L65">        consumer.startField(&quot;timestamp&quot;, 1)</span>
+<span class="fc" id="L66">        consumer.addLong(record.timestamp.toEpochMilli())</span>
+<span class="fc" id="L67">        consumer.endField(&quot;timestamp&quot;, 1)</span>
+
+<span class="fc" id="L69">        consumer.startField(&quot;duration&quot;, 2)</span>
+<span class="fc" id="L70">        consumer.addLong(record.duration.toMillis())</span>
+<span class="fc" id="L71">        consumer.endField(&quot;duration&quot;, 2)</span>
+
+<span class="fc" id="L73">        consumer.startField(&quot;cpu_count&quot;, 3)</span>
+<span class="fc" id="L74">        consumer.addInteger(record.cpuCount)</span>
+<span class="fc" id="L75">        consumer.endField(&quot;cpu_count&quot;, 3)</span>
+
+<span class="fc" id="L77">        consumer.startField(&quot;cpu_usage&quot;, 4)</span>
+<span class="fc" id="L78">        consumer.addDouble(record.cpuUsage)</span>
+<span class="fc" id="L79">        consumer.endField(&quot;cpu_usage&quot;, 4)</span>
+
+<span class="fc" id="L81">        consumer.endMessage()</span>
+<span class="fc" id="L82">    }</span>
+
+    companion object {
+        /**
+         * Parquet schema for the &quot;resource states&quot; table in the trace.
+         */
+        @JvmStatic
+<span class="nc" id="L89">        val WRITE_SCHEMA: MessageType =</span>
+<span class="fc" id="L90">            Types.buildMessage()</span>
+<span class="fc" id="L91">                .addFields(</span>
+<span class="fc" id="L92">                    Types</span>
+<span class="fc" id="L93">                        .required(PrimitiveType.PrimitiveTypeName.BINARY)</span>
+<span class="fc" id="L94">                        .`as`(LogicalTypeAnnotation.stringType())</span>
+<span class="fc" id="L95">                        .named(&quot;id&quot;),</span>
+                    Types
+<span class="fc" id="L97">                        .required(PrimitiveType.PrimitiveTypeName.INT64)</span>
+<span class="fc" id="L98">                        .`as`(LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MILLIS))</span>
+<span class="fc" id="L99">                        .named(&quot;timestamp&quot;),</span>
+                    Types
+<span class="fc" id="L101">                        .required(PrimitiveType.PrimitiveTypeName.INT64)</span>
+<span class="fc" id="L102">                        .named(&quot;duration&quot;),</span>
+                    Types
+<span class="fc" id="L104">                        .required(PrimitiveType.PrimitiveTypeName.INT32)</span>
+<span class="fc" id="L105">                        .named(&quot;cpu_count&quot;),</span>
+                    Types
+<span class="fc" id="L107">                        .required(PrimitiveType.PrimitiveTypeName.DOUBLE)</span>
+<span class="fc" id="L108">                        .named(&quot;cpu_usage&quot;),</span>
+                )
+<span class="fc" id="L110">                .named(&quot;resource_state&quot;)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

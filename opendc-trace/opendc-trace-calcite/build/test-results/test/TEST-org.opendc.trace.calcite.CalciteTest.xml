@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.trace.calcite.CalciteTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:35" hostname="ece-d6200-audu" time="9.354">
+  <properties/>
+  <testcase name="testResourceStates()" classname="org.opendc.trace.calcite.CalciteTest" time="4.336"/>
+  <testcase name="testUUID()" classname="org.opendc.trace.calcite.CalciteTest" time="3.878"/>
+  <testcase name="testInterferenceGroups()" classname="org.opendc.trace.calcite.CalciteTest" time="0.153"/>
+  <testcase name="testComplexQuery()" classname="org.opendc.trace.calcite.CalciteTest" time="0.978"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J: Class path contains multiple SLF4J providers.
+SLF4J: Found provider [org.slf4j.simple.SimpleServiceProvider@5fe7f967]
+SLF4J: Found provider [org.apache.logging.slf4j.SLF4JServiceProvider@59e43e8c]
+SLF4J: See https://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual provider is of type [org.slf4j.simple.SimpleServiceProvider@5fe7f967]
+[Test worker] INFO org.apache.parquet.hadoop.InternalParquetRecordReader - RecordReader initialized will read a total of 16354 records.
+[Test worker] INFO org.apache.parquet.hadoop.InternalParquetRecordReader - at row 0. reading next block
+[Test worker] INFO org.apache.hadoop.io.compress.CodecPool - Got brand-new decompressor [.zstd]
+[Test worker] INFO org.apache.parquet.hadoop.InternalParquetRecordReader - block read in memory in 76 ms. row count = 16354
+WARNING: A Java agent has been loaded dynamically (/home/UFAD/audreycyriell.mo/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.14.6/46e2545d7a97b6ccb195621650c5957279eb4812/byte-buddy-agent-1.14.6.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+[Test worker] INFO org.apache.parquet.hadoop.InternalParquetRecordReader - RecordReader initialized will read a total of 16354 records.
+[Test worker] INFO org.apache.parquet.hadoop.InternalParquetRecordReader - at row 0. reading next block
+[Test worker] INFO org.apache.hadoop.io.compress.CodecPool - Got brand-new decompressor [.zstd]
+[Test worker] INFO org.apache.parquet.hadoop.InternalParquetRecordReader - block read in memory in 1 ms. row count = 16354
+]]></system-err>
+</testsuite>

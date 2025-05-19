@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Scenario.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.model</a> &gt; <span class="el_source">Scenario.java</span></div><h1>Scenario.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2023 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.model;
+
+import io.hypersistence.utils.hibernate.type.json.JsonType;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Parameters;
+import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+import org.hibernate.annotations.Type;
+import org.opendc.web.proto.OperationalPhenomena;
+
+/**
+ * A single scenario to be explored by the simulator.
+ */
+@Entity
+@Table(
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = &quot;uk_scenarios_number&quot;,
+                    columnNames = {&quot;project_id&quot;, &quot;number&quot;})
+        },
+        indexes = {@Index(name = &quot;ux_scenarios_number&quot;, columnList = &quot;project_id, number&quot;)})
+@NamedQueries({
+    @NamedQuery(name = &quot;Scenario.findByProject&quot;, query = &quot;SELECT s FROM Scenario s WHERE s.project.id = :projectId&quot;),
+    @NamedQuery(
+            name = &quot;Scenario.findByPortfolio&quot;,
+            query =
+                    &quot;&quot;&quot;
+                SELECT s
+                FROM Scenario s
+                JOIN Portfolio p ON p.id = s.portfolio.id AND p.number = :number
+                WHERE s.project.id = :projectId
+            &quot;&quot;&quot;),
+    @NamedQuery(
+            name = &quot;Scenario.findOneByProject&quot;,
+            query = &quot;SELECT s FROM Scenario s WHERE s.project.id = :projectId AND s.number = :number&quot;)
+})
+public class Scenario extends PanacheEntityBase {
+    /**
+     * The main ID of a Scenario.
+     * The value starts at 3 to account for the other 2 scenarios already made by the loading script.
+     */
+    @Id
+    @SequenceGenerator(name = &quot;scenarioSeq&quot;, sequenceName = &quot;scenario_id_seq&quot;, allocationSize = 1, initialValue = 3)
+    @GeneratedValue(generator = &quot;scenarioSeq&quot;)
+    public Long id;
+
+    /**
+     * The {@link Project} to which this scenario belongs.
+     */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = &quot;project_id&quot;, nullable = false, foreignKey = @ForeignKey(name = &quot;fk_scenarios_project&quot;))
+    public Project project;
+
+    /**
+     * The {@link Portfolio} to which this scenario belongs.
+     */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = &quot;portfolio_id&quot;, nullable = false, foreignKey = @ForeignKey(name = &quot;fk_scenarios_portfolio&quot;))
+    public Portfolio portfolio;
+
+    /**
+     * Unique number of the scenario for the project.
+     */
+    @Column(nullable = false)
+    public int number;
+
+    /**
+     * The name of the scenario.
+     */
+    @Column(nullable = false, updatable = false)
+    public String name;
+
+    /**
+     * Workload details of the scenario.
+     */
+    @Embedded
+    public Workload workload;
+
+    /**
+     * Topology details of the scenario.
+     */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = &quot;topology_id&quot;, nullable = false, foreignKey = @ForeignKey(name = &quot;fk_scenarios_topology&quot;))
+    public Topology topology;
+
+    /**
+     * Operational phenomena activated in the scenario.
+     *         @Column(columnDefinition = &quot;jsonb&quot;, nullable = false, updatable = false)
+     *     @Type(JsonType.class)
+     */
+    @Column(columnDefinition = &quot;jsonb&quot;, nullable = false, updatable = false)
+    @Type(JsonType.class)
+    public OperationalPhenomena phenomena;
+
+    /**
+     * The name of the VM scheduler used in the scenario.
+     */
+    @Column(name = &quot;scheduler_name&quot;, nullable = false, updatable = false)
+    public String schedulerName;
+
+    /**
+     * The {@link Job} associated with the scenario.
+     */
+<span class="fc" id="L128">    @OneToMany(</span>
+            cascade = {CascadeType.ALL},
+            mappedBy = &quot;scenario&quot;,
+            fetch = FetchType.LAZY)
+    public List&lt;Job&gt; jobs = new ArrayList&lt;&gt;();
+
+    /**
+     * Construct a {@link Scenario} object.
+     */
+    public Scenario(
+            Project project,
+            Portfolio portfolio,
+            int number,
+            String name,
+            Workload workload,
+            Topology topology,
+            OperationalPhenomena phenomena,
+<span class="fc" id="L145">            String schedulerName) {</span>
+<span class="fc" id="L146">        this.project = project;</span>
+<span class="fc" id="L147">        this.portfolio = portfolio;</span>
+<span class="fc" id="L148">        this.number = number;</span>
+<span class="fc" id="L149">        this.name = name;</span>
+<span class="fc" id="L150">        this.workload = workload;</span>
+<span class="fc" id="L151">        this.topology = topology;</span>
+<span class="fc" id="L152">        this.phenomena = phenomena;</span>
+<span class="fc" id="L153">        this.schedulerName = schedulerName;</span>
+<span class="fc" id="L154">    }</span>
+
+    /**
+     * JPA constructor
+     */
+<span class="fc" id="L159">    protected Scenario() {}</span>
+
+    /**
+     * Find all {@link Scenario}s that belong to the specified project
+     *
+     * @param projectId The unique identifier of the project.
+     * @return The query of scenarios that belong to the specified project.
+     */
+    public static PanacheQuery&lt;Scenario&gt; findByProject(long projectId) {
+<span class="fc" id="L168">        return find(&quot;#Scenario.findByProject&quot;, Parameters.with(&quot;projectId&quot;, projectId));</span>
+    }
+
+    /**
+     * Find all {@link Scenario}s that belong to the specified portfolio.
+     *
+     * @param projectId The unique identifier of the project.
+     * @param number The number of the portfolio.
+     * @return The query of scenarios that belong to the specified project and portfolio..
+     */
+    public static PanacheQuery&lt;Scenario&gt; findByPortfolio(long projectId, int number) {
+<span class="fc" id="L179">        return find(</span>
+                &quot;#Scenario.findByPortfolio&quot;,
+<span class="fc" id="L181">                Parameters.with(&quot;projectId&quot;, projectId).and(&quot;number&quot;, number));</span>
+    }
+
+    /**
+     * Find the {@link Scenario} with the specified &lt;code&gt;number&lt;/code&gt; belonging to the specified project.
+     *
+     * @param projectId The unique identifier of the project.
+     * @param number The number of the scenario.
+     * @return The scenario or &lt;code&gt;null&lt;/code&gt; if it does not exist.
+     */
+    public static Scenario findByProject(long projectId, int number) {
+<span class="fc" id="L192">        return find(</span>
+                        &quot;#Scenario.findOneByProject&quot;,
+<span class="fc" id="L194">                        Parameters.with(&quot;projectId&quot;, projectId).and(&quot;number&quot;, number))</span>
+<span class="fc" id="L195">                .firstResult();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

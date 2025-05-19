@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TimerScheduler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.common.util</a> &gt; <span class="el_source">TimerScheduler.java</span></div><h1>TimerScheduler.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.common.util;
+
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.PriorityQueue;
+import org.jetbrains.annotations.NotNull;
+import org.opendc.common.Dispatcher;
+import org.opendc.common.DispatcherHandle;
+
+/**
+ * A {@link TimerScheduler} facilitates scheduled execution of future tasks.
+ */
+<span class="nc" id="L35">public final class TimerScheduler&lt;T&gt; {</span>
+    private final Dispatcher dispatcher;
+
+    /**
+     * The stack of the invocations to occur in the future.
+     */
+<span class="nc" id="L41">    private final ArrayDeque&lt;Invocation&gt; invocations = new ArrayDeque&lt;&gt;();</span>
+
+    /**
+     * A priority queue containing the tasks to be scheduled in the future.
+     */
+<span class="nc" id="L46">    private final PriorityQueue&lt;Timer&lt;T&gt;&gt; queue = new PriorityQueue&lt;Timer&lt;T&gt;&gt;();</span>
+
+    /**
+     * A map that keeps track of the timers.
+     */
+<span class="nc" id="L51">    private final HashMap&lt;T, Timer&lt;T&gt;&gt; timers = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Construct a {@link TimerScheduler} instance.
+     *
+     * @param dispatcher The {@link Dispatcher} to schedule future invocations.
+     */
+<span class="nc" id="L58">    public TimerScheduler(Dispatcher dispatcher) {</span>
+<span class="nc" id="L59">        this.dispatcher = dispatcher;</span>
+<span class="nc" id="L60">    }</span>
+
+    /**
+     * Start a timer that will invoke the specified [block] after [delay].
+     * &lt;p&gt;
+     * Each timer has a key and if a new timer with same key is started the previous is cancelled.
+     *
+     * @param key The key of the timer to start.
+     * @param delay The delay before invoking the block.
+     * @param block The block to invoke.
+     */
+    public void startSingleTimer(T key, long delay, Runnable block) {
+<span class="nc" id="L72">        startSingleTimerTo(key, dispatcher.getTimeSource().millis() + delay, block);</span>
+<span class="nc" id="L73">    }</span>
+
+    /**
+     * Start a timer that will invoke the specified [block] at [timestamp].
+     * &lt;p&gt;
+     * Each timer has a key and if a new timer with same key is started the previous is cancelled.
+     *
+     * @param key The key of the timer to start.
+     * @param timestamp The timestamp at which to invoke the block.
+     * @param block The block to invoke.
+     */
+    public void startSingleTimerTo(T key, long timestamp, Runnable block) {
+<span class="nc" id="L85">        long now = dispatcher.getTimeSource().millis();</span>
+<span class="nc" id="L86">        final PriorityQueue&lt;Timer&lt;T&gt;&gt; queue = this.queue;</span>
+<span class="nc" id="L87">        final ArrayDeque&lt;Invocation&gt; invocations = this.invocations;</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (timestamp &lt; now) {</span>
+<span class="nc" id="L90">            throw new IllegalArgumentException(&quot;Timestamp must be in the future&quot;);</span>
+        }
+
+<span class="nc" id="L93">        timers.compute(key, (k, old) -&gt; {</span>
+<span class="nc bnc" id="L94" title="All 4 branches missed.">            if (old != null &amp;&amp; old.timestamp == timestamp) {</span>
+                // Fast-path: timer for the same timestamp already exists
+<span class="nc" id="L96">                old.block = block;</span>
+<span class="nc" id="L97">                return old;</span>
+            } else {
+                // Slow-path: cancel old timer and replace it with new timer
+<span class="nc" id="L100">                Timer&lt;T&gt; timer = new Timer&lt;T&gt;(key, timestamp, block);</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                if (old != null) {</span>
+<span class="nc" id="L103">                    old.isCancelled = true;</span>
+                }
+<span class="nc" id="L105">                queue.add(timer);</span>
+<span class="nc" id="L106">                trySchedule(now, invocations, timestamp);</span>
+
+<span class="nc" id="L108">                return timer;</span>
+            }
+        });
+<span class="nc" id="L111">    }</span>
+
+    /**
+     * Check if a timer with a given key is active.
+     *
+     * @param key The key to check if active.
+     * @return `true` if the timer with the specified [key] is active, `false` otherwise.
+     */
+    public boolean isTimerActive(T key) {
+<span class="nc" id="L120">        return timers.containsKey(key);</span>
+    }
+
+    /**
+     * Cancel a timer with a given key.
+     * &lt;p&gt;
+     * If canceling a timer that was already canceled, or key never was used to start
+     * a timer this operation will do nothing.
+     *
+     * @param key The key of the timer to cancel.
+     */
+    public void cancel(T key) {
+<span class="nc" id="L132">        final Timer&lt;T&gt; timer = timers.remove(key);</span>
+
+        // Mark the timer as cancelled
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (timer != null) {</span>
+<span class="nc" id="L136">            timer.isCancelled = true;</span>
+        }
+<span class="nc" id="L138">    }</span>
+
+    /**
+     * Cancel all timers.
+     */
+    public void cancelAll() {
+<span class="nc" id="L144">        queue.clear();</span>
+<span class="nc" id="L145">        timers.clear();</span>
+
+        // Cancel all pending invocations
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        for (final Invocation invocation : invocations) {</span>
+<span class="nc" id="L149">            invocation.cancel();</span>
+<span class="nc" id="L150">        }</span>
+
+<span class="nc" id="L152">        invocations.clear();</span>
+<span class="nc" id="L153">    }</span>
+
+    /**
+     * Try to schedule an engine invocation at the specified [target].
+     *
+     * @param now The current virtual timestamp.
+     * @param target The virtual timestamp at which the engine invocation should happen.
+     * @param scheduled The queue of scheduled invocations.
+     */
+    private void trySchedule(long now, ArrayDeque&lt;Invocation&gt; scheduled, long target) {
+<span class="nc" id="L163">        final Invocation head = scheduled.peek();</span>
+
+        // Only schedule a new scheduler invocation in case the target is earlier than all other pending
+        // scheduler invocations
+<span class="nc bnc" id="L167" title="All 4 branches missed.">        if (head == null || target &lt; head.timestamp) {</span>
+<span class="nc" id="L168">            final DispatcherHandle handle = dispatcher.scheduleCancellable(target - now, this::doRunTimers);</span>
+<span class="nc" id="L169">            scheduled.addFirst(new Invocation(target, handle));</span>
+        }
+<span class="nc" id="L171">    }</span>
+
+    /**
+     * This method is invoked when the earliest timer expires.
+     */
+    private void doRunTimers() {
+<span class="nc" id="L177">        final ArrayDeque&lt;Invocation&gt; invocations = this.invocations;</span>
+<span class="nc" id="L178">        final Invocation invocation = invocations.remove();</span>
+
+<span class="nc" id="L180">        final PriorityQueue&lt;Timer&lt;T&gt;&gt; queue = this.queue;</span>
+<span class="nc" id="L181">        final HashMap&lt;T, Timer&lt;T&gt;&gt; timers = this.timers;</span>
+<span class="nc" id="L182">        long now = invocation.timestamp;</span>
+
+<span class="nc bnc" id="L184" title="All 2 branches missed.">        while (!queue.isEmpty()) {</span>
+<span class="nc" id="L185">            final Timer&lt;T&gt; timer = queue.peek();</span>
+
+<span class="nc" id="L187">            long timestamp = timer.timestamp;</span>
+<span class="nc" id="L188">            boolean isCancelled = timer.isCancelled;</span>
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">            assert timestamp &gt;= now : &quot;Found task in the past&quot;;</span>
+
+<span class="nc bnc" id="L192" title="All 4 branches missed.">            if (timestamp &gt; now &amp;&amp; !isCancelled) {</span>
+                // Schedule a task for the next event to occur.
+<span class="nc" id="L194">                trySchedule(now, invocations, timestamp);</span>
+<span class="nc" id="L195">                break;</span>
+            }
+
+<span class="nc" id="L198">            queue.poll();</span>
+
+<span class="nc bnc" id="L200" title="All 2 branches missed.">            if (!isCancelled) {</span>
+<span class="nc" id="L201">                timers.remove(timer.key);</span>
+<span class="nc" id="L202">                timer.run();</span>
+            }
+<span class="nc" id="L204">        }</span>
+<span class="nc" id="L205">    }</span>
+
+    /**
+     * A task that is scheduled to run in the future.
+     */
+    private static class Timer&lt;T&gt; implements Comparable&lt;Timer&lt;T&gt;&gt; {
+        final T key;
+        final long timestamp;
+        Runnable block;
+
+        /**
+         * A flag to indicate that the task has been cancelled.
+         */
+        boolean isCancelled;
+
+        /**
+         * Construct a {@link Timer} instance.
+         */
+<span class="nc" id="L223">        public Timer(T key, long timestamp, Runnable block) {</span>
+<span class="nc" id="L224">            this.key = key;</span>
+<span class="nc" id="L225">            this.timestamp = timestamp;</span>
+<span class="nc" id="L226">            this.block = block;</span>
+<span class="nc" id="L227">        }</span>
+
+        /**
+         * Run the task.
+         */
+        void run() {
+<span class="nc" id="L233">            block.run();</span>
+<span class="nc" id="L234">        }</span>
+
+        @Override
+        public int compareTo(@NotNull Timer&lt;T&gt; other) {
+<span class="nc" id="L238">            return Long.compare(timestamp, other.timestamp);</span>
+        }
+    }
+
+    /**
+     * A future engine invocation.
+     * &lt;p&gt;
+     * This class is used to keep track of the future engine invocations created using the {@link Dispatcher} instance.
+     * In case the invocation is not needed anymore, it can be cancelled via [cancel].
+     */
+<span class="nc" id="L248">    private record Invocation(long timestamp, DispatcherHandle handle) {</span>
+        /**
+         * Cancel the engine invocation.
+         */
+        void cancel() {
+<span class="nc" id="L253">            handle.cancel();</span>
+<span class="nc" id="L254">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

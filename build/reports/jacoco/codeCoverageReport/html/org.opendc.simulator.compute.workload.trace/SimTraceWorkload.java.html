@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimTraceWorkload.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.compute.workload.trace</a> &gt; <span class="el_source">SimTraceWorkload.java</span></div><h1>SimTraceWorkload.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.compute.workload.trace;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import org.opendc.simulator.compute.workload.SimWorkload;
+import org.opendc.simulator.compute.workload.trace.scaling.ScalingPolicy;
+import org.opendc.simulator.engine.graph.FlowConsumer;
+import org.opendc.simulator.engine.graph.FlowEdge;
+import org.opendc.simulator.engine.graph.FlowNode;
+import org.opendc.simulator.engine.graph.FlowSupplier;
+
+public class SimTraceWorkload extends SimWorkload implements FlowConsumer {
+    private LinkedList&lt;TraceFragment&gt; remainingFragments;
+    private int fragmentIndex;
+
+    private TraceFragment currentFragment;
+    private long startOfFragment;
+
+    private FlowEdge machineEdge;
+
+<span class="fc" id="L44">    private double cpuFreqDemand = 0.0; // The Cpu demanded by fragment</span>
+<span class="fc" id="L45">    private double cpuFreqSupplied = 0.0; // The Cpu speed supplied</span>
+<span class="fc" id="L46">    private double newCpuFreqSupplied = 0.0; // The Cpu speed supplied</span>
+<span class="fc" id="L47">    private double remainingWork = 0.0; // The duration of the fragment at the demanded speed</span>
+
+    private final long checkpointDuration;
+
+    private final TraceWorkload snapshot;
+
+    private final ScalingPolicy scalingPolicy;
+
+    private final String taskName;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Basic Getters and Setters
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public long getPassedTime(long now) {
+<span class="fc" id="L62">        return now - this.startOfFragment;</span>
+    }
+
+    public TraceWorkload getSnapshot() {
+<span class="nc" id="L66">        return snapshot;</span>
+    }
+
+    @Override
+    public long getCheckpointInterval() {
+<span class="nc" id="L71">        return 0;</span>
+    }
+
+    @Override
+    public long getCheckpointDuration() {
+<span class="nc" id="L76">        return 0;</span>
+    }
+
+    @Override
+    public double getCheckpointIntervalScaling() {
+<span class="nc" id="L81">        return 0;</span>
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public SimTraceWorkload(FlowSupplier supplier, TraceWorkload workload) {
+<span class="fc" id="L89">        super(((FlowNode) supplier).getEngine());</span>
+
+<span class="fc" id="L91">        this.snapshot = workload;</span>
+<span class="fc" id="L92">        this.checkpointDuration = workload.checkpointDuration();</span>
+<span class="fc" id="L93">        this.scalingPolicy = workload.getScalingPolicy();</span>
+<span class="fc" id="L94">        this.remainingFragments = new LinkedList&lt;&gt;(workload.getFragments());</span>
+<span class="fc" id="L95">        this.fragmentIndex = 0;</span>
+<span class="fc" id="L96">        this.taskName = workload.getTaskName();</span>
+
+<span class="fc" id="L98">        this.startOfFragment = this.clock.millis();</span>
+
+<span class="fc" id="L100">        new FlowEdge(this, supplier);</span>
+<span class="fc" id="L101">    }</span>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Fragment related functionality
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public long onUpdate(long now) {
+<span class="fc" id="L109">        long passedTime = getPassedTime(now);</span>
+<span class="fc" id="L110">        this.startOfFragment = now;</span>
+
+        // The amount of work done since last update
+<span class="fc" id="L113">        double finishedWork = this.scalingPolicy.getFinishedWork(this.cpuFreqDemand, this.cpuFreqSupplied, passedTime);</span>
+
+<span class="fc" id="L115">        this.remainingWork -= finishedWork;</span>
+
+        // If this.remainingWork &lt;= 0, the fragment has been completed
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (this.remainingWork &lt;= 0) {</span>
+<span class="fc" id="L119">            this.startNextFragment();</span>
+
+<span class="fc" id="L121">            this.invalidate();</span>
+<span class="fc" id="L122">            return Long.MAX_VALUE;</span>
+        }
+
+<span class="fc" id="L125">        this.cpuFreqSupplied = this.newCpuFreqSupplied;</span>
+
+        // The amount of time required to finish the fragment at this speed
+<span class="fc" id="L128">        long remainingDuration = this.scalingPolicy.getRemainingDuration(</span>
+                this.cpuFreqDemand, this.newCpuFreqSupplied, this.remainingWork);
+
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if (remainingDuration == 0.0) {</span>
+<span class="nc" id="L132">            this.remainingWork = 0.0;</span>
+        }
+
+<span class="fc" id="L135">        return now + remainingDuration;</span>
+    }
+
+    public TraceFragment getNextFragment() {
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (this.remainingFragments.isEmpty()) {</span>
+<span class="fc" id="L140">            return null;</span>
+        }
+<span class="fc" id="L142">        this.currentFragment = this.remainingFragments.pop();</span>
+<span class="fc" id="L143">        this.fragmentIndex++;</span>
+
+<span class="fc" id="L145">        return this.currentFragment;</span>
+    }
+
+    private void startNextFragment() {
+
+<span class="fc" id="L150">        TraceFragment nextFragment = this.getNextFragment();</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (nextFragment == null) {</span>
+<span class="fc" id="L152">            this.stopWorkload();</span>
+<span class="fc" id="L153">            return;</span>
+        }
+<span class="fc" id="L155">        double demand = nextFragment.cpuUsage();</span>
+<span class="fc" id="L156">        this.remainingWork = this.scalingPolicy.getRemainingWork(demand, nextFragment.duration());</span>
+<span class="fc" id="L157">        this.pushOutgoingDemand(this.machineEdge, demand);</span>
+<span class="fc" id="L158">    }</span>
+
+    @Override
+    public void stopWorkload() {
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">        if (this.machineEdge == null) {</span>
+<span class="nc" id="L163">            return;</span>
+        }
+
+        // TODO: Maybe move this to the end
+        // Currently stopWorkload is called twice
+<span class="fc" id="L168">        this.closeNode();</span>
+
+<span class="fc" id="L170">        this.machineEdge = null;</span>
+<span class="fc" id="L171">        this.remainingFragments = null;</span>
+<span class="fc" id="L172">        this.currentFragment = null;</span>
+<span class="fc" id="L173">    }</span>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Checkpoint related functionality
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * SimTraceWorkload does not make a checkpoint, checkpointing is handled by SimChainWorkload
+     * TODO: Maybe add checkpoint models for SimTraceWorkload
+     */
+    @Override
+<span class="nc" id="L184">    public void createCheckpointModel() {}</span>
+
+    /**
+     * Create a new snapshot based on the current status of the workload.
+     * @param now Moment on which the snapshot is made in milliseconds
+     */
+    public void makeSnapshot(long now) {
+
+        // Check if fragments is empty
+
+        // Get remaining time of current fragment
+<span class="fc" id="L195">        long passedTime = getPassedTime(now);</span>
+
+        // The amount of work done since last update
+<span class="fc" id="L198">        double finishedWork = this.scalingPolicy.getFinishedWork(this.cpuFreqDemand, this.cpuFreqSupplied, passedTime);</span>
+
+<span class="fc" id="L200">        this.remainingWork -= finishedWork;</span>
+
+        // The amount of time required to finish the fragment at this speed
+<span class="fc" id="L203">        long remainingTime =</span>
+<span class="fc" id="L204">                this.scalingPolicy.getRemainingDuration(this.cpuFreqDemand, this.cpuFreqDemand, this.remainingWork);</span>
+
+        // If this is the end of the Task, don't make a snapshot
+<span class="pc bpc" id="L207" title="1 of 6 branches missed.">        if (this.currentFragment == null || (remainingTime &lt;= 0 &amp;&amp; remainingFragments.isEmpty())) {</span>
+<span class="fc" id="L208">            return;</span>
+        }
+
+        // Create a new fragment based on the current fragment and remaining duration
+<span class="fc" id="L212">        TraceFragment newFragment =</span>
+<span class="fc" id="L213">                new TraceFragment(remainingTime, currentFragment.cpuUsage(), currentFragment.coreCount());</span>
+
+        // Alter the snapshot by removing finished fragments
+<span class="fc" id="L216">        this.snapshot.removeFragments(this.fragmentIndex);</span>
+<span class="fc" id="L217">        this.snapshot.addFirst(newFragment);</span>
+
+<span class="fc" id="L219">        this.remainingFragments.addFirst(newFragment);</span>
+
+        // Create and add a fragment for processing the snapshot process
+<span class="fc" id="L222">        TraceFragment snapshotFragment = new TraceFragment(</span>
+<span class="fc" id="L223">                this.checkpointDuration, this.snapshot.getMaxCpuDemand(), this.snapshot.getMaxCoreCount());</span>
+<span class="fc" id="L224">        this.remainingFragments.addFirst(snapshotFragment);</span>
+
+<span class="fc" id="L226">        this.fragmentIndex = -1;</span>
+<span class="fc" id="L227">        startNextFragment();</span>
+
+<span class="fc" id="L229">        this.startOfFragment = now;</span>
+
+<span class="fc" id="L231">        this.invalidate();</span>
+<span class="fc" id="L232">    }</span>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // FlowGraph Related functionality
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Handle updates in supply from the Virtual Machine
+     *
+     * @param supplierEdge edge to the VM on which this is running
+     * @param newSupply The new demand that needs to be sent to the VM
+     */
+    @Override
+    public void handleIncomingSupply(FlowEdge supplierEdge, double newSupply) {
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">        if (newSupply == this.cpuFreqSupplied) {</span>
+<span class="nc" id="L247">            return;</span>
+        }
+
+<span class="fc" id="L250">        this.cpuFreqSupplied = this.newCpuFreqSupplied;</span>
+<span class="fc" id="L251">        this.newCpuFreqSupplied = newSupply;</span>
+
+<span class="fc" id="L253">        this.invalidate();</span>
+<span class="fc" id="L254">    }</span>
+
+    /**
+     * Push a new demand to the Virtual Machine
+     *
+     * @param supplierEdge edge to the VM on which this is running
+     * @param newDemand The new demand that needs to be sent to the VM
+     */
+    @Override
+    public void pushOutgoingDemand(FlowEdge supplierEdge, double newDemand) {
+<span class="fc bfc" id="L264" title="All 2 branches covered.">        if (newDemand == this.cpuFreqDemand) {</span>
+<span class="fc" id="L265">            return;</span>
+        }
+
+<span class="fc" id="L268">        this.cpuFreqDemand = newDemand;</span>
+<span class="fc" id="L269">        this.machineEdge.pushDemand(newDemand);</span>
+<span class="fc" id="L270">    }</span>
+
+    /**
+     * Add the connection to the Virtual Machine
+     *
+     * @param supplierEdge edge to the VM on which this is running
+     */
+    @Override
+    public void addSupplierEdge(FlowEdge supplierEdge) {
+<span class="fc" id="L279">        this.machineEdge = supplierEdge;</span>
+<span class="fc" id="L280">    }</span>
+
+    /**
+     * Handle the removal of the connection to the Virtual Machine
+     * When the connection to the Virtual Machine is removed, the SimTraceWorkload is removed
+     *
+     * @param supplierEdge edge to the VM on which this is running
+     */
+    @Override
+    public void removeSupplierEdge(FlowEdge supplierEdge) {
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        if (this.machineEdge == null) {</span>
+<span class="nc" id="L291">            return;</span>
+        }
+
+<span class="nc" id="L294">        this.stopWorkload();</span>
+<span class="nc" id="L295">    }</span>
+
+    @Override
+    public Map&lt;FlowEdge.NodeType, List&lt;FlowEdge&gt;&gt; getConnectedEdges() {
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">        return Map.of(FlowEdge.NodeType.CONSUMING, (this.machineEdge != null) ? List.of(this.machineEdge) : List.of());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

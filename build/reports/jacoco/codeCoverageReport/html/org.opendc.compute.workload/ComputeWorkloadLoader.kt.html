@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ComputeWorkloadLoader.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.workload</a> &gt; <span class="el_source">ComputeWorkloadLoader.kt</span></div><h1>ComputeWorkloadLoader.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.workload
+
+import mu.KotlinLogging
+import org.opendc.simulator.compute.workload.trace.TraceWorkload
+import org.opendc.simulator.compute.workload.trace.scaling.NoDelayScaling
+import org.opendc.simulator.compute.workload.trace.scaling.ScalingPolicy
+import org.opendc.trace.Trace
+import org.opendc.trace.conv.TABLE_RESOURCES
+import org.opendc.trace.conv.TABLE_RESOURCE_STATES
+import org.opendc.trace.conv.resourceCpuCapacity
+import org.opendc.trace.conv.resourceCpuCount
+import org.opendc.trace.conv.resourceDeadline
+import org.opendc.trace.conv.resourceDuration
+import org.opendc.trace.conv.resourceID
+import org.opendc.trace.conv.resourceMemCapacity
+import org.opendc.trace.conv.resourceNature
+import org.opendc.trace.conv.resourceStateCpuUsage
+import org.opendc.trace.conv.resourceStateDuration
+import org.opendc.trace.conv.resourceSubmissionTime
+import java.io.File
+import java.lang.ref.SoftReference
+import java.time.Duration
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.roundToLong
+
+/**
+ * A helper class for loading compute workload traces into memory.
+ *
+ */
+<span class="nc" id="L53">public class ComputeWorkloadLoader(</span>
+<span class="nc" id="L54">    private val pathToFile: File,</span>
+<span class="nc" id="L55">    private val subMissionTime: String? = null,</span>
+<span class="nc" id="L56">    private val checkpointInterval: Long = 0L,</span>
+<span class="nc" id="L57">    private val checkpointDuration: Long = 0L,</span>
+<span class="nc" id="L58">    private val checkpointIntervalScaling: Double = 1.0,</span>
+<span class="nc" id="L59">    private val scalingPolicy: ScalingPolicy = NoDelayScaling(),</span>
+<span class="nc" id="L60">    private val deferAll: Boolean = false,</span>
+<span class="nc" id="L61">) : WorkloadLoader(subMissionTime) {</span>
+    /**
+     * The logger for this instance.
+     */
+<span class="nc" id="L65">    private val logger = KotlinLogging.logger {}</span>
+
+    /**
+     * The cache of workloads.
+     */
+<span class="nc" id="L70">    private val cache = ConcurrentHashMap&lt;File, SoftReference&lt;List&lt;Task&gt;&gt;&gt;()</span>
+
+    /**
+     * Read the fragments into memory.
+     */
+    private fun parseFragments(trace: Trace): Map&lt;String, Builder&gt; {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        val reader = checkNotNull(trace.getTable(TABLE_RESOURCE_STATES)).newReader()</span>
+
+<span class="nc" id="L78">        val idCol = reader.resolve(resourceID)</span>
+<span class="nc" id="L79">        val durationCol = reader.resolve(resourceStateDuration)</span>
+<span class="nc" id="L80">        val coresCol = reader.resolve(resourceCpuCount)</span>
+<span class="nc" id="L81">        val usageCol = reader.resolve(resourceStateCpuUsage)</span>
+
+<span class="nc" id="L83">        val fragments = mutableMapOf&lt;String, Builder&gt;()</span>
+
+<span class="nc" id="L85">        return try {</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">            while (reader.nextRow()) {</span>
+<span class="nc" id="L87">                val id = reader.getString(idCol)!!</span>
+<span class="nc" id="L88">                val durationMs = reader.getDuration(durationCol)!!</span>
+<span class="nc" id="L89">                val cores = reader.getInt(coresCol)</span>
+<span class="nc" id="L90">                val cpuUsage = reader.getDouble(usageCol)</span>
+
+<span class="nc" id="L92">                val builder =</span>
+<span class="nc" id="L93">                    fragments.computeIfAbsent(</span>
+<span class="nc" id="L94">                        id,</span>
+<span class="nc" id="L95">                    ) { Builder(checkpointInterval, checkpointDuration, checkpointIntervalScaling, scalingPolicy, id) }</span>
+<span class="nc" id="L96">                builder.add(durationMs, cpuUsage, cores)</span>
+            }
+
+<span class="nc" id="L99">            fragments</span>
+        } finally {
+<span class="nc" id="L101">            reader.close()</span>
+        }
+    }
+
+    /**
+     * Read the metadata into a workload.
+     */
+    private fun parseMeta(
+        trace: Trace,
+        fragments: Map&lt;String, Builder&gt;,
+    ): List&lt;Task&gt; {
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        val reader = checkNotNull(trace.getTable(TABLE_RESOURCES)).newReader()</span>
+
+<span class="nc" id="L114">        val idCol = reader.resolve(resourceID)</span>
+<span class="nc" id="L115">        val submissionTimeCol = reader.resolve(resourceSubmissionTime)</span>
+<span class="nc" id="L116">        val durationCol = reader.resolve(resourceDuration)</span>
+<span class="nc" id="L117">        val cpuCountCol = reader.resolve(resourceCpuCount)</span>
+<span class="nc" id="L118">        val cpuCapacityCol = reader.resolve(resourceCpuCapacity)</span>
+<span class="nc" id="L119">        val memCol = reader.resolve(resourceMemCapacity)</span>
+<span class="nc" id="L120">        val natureCol = reader.resolve(resourceNature)</span>
+<span class="nc" id="L121">        val deadlineCol = reader.resolve(resourceDeadline)</span>
+
+<span class="nc" id="L123">        var counter = 0</span>
+<span class="nc" id="L124">        val entries = mutableListOf&lt;Task&gt;()</span>
+
+<span class="nc" id="L126">        return try {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            while (reader.nextRow()) {</span>
+<span class="nc" id="L128">                val id = reader.getString(idCol)!!</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">                if (!fragments.containsKey(id)) {</span>
+<span class="nc" id="L130">                    continue</span>
+                }
+
+<span class="nc" id="L133">                val submissionTime = reader.getInstant(submissionTimeCol)!!.toEpochMilli()</span>
+<span class="nc" id="L134">                val duration = reader.getLong(durationCol)</span>
+<span class="nc" id="L135">                val cpuCount = reader.getInt(cpuCountCol)</span>
+<span class="nc" id="L136">                val cpuCapacity = reader.getDouble(cpuCapacityCol)</span>
+<span class="nc" id="L137">                val memCapacity = reader.getDouble(memCol) / 1000.0 // Convert from KB to MB</span>
+<span class="nc" id="L138">                val uid = UUID.nameUUIDFromBytes(&quot;$id-${counter++}&quot;.toByteArray())</span>
+<span class="nc" id="L139">                var nature = reader.getString(natureCol)</span>
+<span class="nc" id="L140">                var deadline = reader.getLong(deadlineCol)</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">                if (deferAll) {</span>
+<span class="nc" id="L142">                    nature = &quot;deferrable&quot;</span>
+<span class="nc" id="L143">                    deadline = submissionTime + (3 * duration)</span>
+                }
+
+<span class="nc" id="L146">                val builder = fragments.getValue(id) // Get all fragments related to this VM</span>
+<span class="nc" id="L147">                val totalLoad = builder.totalLoad</span>
+
+<span class="nc" id="L149">                entries.add(</span>
+<span class="nc" id="L150">                    Task(</span>
+<span class="nc" id="L151">                        uid,</span>
+<span class="nc" id="L152">                        id,</span>
+<span class="nc" id="L153">                        cpuCount,</span>
+<span class="nc" id="L154">                        cpuCapacity,</span>
+<span class="nc" id="L155">                        memCapacity.roundToLong(),</span>
+<span class="nc" id="L156">                        totalLoad,</span>
+<span class="nc" id="L157">                        submissionTime,</span>
+<span class="nc" id="L158">                        duration,</span>
+<span class="nc" id="L159">                        nature,</span>
+<span class="nc" id="L160">                        deadline,</span>
+<span class="nc" id="L161">                        builder.build(),</span>
+                    ),
+                )
+            }
+
+            // Make sure the virtual machines are ordered by start time
+<span class="nc" id="L167">            entries.sortBy { it.submissionTime }</span>
+
+<span class="nc" id="L169">            entries</span>
+<span class="nc" id="L170">        } catch (e: Exception) {</span>
+<span class="nc" id="L171">            e.printStackTrace()</span>
+<span class="nc" id="L172">            throw e</span>
+        } finally {
+<span class="nc" id="L174">            reader.close()</span>
+        }
+    }
+
+    /**
+     * Load the trace at the specified [pathToFile].
+     */
+    override fun load(): List&lt;Task&gt; {
+<span class="nc" id="L182">        val trace = Trace.open(pathToFile, &quot;opendc-vm&quot;)</span>
+<span class="nc" id="L183">        val fragments = parseFragments(trace)</span>
+<span class="nc" id="L184">        val vms = parseMeta(trace, fragments)</span>
+
+<span class="nc" id="L186">        return vms</span>
+    }
+
+    /**
+     * Clear the workload cache.
+     */
+    public fun reset() {
+<span class="nc" id="L193">        cache.clear()</span>
+<span class="nc" id="L194">    }</span>
+
+    /**
+     * A builder for a VM trace.
+     */
+<span class="nc" id="L199">    private class Builder(</span>
+        checkpointInterval: Long,
+        checkpointDuration: Long,
+        checkpointIntervalScaling: Double,
+        scalingPolicy: ScalingPolicy,
+        taskName: String,
+    ) {
+        /**
+         * The total load of the trace.
+         */
+        @JvmField var totalLoad: Double = 0.0
+
+        /**
+         * The internal builder for the trace.
+         */
+        private val builder =
+<span class="nc" id="L215">            TraceWorkload.builder(</span>
+<span class="nc" id="L216">                checkpointInterval,</span>
+<span class="nc" id="L217">                checkpointDuration,</span>
+<span class="nc" id="L218">                checkpointIntervalScaling,</span>
+<span class="nc" id="L219">                scalingPolicy,</span>
+<span class="nc" id="L220">                taskName,</span>
+            )
+
+        /**
+         * Add a fragment to the trace.
+         *
+         * @param duration The duration of the fragment (in epoch millis).
+         * @param usage CPU usage of this fragment.
+         * @param cores Number of cores used.
+         */
+        fun add(
+            duration: Duration,
+            usage: Double,
+            cores: Int,
+        ) {
+<span class="nc" id="L235">            totalLoad += (usage * duration.toMillis()) / 1000 // avg MHz * duration = MFLOPs</span>
+
+<span class="nc" id="L237">            builder.add(duration.toMillis(), usage, cores)</span>
+<span class="nc" id="L238">        }</span>
+
+        /**
+         * Build the trace.
+         */
+<span class="nc" id="L243">        fun build(): TraceWorkload = builder.build()</span>
+    }
+<span class="nc" id="L245">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

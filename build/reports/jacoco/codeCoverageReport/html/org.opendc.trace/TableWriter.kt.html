@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TableWriter.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace</a> &gt; <span class="el_source">TableWriter.kt</span></div><h1>TableWriter.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace
+
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
+
+/**
+ * Base class for writing workload traces.
+ */
+public interface TableWriter : AutoCloseable {
+    /**
+     * Start a new row in the table.
+     */
+    public fun startRow()
+
+    /**
+     * Flush the current row to the table.
+     */
+    public fun endRow()
+
+    /**
+     * Resolve the index of the column named [name] for this writer.
+     *
+     * @param name The name of the column to lookup.
+     * @return The zero-based index of the column or a negative value if the column is not present in this table.
+     */
+    public fun resolve(name: String): Int
+
+    /**
+     * Set the column with index [index] to boolean [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The boolean value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setBoolean(
+        index: Int,
+        value: Boolean,
+    )
+
+    /**
+     * Set the column with index [index] to integer [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The integer value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setInt(
+        index: Int,
+        value: Int,
+    )
+
+    /**
+     * Set the column with index [index] to long [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The long value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setLong(
+        index: Int,
+        value: Long,
+    )
+
+    /**
+     * Set the column with index [index] to float [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The float value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setFloat(
+        index: Int,
+        value: Float,
+    )
+
+    /**
+     * Set the column with index [index] to double [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The double value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setDouble(
+        index: Int,
+        value: Double,
+    )
+
+    /**
+     * Set the column with index [index] to [String] [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The [String] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setString(
+        index: Int,
+        value: String,
+    )
+
+    /**
+     * Set the column with index [index] to [UUID] [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The [UUID] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setUUID(
+        index: Int,
+        value: UUID,
+    )
+
+    /**
+     * Set the column with index [index] to [Instant] [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The [Instant] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setInstant(
+        index: Int,
+        value: Instant,
+    )
+
+    /**
+     * Set the column with index [index] to [Duration] [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The [Duration] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setDuration(
+        index: Int,
+        value: Duration,
+    )
+
+    /**
+     * Set the column with index [index] to [List] [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The [Map] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun &lt;T&gt; setList(
+        index: Int,
+        value: List&lt;T&gt;,
+    )
+
+    /**
+     * Set the column with index [index] to [Set] [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The [Set] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun &lt;T&gt; setSet(
+        index: Int,
+        value: Set&lt;T&gt;,
+    )
+
+    /**
+     * Set the column with index [index] to [Map] [value].
+     *
+     * @param index The zero-based index of the column to set the value for.
+     * @param value The [Map] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun &lt;K, V&gt; setMap(
+        index: Int,
+        value: Map&lt;K, V&gt;,
+    )
+
+    /**
+     * Set the column named [name] to boolean [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The boolean value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setBoolean(
+        name: String,
+        value: Boolean,
+<span class="nc" id="L205">    ): Unit = setBoolean(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to integer [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The integer value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setInt(
+        name: String,
+        value: Int,
+<span class="fc" id="L217">    ): Unit = setInt(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to long [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The long value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setLong(
+        name: String,
+        value: Long,
+<span class="nc" id="L229">    ): Unit = setLong(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to float [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The float value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setFloat(
+        name: String,
+        value: Float,
+<span class="nc" id="L241">    ): Unit = setFloat(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to double [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The double value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setDouble(
+        name: String,
+        value: Double,
+<span class="fc" id="L253">    ): Unit = setDouble(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to [String] [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The [String] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setString(
+        name: String,
+        value: String,
+<span class="fc" id="L265">    ): Unit = setString(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to [UUID] [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The [UUID] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setUUID(
+        name: String,
+        value: UUID,
+<span class="nc" id="L277">    ): Unit = setUUID(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to [Instant] [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The [Instant] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setInstant(
+        name: String,
+        value: Instant,
+<span class="fc" id="L289">    ): Unit = setInstant(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to [Duration] [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The [Duration] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun setDuration(
+        name: String,
+        value: Duration,
+<span class="nc" id="L301">    ): Unit = setDuration(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to [List] [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The [List] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun &lt;T&gt; setList(
+        name: String,
+        value: List&lt;T&gt;,
+<span class="nc" id="L313">    ): Unit = setList(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to [Set] [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The [Set] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun &lt;T&gt; setSet(
+        name: String,
+        value: Set&lt;T&gt;,
+<span class="fc" id="L325">    ): Unit = setSet(resolve(name), value)</span>
+
+    /**
+     * Set the column named [name] to [Map] [value].
+     *
+     * @param name The name of the column to set the value for.
+     * @param value The [Map] value to set the column to.
+     * @throws IllegalArgumentException if the column is not valid for this method.
+     */
+    public fun &lt;K, V&gt; setMap(
+        name: String,
+        value: Map&lt;K, V&gt;,
+<span class="nc" id="L337">    ): Unit = setMap(resolve(name), value)</span>
+
+    /**
+     * Flush any buffered content to the underlying target.
+     */
+    public fun flush()
+
+    /**
+     * Close the writer so that no more rows can be written.
+     */
+    public override fun close()
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

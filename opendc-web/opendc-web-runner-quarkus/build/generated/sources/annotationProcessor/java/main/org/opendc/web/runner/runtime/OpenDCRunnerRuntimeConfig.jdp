@@ -1,0 +1,6 @@
+org.opendc.web.runner.runtime.OpenDCRunnerRuntimeConfig.enable=Flag to indicate whether the runner should be enabled.
+org.opendc.web.runner.runtime.OpenDCRunnerRuntimeConfig.heartbeatInterval=The interval between successive heartbeats to the API.
+org.opendc.web.runner.runtime.OpenDCRunnerRuntimeConfig.jobTimeout=The maximum duration of a job.
+org.opendc.web.runner.runtime.OpenDCRunnerRuntimeConfig.parallelism=The number of concurrent simulations
+org.opendc.web.runner.runtime.OpenDCRunnerRuntimeConfig.pollInterval=The interval between successive polls to the API.
+org.opendc.web.runner.runtime.OpenDCRunnerRuntimeConfig.tracePath=The path where the workload traces are located.

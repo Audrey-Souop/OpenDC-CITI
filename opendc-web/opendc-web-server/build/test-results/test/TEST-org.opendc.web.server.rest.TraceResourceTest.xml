@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.web.server.rest.TraceResourceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-05-17T00:28:08" hostname="ece-d6200-audu" time="0.481">
+  <properties/>
+  <testcase name="testGetNonExisting()" classname="org.opendc.web.server.rest.TraceResourceTest" time="0.209"/>
+  <testcase name="testGetAllEmpty()" classname="org.opendc.web.server.rest.TraceResourceTest" time="0.043"/>
+  <testcase name="testGetExisting()" classname="org.opendc.web.server.rest.TraceResourceTest" time="0.227"/>
+  <system-out><![CDATA[Hibernate: 
+    select
+        t1_0.id,
+        t1_0.name,
+        t1_0.type 
+    from
+        Trace t1_0 
+    where
+        t1_0.id=?
+Hibernate: 
+    select
+        t1_0.id,
+        t1_0.name,
+        t1_0.type 
+    from
+        Trace t1_0
+Hibernate: 
+    select
+        t1_0.id,
+        t1_0.name,
+        t1_0.type 
+    from
+        Trace t1_0 
+    where
+        t1_0.id=?
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

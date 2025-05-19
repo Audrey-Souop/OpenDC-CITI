@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BatteryTableReaderImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.telemetry.table.battery</a> &gt; <span class="el_source">BatteryTableReaderImpl.kt</span></div><h1>BatteryTableReaderImpl.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2024 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.telemetry.table.battery
+
+import org.opendc.simulator.compute.power.batteries.BatteryState
+import org.opendc.simulator.compute.power.batteries.SimBattery
+import java.time.Duration
+import java.time.Instant
+
+/**
+ * An aggregator for task metrics before they are reported.
+ */
+<span class="nc" id="L33">public class BatteryTableReaderImpl(</span>
+<span class="nc" id="L34">    private val battery: SimBattery,</span>
+<span class="nc" id="L35">    private val startTime: Duration = Duration.ofMillis(0),</span>
+) : BatteryTableReader {
+    override fun copy(): BatteryTableReader {
+<span class="nc" id="L38">        val newPowerSourceTable =</span>
+<span class="nc" id="L39">            BatteryTableReaderImpl(</span>
+<span class="nc" id="L40">                battery,</span>
+            )
+<span class="nc" id="L42">        newPowerSourceTable.setValues(this)</span>
+
+<span class="nc" id="L44">        return newPowerSourceTable</span>
+    }
+
+    override fun setValues(table: BatteryTableReader) {
+<span class="nc" id="L48">        _timestamp = table.timestamp</span>
+<span class="nc" id="L49">        _timestampAbsolute = table.timestampAbsolute</span>
+
+<span class="nc" id="L51">        _powerDraw = table.powerDraw</span>
+<span class="nc" id="L52">        _energyUsage = table.energyUsage</span>
+<span class="nc" id="L53">        _embodiedCarbonEmission = table.embodiedCarbonEmission</span>
+<span class="nc" id="L54">        _charge = table.charge</span>
+<span class="nc" id="L55">        _capacity = table.capacity</span>
+<span class="nc" id="L56">        _batteryState = table.batteryState</span>
+<span class="nc" id="L57">    }</span>
+
+<span class="nc" id="L59">    public override val batteryInfo: BatteryInfo =</span>
+<span class="nc" id="L60">        BatteryInfo(</span>
+<span class="nc" id="L61">            battery.name,</span>
+<span class="nc" id="L62">            battery.clusterName,</span>
+<span class="nc" id="L63">            &quot;XXX&quot;,</span>
+<span class="nc" id="L64">            battery.capacity,</span>
+        )
+
+<span class="nc" id="L67">    private var _timestamp = Instant.MIN</span>
+    override val timestamp: Instant
+<span class="nc" id="L69">        get() = _timestamp</span>
+
+<span class="nc" id="L71">    private var _timestampAbsolute = Instant.MIN</span>
+    override val timestampAbsolute: Instant
+<span class="nc" id="L73">        get() = _timestampAbsolute</span>
+
+    override val powerDraw: Double
+<span class="nc" id="L76">        get() = _powerDraw</span>
+    private var _powerDraw = 0.0
+
+    override val energyUsage: Double
+<span class="nc" id="L80">        get() = _energyUsage - previousEnergyUsage</span>
+    private var _energyUsage = 0.0
+    private var previousEnergyUsage = 0.0
+
+    override val embodiedCarbonEmission: Double
+<span class="nc" id="L85">        get() = _embodiedCarbonEmission - previousEmbodiedCarbonEmission</span>
+    private var _embodiedCarbonEmission = 0.0
+    private var previousEmbodiedCarbonEmission = 0.0
+
+    override val charge: Double
+<span class="nc" id="L90">        get() = _charge</span>
+    private var _charge = 0.0
+
+    override val capacity: Double
+<span class="nc" id="L94">        get() = _capacity</span>
+    private var _capacity = 0.0
+
+    override val batteryState: BatteryState
+<span class="nc" id="L98">        get() = _batteryState</span>
+<span class="nc" id="L99">    private var _batteryState = BatteryState.IDLE</span>
+
+    /**
+     * Record the next cycle.
+     */
+    override fun record(now: Instant) {
+<span class="nc" id="L105">        _timestamp = now</span>
+<span class="nc" id="L106">        _timestampAbsolute = now + startTime</span>
+
+<span class="nc" id="L108">        battery.updateCounters()</span>
+<span class="nc" id="L109">        _powerDraw = battery.outgoingSupply</span>
+<span class="nc" id="L110">        _energyUsage = battery.totalEnergyUsage</span>
+<span class="nc" id="L111">        _embodiedCarbonEmission = battery.embodiedCarbonEmission</span>
+
+<span class="nc" id="L113">        _charge = battery.charge</span>
+<span class="nc" id="L114">        _capacity = battery.capacity</span>
+<span class="nc" id="L115">        _batteryState = battery.batteryState</span>
+<span class="nc" id="L116">    }</span>
+
+    /**
+     * Finish the aggregation for this cycle.
+     */
+    override fun reset() {
+<span class="nc" id="L122">        previousEnergyUsage = _energyUsage</span>
+<span class="nc" id="L123">        previousEmbodiedCarbonEmission = _embodiedCarbonEmission</span>
+
+<span class="nc" id="L125">        _powerDraw = 0.0</span>
+<span class="nc" id="L126">        _energyUsage = 0.0</span>
+<span class="nc" id="L127">        _embodiedCarbonEmission = 0.0</span>
+<span class="nc" id="L128">        _charge = 0.0</span>
+<span class="nc" id="L129">        _capacity = 0.0</span>
+<span class="nc" id="L130">        _batteryState = BatteryState.IDLE</span>
+<span class="nc" id="L131">    }</span>
+<span class="nc" id="L132">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

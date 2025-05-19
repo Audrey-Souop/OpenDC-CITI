@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CpuPowerModels.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.simulator.compute.cpu</a> &gt; <span class="el_source">CpuPowerModels.java</span></div><h1>CpuPowerModels.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.simulator.compute.cpu;
+
+import java.util.Arrays;
+
+/**
+ * A collection {@link CpuPowerModel} implementations.
+ */
+public class CpuPowerModels {
+    private CpuPowerModels() {}
+
+    /**
+     * Construct a constant {@link CpuPowerModel}.
+     *
+     * @param power The power consumption of the host at all times (in W).
+     */
+    public static CpuPowerModel constant(double power) {
+<span class="nc" id="L39">        return new ConstantPowerModel(power);</span>
+    }
+
+    /**
+     * Construct a square root {@link CpuPowerModel} that is adapted from CloudSim.
+     *
+     * @param maxPower  The maximum power draw of the host in W.
+     * @param idlePower The power draw of the host at its lowest utilization level in W.
+     */
+    public static CpuPowerModel sqrt(double maxPower, double idlePower) {
+<span class="nc" id="L49">        return new SqrtPowerModel(maxPower, idlePower);</span>
+    }
+
+    /**
+     * Construct a linear {@link CpuPowerModel} that is adapted from CloudSim.
+     *
+     * @param maxPower  The maximum power draw of the host in W.
+     * @param idlePower The power draw of the host at its lowest utilization level in W.
+     */
+    public static CpuPowerModel linear(double maxPower, double idlePower) {
+<span class="nc" id="L59">        return new LinearPowerModel(maxPower, idlePower);</span>
+    }
+
+    /**
+     * Construct a square {@link CpuPowerModel} that is adapted from CloudSim.
+     *
+     * @param maxPower  The maximum power draw of the host in W.
+     * @param idlePower The power draw of the host at its lowest utilization level in W.
+     */
+    public static CpuPowerModel square(double maxPower, double idlePower) {
+<span class="nc" id="L69">        return new SquarePowerModel(maxPower, idlePower);</span>
+    }
+
+    /**
+     * Construct a cubic {@link CpuPowerModel} that is adapted from CloudSim.
+     *
+     * @param maxPower  The maximum power draw of the host in W.
+     * @param idlePower The power draw of the host at its lowest utilization level in W.
+     */
+    public static CpuPowerModel cubic(double maxPower, double idlePower) {
+<span class="nc" id="L79">        return new CubicPowerModel(maxPower, idlePower);</span>
+    }
+
+    /**
+     * Construct a {@link CpuPowerModel} that minimizes the mean squared error (MSE)
+     * to the actual power measurement by tuning the calibration parameter.
+     *
+     * @param maxPower          The maximum power draw of the host in W.
+     * @param idlePower         The power draw of the host at its lowest utilization level in W.
+     * @param calibrationFactor The parameter set to minimize the MSE.
+     * @see &lt;a href=&quot;https://dl.acm.org/doi/abs/10.1145/1273440.1250665&quot;&gt;
+     * Fan et al., Power provisioning for a warehouse-sized computer, ACM SIGARCH'07&lt;/a&gt;
+     */
+    public static CpuPowerModel mse(double maxPower, double idlePower, double calibrationFactor) {
+<span class="nc" id="L93">        return new MsePowerModel(maxPower, idlePower, calibrationFactor);</span>
+    }
+
+    /**
+     * Construct an asymptotic {@link CpuPowerModel} adapted from GreenCloud.
+     *
+     * @param maxPower  The maximum power draw of the host in W.
+     * @param idlePower The power draw of the host at its lowest utilization level in W.
+     * @param asymUtil  A utilization level at which the host attains asymptotic,
+     *                  i.e., close to linear power consumption versus the offered load.
+     *                  For most of the CPUs,a is in [0.2, 0.5].
+     * @param dvfs      A flag indicates whether DVFS is enabled.
+     */
+    public static CpuPowerModel asymptotic(double maxPower, double idlePower, double asymUtil, boolean dvfs) {
+<span class="nc" id="L107">        return new AsymptoticPowerModel(maxPower, idlePower, asymUtil, dvfs);</span>
+    }
+
+    /**
+     * Construct a linear interpolation model {@link CpuPowerModel} that is adapted from CloudSim.
+     *
+     * &lt;p&gt;
+     * The power consumption is linearly interpolated over the given power levels. In case of two values, the first
+     * represents 0% utilization, while the last value represent 100% utilization.
+     *
+     * @param powerLevels An array of power consumption steps (in W) for a specific CPU utilization.
+     * @see &lt;a href=&quot;http://www.spec.org/power_ssj2008/results/res2011q1/&quot;&gt;Machines used in the SPEC benchmark&lt;/a&gt;
+     */
+    public static CpuPowerModel interpolate(double... powerLevels) {
+<span class="nc" id="L121">        return new InterpolationPowerModel(powerLevels.clone());</span>
+    }
+
+    /**
+     * Decorate an existing {@link CpuPowerModel} to ensure that zero power consumption is reported when there is no
+     * utilization.
+     *
+     * @param delegate The existing {@link CpuPowerModel} to decorate.
+     */
+    public static CpuPowerModel zeroIdle(CpuPowerModel delegate) {
+<span class="nc" id="L131">        return new ZeroIdlePowerDecorator(delegate);</span>
+    }
+
+    private static final class ConstantPowerModel implements CpuPowerModel {
+        private final double power;
+
+<span class="nc" id="L137">        ConstantPowerModel(double power) {</span>
+<span class="nc" id="L138">            this.power = power;</span>
+<span class="nc" id="L139">        }</span>
+
+        @Override
+        public double computePower(double utilization) {
+<span class="nc" id="L143">            return power;</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="nc" id="L148">            return &quot;ConstantPowerModel[power=&quot; + power + &quot;]&quot;;</span>
+        }
+
+        @Override
+        public String getName() {
+<span class="nc" id="L153">            return &quot;ConstantPowerModel&quot;;</span>
+        }
+    }
+
+    private abstract static class MaxIdlePowerModel implements CpuPowerModel {
+        protected final double maxPower;
+        protected final double idlePower;
+
+<span class="nc" id="L161">        MaxIdlePowerModel(double maxPower, double idlePower) {</span>
+<span class="nc" id="L162">            this.maxPower = maxPower;</span>
+<span class="nc" id="L163">            this.idlePower = idlePower;</span>
+<span class="nc" id="L164">        }</span>
+
+        // Clamps the provided utilization in the range of 0.0 and 1.0
+        // This is done to avoid floating point errors
+        public double clampUtilization(double utilization) {
+<span class="nc" id="L169">            return Math.max(0.0, Math.min(1.0, utilization));</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="nc" id="L174">            return getClass().getSimpleName() + &quot;[max=&quot; + maxPower + &quot;,idle=&quot; + idlePower + &quot;]&quot;;</span>
+        }
+    }
+
+    private static final class SqrtPowerModel extends MaxIdlePowerModel {
+        private final double factor;
+
+        SqrtPowerModel(double maxPower, double idlePower) {
+<span class="nc" id="L182">            super(maxPower, idlePower);</span>
+<span class="nc" id="L183">            this.factor = (maxPower - idlePower);</span>
+<span class="nc" id="L184">        }</span>
+
+        @Override
+        public double computePower(double utilization) {
+<span class="nc" id="L188">            utilization = clampUtilization(utilization);</span>
+
+<span class="nc" id="L190">            return idlePower + factor * Math.sqrt(utilization);</span>
+        }
+
+        @Override
+        public String getName() {
+<span class="nc" id="L195">            return &quot;SqrtPowerModel&quot;;</span>
+        }
+
+        @Override
+        public String getFullName() {
+<span class="nc" id="L200">            return (&quot;sqrtPowerModel-&quot; + idlePower + &quot;-&quot; + maxPower);</span>
+        }
+    }
+
+    private static final class LinearPowerModel extends MaxIdlePowerModel {
+        private final double factor;
+
+        LinearPowerModel(double maxPower, double idlePower) {
+<span class="nc" id="L208">            super(maxPower, idlePower);</span>
+<span class="nc" id="L209">            this.factor = maxPower - idlePower;</span>
+<span class="nc" id="L210">        }</span>
+
+        @Override
+        public double computePower(double utilization) {
+<span class="nc" id="L214">            utilization = clampUtilization(utilization);</span>
+
+<span class="nc" id="L216">            return idlePower + factor * utilization;</span>
+        }
+
+        @Override
+        public String getName() {
+<span class="nc" id="L221">            return &quot;LinearPowerModel&quot;;</span>
+        }
+
+        @Override
+        public String getFullName() {
+<span class="nc" id="L226">            return (&quot;linearPowerModel-&quot; + idlePower + &quot;-&quot; + maxPower);</span>
+        }
+    }
+
+    private static final class SquarePowerModel extends MaxIdlePowerModel {
+        private final double factor;
+
+        SquarePowerModel(double maxPower, double idlePower) {
+<span class="nc" id="L234">            super(maxPower, idlePower);</span>
+<span class="nc" id="L235">            this.factor = (maxPower - idlePower);</span>
+<span class="nc" id="L236">        }</span>
+
+        @Override
+        public double computePower(double utilization) {
+<span class="nc" id="L240">            utilization = clampUtilization(utilization);</span>
+
+<span class="nc" id="L242">            return idlePower + factor * Math.pow(utilization, 2);</span>
+        }
+
+        @Override
+        public String getName() {
+<span class="nc" id="L247">            return &quot;SquarePowerModel&quot;;</span>
+        }
+
+        @Override
+        public String getFullName() {
+<span class="nc" id="L252">            return (&quot;squarePowerModel-&quot; + idlePower + &quot;-&quot; + maxPower);</span>
+        }
+    }
+
+    //
+    private static final class CubicPowerModel extends MaxIdlePowerModel {
+        private final double factor;
+
+        CubicPowerModel(double maxPower, double idlePower) {
+<span class="nc" id="L261">            super(maxPower, idlePower);</span>
+<span class="nc" id="L262">            this.factor = (maxPower - idlePower);</span>
+<span class="nc" id="L263">        }</span>
+
+        @Override
+        public double computePower(double utilization) {
+<span class="nc" id="L267">            utilization = clampUtilization(utilization);</span>
+
+<span class="nc" id="L269">            return idlePower + factor * Math.pow(utilization, 3);</span>
+        }
+
+        @Override
+        public String getName() {
+<span class="nc" id="L274">            return &quot;CubicPowerModel&quot;;</span>
+        }
+
+        @Override
+        public String getFullName() {
+<span class="nc" id="L279">            return (&quot;cubicPowerModel-&quot; + idlePower + &quot;-&quot; + maxPower);</span>
+        }
+    }
+
+    private static final class MsePowerModel extends MaxIdlePowerModel {
+        private final double calibrationFactor;
+        private final double factor;
+
+        MsePowerModel(double maxPower, double idlePower, double calibrationFactor) {
+<span class="nc" id="L288">            super(maxPower, idlePower);</span>
+<span class="nc" id="L289">            this.calibrationFactor = calibrationFactor;</span>
+<span class="nc" id="L290">            this.factor = (maxPower - idlePower) / 100;</span>
+<span class="nc" id="L291">        }</span>
+
+        @Override
+        public double computePower(double utilization) {
+<span class="nc" id="L295">            return idlePower + factor * (2 * utilization - Math.pow(utilization, calibrationFactor)) * 100;</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="nc" id="L300">            return &quot;MsePowerModel[max=&quot; + maxPower + &quot;,idle=&quot; + idlePower + &quot;,calibrationFactor=&quot; + calibrationFactor</span>
+                    + &quot;]&quot;;
+        }
+
+        @Override
+        public String getName() {
+<span class="nc" id="L306">            return &quot;MsePowerModel&quot;;</span>
+        }
+    }
+
+    private static final class AsymptoticPowerModel extends MaxIdlePowerModel {
+        private final double asymUtil;
+        private final boolean dvfs;
+        private final double factor;
+
+        AsymptoticPowerModel(double maxPower, double idlePower, double asymUtil, boolean dvfs) {
+<span class="nc" id="L316">            super(maxPower, idlePower);</span>
+<span class="nc" id="L317">            this.asymUtil = asymUtil;</span>
+<span class="nc" id="L318">            this.dvfs = dvfs;</span>
+<span class="nc" id="L319">            this.factor = (maxPower - idlePower) / 100;</span>
+<span class="nc" id="L320">        }</span>
+
+        @Override
+        public double computePower(double utilization) {
+<span class="nc bnc" id="L324" title="All 2 branches missed.">            if (dvfs) {</span>
+<span class="nc" id="L325">                return idlePower</span>
+                        + (factor * 100)
+                                / 2
+                                * (1
+<span class="nc" id="L329">                                        + Math.pow(utilization, 3)</span>
+<span class="nc" id="L330">                                        - Math.pow(Math.E, -Math.pow(utilization, 3) / asymUtil));</span>
+            } else {
+<span class="nc" id="L332">                return idlePower + (factor * 100) / 2 * (1 + utilization - Math.pow(Math.E, -utilization / asymUtil));</span>
+            }
+        }
+
+        @Override
+        public String toString() {
+<span class="nc" id="L338">            return &quot;AsymptoticPowerModel[max=&quot; + maxPower + &quot;,idle=&quot; + idlePower + &quot;,asymUtil=&quot; + asymUtil + &quot;,dvfs=&quot;</span>
+                    + dvfs + &quot;]&quot;;
+        }
+
+        @Override
+        public String getName() {
+<span class="nc" id="L344">            return &quot;AsymptoticPowerModel&quot;;</span>
+        }
+    }
+
+    private static final class InterpolationPowerModel implements CpuPowerModel {
+        private final double[] powerLevels;
+
+<span class="nc" id="L351">        InterpolationPowerModel(double[] powerLevels) {</span>
+<span class="nc" id="L352">            this.powerLevels = powerLevels;</span>
+<span class="nc" id="L353">        }</span>
+
+        @Override
+        public double computePower(double utilization) {
+<span class="nc" id="L357">            final double[] powerLevels = this.powerLevels;</span>
+<span class="nc" id="L358">            double clampedUtilization = Math.min(1.0, Math.max(0.0, utilization));</span>
+
+<span class="nc bnc" id="L360" title="All 2 branches missed.">            if (utilization % 0.1 == 0.0) {</span>
+<span class="nc" id="L361">                return powerLevels[(int) (clampedUtilization * 10)];</span>
+            }
+
+<span class="nc" id="L364">            int utilizationFlr = (int) Math.floor(clampedUtilization * 10);</span>
+<span class="nc" id="L365">            int utilizationCil = (int) Math.ceil(clampedUtilization * 10);</span>
+<span class="nc" id="L366">            double powerFlr = powerLevels[utilizationFlr];</span>
+<span class="nc" id="L367">            double powerCil = powerLevels[utilizationCil];</span>
+<span class="nc" id="L368">            double delta = (powerCil - powerFlr) / 10;</span>
+
+<span class="nc" id="L370">            return powerFlr + delta * (clampedUtilization - utilizationFlr / 10.0) * 100;</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="nc" id="L375">            return &quot;InterpolationPowerModel[levels=&quot; + Arrays.toString(powerLevels) + &quot;]&quot;;</span>
+        }
+
+        @Override
+        public String getName() {
+<span class="nc" id="L380">            return &quot;InterpolationPowerModel&quot;;</span>
+        }
+    }
+
+    private static final class ZeroIdlePowerDecorator implements CpuPowerModel {
+        private final CpuPowerModel delegate;
+
+<span class="nc" id="L387">        ZeroIdlePowerDecorator(CpuPowerModel delegate) {</span>
+<span class="nc" id="L388">            this.delegate = delegate;</span>
+<span class="nc" id="L389">        }</span>
+
+        @Override
+        public double computePower(double utilization) {
+<span class="nc bnc" id="L393" title="All 2 branches missed.">            if (utilization == 0.0) {</span>
+<span class="nc" id="L394">                return 0.0;</span>
+            }
+
+<span class="nc" id="L397">            return delegate.computePower(utilization);</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="nc" id="L402">            return &quot;ZeroIdlePowerDecorator[delegate=&quot; + delegate + &quot;]&quot;;</span>
+        }
+
+        @Override
+        public String getName() {
+<span class="nc" id="L407">            return &quot;ZeroIdlePowerDecorator&quot;;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

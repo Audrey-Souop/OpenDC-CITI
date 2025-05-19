@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OdcVmResourceTableReader.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.trace.formats.opendc</a> &gt; <span class="el_source">OdcVmResourceTableReader.kt</span></div><h1>OdcVmResourceTableReader.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.trace.formats.opendc
+
+import org.opendc.trace.TableReader
+import org.opendc.trace.conv.resourceCpuCapacity
+import org.opendc.trace.conv.resourceCpuCount
+import org.opendc.trace.conv.resourceDeadline
+import org.opendc.trace.conv.resourceDuration
+import org.opendc.trace.conv.resourceID
+import org.opendc.trace.conv.resourceMemCapacity
+import org.opendc.trace.conv.resourceNature
+import org.opendc.trace.conv.resourceSubmissionTime
+import org.opendc.trace.formats.opendc.parquet.Resource
+import org.opendc.trace.util.parquet.LocalParquetReader
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
+
+/**
+ * A [TableReader] implementation for the &quot;resources table&quot; in the OpenDC virtual machine trace format.
+ */
+<span class="fc" id="L43">internal class OdcVmResourceTableReader(private val reader: LocalParquetReader&lt;Resource&gt;) : TableReader {</span>
+    /**
+     * The current record.
+     */
+    private var record: Resource? = null
+
+    override fun nextRow(): Boolean {
+<span class="fc" id="L50">        try {</span>
+<span class="fc" id="L51">            val record = reader.read()</span>
+<span class="fc" id="L52">            this.record = record</span>
+
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            return record != null</span>
+<span class="nc" id="L55">        } catch (e: Throwable) {</span>
+<span class="nc" id="L56">            this.record = null</span>
+<span class="nc" id="L57">            throw e</span>
+        }
+    }
+
+    private val colID = 0
+<span class="fc" id="L62">    private val colSubmissionTime = 1</span>
+<span class="fc" id="L63">    private val colDurationTime = 2</span>
+<span class="fc" id="L64">    private val colCpuCount = 3</span>
+<span class="fc" id="L65">    private val colCpuCapacity = 4</span>
+<span class="fc" id="L66">    private val colMemCapacity = 5</span>
+<span class="fc" id="L67">    private val colNature = 6</span>
+<span class="fc" id="L68">    private val colDeadline = 7</span>
+
+    override fun resolve(name: String): Int {
+<span class="fc" id="L71">        return when (name) {</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">            resourceID -&gt; colID</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            resourceSubmissionTime -&gt; colSubmissionTime</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">            resourceDuration -&gt; colDurationTime</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            resourceCpuCount -&gt; colCpuCount</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            resourceCpuCapacity -&gt; colCpuCapacity</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">            resourceMemCapacity -&gt; colMemCapacity</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            resourceNature -&gt; colNature</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            resourceDeadline -&gt; colDeadline</span>
+<span class="fc" id="L80">            else -&gt; -1</span>
+        }
+    }
+
+    override fun isNull(index: Int): Boolean {
+<span class="pc bpc" id="L85" title="1 of 6 branches missed.">        require(index in 0..colDeadline) { &quot;Invalid column index&quot; }</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        val record = checkNotNull(record) { &quot;Reader in invalid state&quot; }</span>
+
+<span class="fc" id="L88">        return when (index) {</span>
+<span class="pc bpc" id="L89" title="1 of 4 branches missed.">            colNature -&gt; record.nature == null</span>
+<span class="pc bpc" id="L90" title="1 of 4 branches missed.">            colDeadline -&gt; record.deadline == -1L</span>
+<span class="fc" id="L91">            else -&gt; false</span>
+        }
+    }
+
+    override fun getBoolean(index: Int): Boolean {
+<span class="fc" id="L96">        throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+    }
+
+    override fun getInt(index: Int): Int {
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        val record = checkNotNull(record) { &quot;Reader in invalid state&quot; }</span>
+
+<span class="fc" id="L102">        return when (index) {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            colCpuCount -&gt; record.cpuCount</span>
+<span class="fc" id="L104">            else -&gt; throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+        }
+    }
+
+    override fun getLong(index: Int): Long {
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        val record = checkNotNull(record) { &quot;Reader in invalid state&quot; }</span>
+<span class="fc" id="L110">        return when (index) {</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            colDurationTime -&gt; record.durationTime</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            colDeadline -&gt; record.deadline</span>
+<span class="fc" id="L113">            else -&gt; throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+        }
+    }
+
+    override fun getFloat(index: Int): Float {
+<span class="fc" id="L118">        throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+    }
+
+    override fun getDouble(index: Int): Double {
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        val record = checkNotNull(record) { &quot;Reader in invalid state&quot; }</span>
+
+<span class="fc" id="L124">        return when (index) {</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">            colCpuCapacity -&gt; record.cpuCapacity</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">            colMemCapacity -&gt; record.memCapacity</span>
+<span class="fc" id="L127">            else -&gt; throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+        }
+    }
+
+    override fun getString(index: Int): String? {
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        val record = checkNotNull(record) { &quot;Reader in invalid state&quot; }</span>
+
+<span class="fc" id="L134">        return when (index) {</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            colID -&gt; record.id</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">            colNature -&gt; record.nature</span>
+<span class="fc" id="L137">            else -&gt; throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+        }
+    }
+
+    override fun getUUID(index: Int): UUID? {
+<span class="fc" id="L142">        throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+    }
+
+    override fun getInstant(index: Int): Instant {
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        val record = checkNotNull(record) { &quot;Reader in invalid state&quot; }</span>
+
+<span class="fc" id="L148">        return when (index) {</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            colSubmissionTime -&gt; record.submissionTime</span>
+<span class="fc" id="L150">            else -&gt; throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+        }
+    }
+
+    override fun getDuration(index: Int): Duration? {
+<span class="fc" id="L155">        throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+    }
+
+    override fun &lt;T&gt; getList(
+        index: Int,
+        elementType: Class&lt;T&gt;,
+    ): List&lt;T&gt;? {
+<span class="fc" id="L162">        throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+    }
+
+    override fun &lt;T&gt; getSet(
+        index: Int,
+        elementType: Class&lt;T&gt;,
+    ): Set&lt;T&gt;? {
+<span class="fc" id="L169">        throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+    }
+
+    override fun &lt;K, V&gt; getMap(
+        index: Int,
+        keyType: Class&lt;K&gt;,
+        valueType: Class&lt;V&gt;,
+    ): Map&lt;K, V&gt;? {
+<span class="fc" id="L177">        throw IllegalArgumentException(&quot;Invalid column&quot;)</span>
+    }
+
+    override fun close() {
+<span class="fc" id="L181">        reader.close()</span>
+<span class="fc" id="L182">    }</span>
+
+<span class="nc" id="L184">    override fun toString(): String = &quot;OdcVmResourceTableReader&quot;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

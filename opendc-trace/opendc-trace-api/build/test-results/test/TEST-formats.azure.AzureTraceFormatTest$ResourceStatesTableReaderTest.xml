@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="TableReader for Resource States" tests="7" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:33" hostname="ece-d6200-audu" time="0.107">
+  <properties/>
+  <testcase name="testReadWithoutNextRow()" classname="formats.azure.AzureTraceFormatTest$ResourceStatesTableReaderTest" time="0.016"/>
+  <testcase name="testReadAfterFinish()" classname="formats.azure.AzureTraceFormatTest$ResourceStatesTableReaderTest" time="0.012"/>
+  <testcase name="testReadFully()" classname="formats.azure.AzureTraceFormatTest$ResourceStatesTableReaderTest" time="0.02"/>
+  <testcase name="testVerifyNullColumns()" classname="formats.azure.AzureTraceFormatTest$ResourceStatesTableReaderTest" time="0.019"/>
+  <testcase name="testResolve()" classname="formats.azure.AzureTraceFormatTest$ResourceStatesTableReaderTest" time="0.006"/>
+  <testcase name="testResolveEmpty()" classname="formats.azure.AzureTraceFormatTest$ResourceStatesTableReaderTest" time="0.003"/>
+  <testcase name="testReadNonExistentColumns()" classname="formats.azure.AzureTraceFormatTest$ResourceStatesTableReaderTest" time="0.019"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

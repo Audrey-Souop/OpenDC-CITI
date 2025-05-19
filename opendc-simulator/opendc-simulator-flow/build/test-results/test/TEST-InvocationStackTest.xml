@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="InvocationStackTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-05-13T17:40:27" hostname="ece-d6200-audu" time="0.144">
+  <properties/>
+  <testcase name="testCapacityExceeded()" classname="InvocationStackTest" time="0.089"/>
+  <testcase name="testAddEarlier()" classname="InvocationStackTest" time="0.005"/>
+  <testcase name="testAddLater()" classname="InvocationStackTest" time="0.006"/>
+  <testcase name="testPollEmpty()" classname="InvocationStackTest" time="0.005"/>
+  <testcase name="testAddSingle()" classname="InvocationStackTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

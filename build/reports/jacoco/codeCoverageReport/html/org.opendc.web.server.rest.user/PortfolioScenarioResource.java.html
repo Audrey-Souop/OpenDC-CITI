@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PortfolioScenarioResource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.web.server.rest.user</a> &gt; <span class="el_source">PortfolioScenarioResource.java</span></div><h1>PortfolioScenarioResource.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2023 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.web.server.rest.user;
+
+import io.quarkus.security.identity.SecurityIdentity;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import java.time.Instant;
+import java.util.List;
+import org.opendc.web.proto.JobState;
+import org.opendc.web.server.model.Job;
+import org.opendc.web.server.model.Portfolio;
+import org.opendc.web.server.model.ProjectAuthorization;
+import org.opendc.web.server.model.Scenario;
+import org.opendc.web.server.model.Topology;
+import org.opendc.web.server.model.Trace;
+import org.opendc.web.server.model.Workload;
+import org.opendc.web.server.service.UserAccountingService;
+
+/**
+ * A resource representing the scenarios of a portfolio.
+ */
+@Path(&quot;/projects/{project}/portfolios/{portfolio}/scenarios&quot;)
+@RolesAllowed(&quot;openid&quot;)
+@Produces(&quot;application/json&quot;)
+public final class PortfolioScenarioResource {
+    /**
+     * The service for managing the user accounting.
+     */
+    private final UserAccountingService accountingService;
+
+    /**
+     * The identity of the current user.
+     */
+    private final SecurityIdentity identity;
+
+    /**
+     * Construct a {@link PortfolioScenarioResource}.
+     *
+     * @param accountingService The {@link UserAccountingService} instance to use.
+     * @param identity The {@link SecurityIdentity} of the current user.
+     */
+<span class="fc" id="L71">    public PortfolioScenarioResource(UserAccountingService accountingService, SecurityIdentity identity) {</span>
+<span class="fc" id="L72">        this.accountingService = accountingService;</span>
+<span class="fc" id="L73">        this.identity = identity;</span>
+<span class="fc" id="L74">    }</span>
+
+    /**
+     * Get all scenarios that belong to the specified portfolio.
+     */
+    @GET
+    public List&lt;org.opendc.web.proto.user.Scenario&gt; get(
+            @PathParam(&quot;project&quot;) long projectId, @PathParam(&quot;portfolio&quot;) int portfolioNumber) {
+        // User must have access to project
+<span class="fc" id="L83">        ProjectAuthorization auth =</span>
+<span class="fc" id="L84">                ProjectAuthorization.findByUser(identity.getPrincipal().getName(), projectId);</span>
+
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L87">            return List.of();</span>
+        }
+
+<span class="fc" id="L90">        return org.opendc.web.server.model.Scenario.findByPortfolio(projectId, portfolioNumber).list().stream()</span>
+<span class="fc" id="L91">                .map((s) -&gt; UserProtocol.toDto(s, auth))</span>
+<span class="fc" id="L92">                .toList();</span>
+    }
+
+    /**
+     * Create a scenario for this portfolio.
+     */
+    @POST
+    @Transactional
+    @Consumes(&quot;application/json&quot;)
+    public org.opendc.web.proto.user.Scenario create(
+            @PathParam(&quot;project&quot;) long projectId,
+            @PathParam(&quot;portfolio&quot;) int portfolioNumber,
+            @Valid org.opendc.web.proto.user.Scenario.Create request) {
+        // User must have access to project
+<span class="fc" id="L106">        String userId = identity.getPrincipal().getName();</span>
+<span class="fc" id="L107">        ProjectAuthorization auth = ProjectAuthorization.findByUser(userId, projectId);</span>
+
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L110">            throw new WebApplicationException(&quot;Portfolio not found&quot;, 404);</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        } else if (!auth.canEdit()) {</span>
+<span class="fc" id="L112">            throw new WebApplicationException(&quot;Not permitted to edit project&quot;, 403);</span>
+        }
+
+<span class="fc" id="L115">        Portfolio portfolio = Portfolio.findByProject(projectId, portfolioNumber);</span>
+
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (portfolio == null) {</span>
+<span class="fc" id="L118">            throw new WebApplicationException(&quot;Portfolio not found&quot;, 404);</span>
+        }
+
+<span class="fc" id="L121">        Topology topology = Topology.findByProject(projectId, (int) request.getTopology());</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        if (topology == null) {</span>
+<span class="fc" id="L123">            throw new WebApplicationException(&quot;Referred topology does not exist&quot;, 400);</span>
+        }
+
+<span class="fc" id="L126">        Trace trace = Trace.findById(request.getWorkload().getTrace());</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (trace == null) {</span>
+<span class="fc" id="L128">            throw new WebApplicationException(&quot;Referred trace does not exist&quot;, 400);</span>
+        }
+
+<span class="fc" id="L131">        var now = Instant.now();</span>
+<span class="fc" id="L132">        var project = auth.project;</span>
+<span class="fc" id="L133">        int number = project.allocateScenario(now);</span>
+
+<span class="fc" id="L135">        Scenario scenario = new Scenario(</span>
+                project,
+                portfolio,
+                number,
+<span class="fc" id="L139">                request.getName(),</span>
+<span class="fc" id="L140">                new Workload(trace, request.getWorkload().getSamplingFraction()),</span>
+                topology,
+<span class="fc" id="L142">                request.getPhenomena(),</span>
+<span class="fc" id="L143">                request.getSchedulerName());</span>
+<span class="fc" id="L144">        scenario.persist();</span>
+
+<span class="fc" id="L146">        Job job = new Job(scenario, userId, now, portfolio.targets.getRepeats());</span>
+<span class="fc" id="L147">        job.persist();</span>
+
+        // Fail the job if there is not enough budget for the simulation
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (!accountingService.hasSimulationBudget(userId)) {</span>
+<span class="nc" id="L151">            job.state = JobState.FAILED;</span>
+        }
+
+<span class="fc" id="L154">        scenario.jobs.add(job);</span>
+<span class="fc" id="L155">        portfolio.scenarios.add(scenario);</span>
+
+<span class="fc" id="L157">        return UserProtocol.toDto(scenario, auth);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

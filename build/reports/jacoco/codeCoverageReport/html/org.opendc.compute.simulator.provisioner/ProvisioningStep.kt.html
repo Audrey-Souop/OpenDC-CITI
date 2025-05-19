@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProvisioningStep.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.provisioner</a> &gt; <span class="el_source">ProvisioningStep.kt</span></div><h1>ProvisioningStep.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2022 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.provisioner
+
+import org.eclipse.microprofile.config.Config
+
+/**
+ * A provisioning step is responsible for provisioning (acquiring or configuring) infrastructure necessary for a
+ * simulation experiment.
+ */
+public fun interface ProvisioningStep {
+    /**
+     * Apply the step by provisioning the required resources for the experiment using the specified
+     * [ProvisioningContext][ctx].
+     *
+     * @param ctx The environment in which the resources should be provisioned.
+     * @return A handle that is invoked once the simulation completes, so that the resources can be cleaned up.
+     */
+    public fun apply(ctx: ProvisioningContext): AutoCloseable
+
+    /**
+     * A factory interface for [ProvisioningStep] instances.
+     *
+     * @param S The type that describes the input for constructing a [ProvisioningStep].
+     */
+<span class="nc" id="L46">    public abstract class Provider&lt;S&gt;(public val type: Class&lt;S&gt;) {</span>
+        /**
+         * The name that identifies the provisioning step.
+         */
+        public abstract val name: String
+
+        /**
+         * Construct a [ProvisioningStep] with the specified [spec].
+         *
+         * @param spec The specification that describes the provisioner to be created.
+         * @param config The external configuration of the experiment runner.
+         * @return The [ProvisioningStep] constructed according to [spec].
+         */
+        public abstract fun create(
+            spec: S,
+            config: Config,
+        ): ProvisioningStep
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RamFilter.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.simulator.scheduler.filters</a> &gt; <span class="el_source">RamFilter.kt</span></div><h1>RamFilter.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.simulator.scheduler.filters
+
+import org.opendc.compute.simulator.service.HostView
+import org.opendc.compute.simulator.service.ServiceTask
+
+/**
+ * A [HostFilter] that filters hosts based on the memory requirements of a [ServiceTask] and the RAM available on the host.
+ *
+ * @param allocationRatio Virtual RAM to physical RAM allocation ratio.
+ */
+<span class="fc" id="L33">public class RamFilter(private val allocationRatio: Double) : HostFilter {</span>
+    override fun test(
+        host: HostView,
+        task: ServiceTask,
+    ): Boolean {
+<span class="fc" id="L38">        val requestedMemory = task.flavor.memorySize</span>
+<span class="fc" id="L39">        val availableMemory = host.availableMemory</span>
+<span class="fc" id="L40">        val memoryCapacity = host.host.getModel().memoryCapacity</span>
+
+        // Do not allow an instance to overcommit against itself, only against
+        // other instances.
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (requestedMemory &gt; memoryCapacity) {</span>
+<span class="fc" id="L45">            return false</span>
+        }
+
+<span class="fc" id="L48">        val limit = memoryCapacity * allocationRatio</span>
+<span class="fc" id="L49">        val used = memoryCapacity - availableMemory</span>
+<span class="fc" id="L50">        val usable = limit - used</span>
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        val result = usable &gt;= requestedMemory</span>
+<span class="fc" id="L53">        return result</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

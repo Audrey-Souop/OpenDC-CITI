@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.opendc.web.server.service.UserAccountingServiceTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2025-05-17T00:28:10" hostname="ece-d6200-audu" time="0.054">
+  <properties/>
+  <testcase name="testConsumeBudgetNewUserConflict()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.032"/>
+  <testcase name="testGetUserDoesExist()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.003"/>
+  <testcase name="testHasBudgetUserDoesNotExist()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.002"/>
+  <testcase name="testHasBudgetExceededButPeriodExpired()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.001"/>
+  <testcase name="testHasBudget()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.001"/>
+  <testcase name="testGetUserDoesNotExist()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.001"/>
+  <testcase name="testConsumeBudgetNewUserExceeded()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.001"/>
+  <testcase name="testInfiniteConflict()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.002"/>
+  <testcase name="testHasBudgetExceeded()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.001"/>
+  <testcase name="testConsumeBudgetNewUser()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.001"/>
+  <testcase name="testHasBudgetPeriodExpired()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.001"/>
+  <testcase name="testConsumeBudgetResetSuccess()" classname="org.opendc.web.server.service.UserAccountingServiceTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

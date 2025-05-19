@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FailureModel.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SchedulerResourceTest (QuarkusTest)</a> &gt; <a href="index.source.html" class="el_package">org.opendc.compute.failure.models</a> &gt; <span class="el_source">FailureModel.kt</span></div><h1>FailureModel.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2021 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.compute.failure.models
+
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import org.opendc.compute.failure.hostfault.HostFault
+import org.opendc.compute.failure.hostfault.StartStopHostFault
+import org.opendc.compute.failure.victimselector.StochasticVictimSelector
+import org.opendc.compute.simulator.host.SimHost
+import org.opendc.compute.simulator.service.ComputeService
+import java.time.InstantSource
+import java.util.random.RandomGenerator
+import kotlin.coroutines.CoroutineContext
+
+/**
+ * Factory interface for constructing [FailureModel] for modeling failures of compute service hosts.
+ */
+<span class="nc" id="L41">public abstract class FailureModel(</span>
+    context: CoroutineContext,
+<span class="nc" id="L43">    protected val clock: InstantSource,</span>
+<span class="nc" id="L44">    protected val service: ComputeService,</span>
+<span class="nc" id="L45">    protected val random: RandomGenerator,</span>
+) : AutoCloseable {
+<span class="nc" id="L47">    protected val scope: CoroutineScope = CoroutineScope(context + Job())</span>
+
+    // TODO: could at some point be extended to different types of faults
+<span class="nc" id="L50">    protected val fault: HostFault = StartStopHostFault(service)</span>
+
+    // TODO: could at some point be extended to different types of victim selectors
+<span class="nc" id="L53">    protected val victimSelector: StochasticVictimSelector = StochasticVictimSelector(random)</span>
+
+<span class="nc" id="L55">    protected val hosts: Set&lt;SimHost&gt; = service.hosts.map { it as SimHost }.toSet()</span>
+
+    /**
+     * The [Job] that awaits the nearest fault in the system.
+     */
+    private var job: Job? = null
+
+    /**
+     * Start the fault injection into the system.
+     */
+    public fun start() {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (job != null) {</span>
+<span class="nc" id="L67">            return</span>
+        }
+
+<span class="nc" id="L70">        job =</span>
+<span class="nc" id="L71">            scope.launch {</span>
+<span class="nc" id="L72">                runInjector()</span>
+<span class="nc" id="L73">                job = null</span>
+<span class="nc" id="L74">            }</span>
+<span class="nc" id="L75">    }</span>
+
+    public abstract suspend fun runInjector()
+
+    /**
+     * Stop the fault injector.
+     */
+    public override fun close() {
+<span class="nc" id="L83">        scope.cancel()</span>
+<span class="nc" id="L84">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

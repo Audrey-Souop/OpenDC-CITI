@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HostFilterSpec.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">opendc</a> &gt; <a href="index.source.html" class="el_package">org.opendc.experiments.base.experiment.specs.allocation</a> &gt; <span class="el_source">HostFilterSpec.kt</span></div><h1>HostFilterSpec.kt</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2025 AtLarge Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.opendc.experiments.base.experiment.specs.allocation
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import org.opendc.compute.simulator.scheduler.filters.ComputeFilter
+import org.opendc.compute.simulator.scheduler.filters.DifferentHostFilter
+import org.opendc.compute.simulator.scheduler.filters.HostFilter
+import org.opendc.compute.simulator.scheduler.filters.InstanceCountFilter
+import org.opendc.compute.simulator.scheduler.filters.RamFilter
+import org.opendc.compute.simulator.scheduler.filters.SameHostFilter
+import org.opendc.compute.simulator.scheduler.filters.VCpuCapacityFilter
+import org.opendc.compute.simulator.scheduler.filters.VCpuFilter
+
+public enum class HostFilterEnum {
+<span class="nc" id="L37">    Compute,</span>
+<span class="nc" id="L38">    DifferentHost,</span>
+<span class="nc" id="L39">    InstanceCount,</span>
+<span class="nc" id="L40">    Ram,</span>
+<span class="nc" id="L41">    SameHost,</span>
+<span class="nc" id="L42">    VCpuCapacity,</span>
+<span class="nc" id="L43">    VCpu,</span>
+<span class="nc" id="L44">    CpuUtilization,</span>
+}
+
+/**
+ * A specification for a host filter.
+ *
+ * A host filter can be defined in a JSON file by adding the serialName as the type parameter.
+ *
+ * The user then has to specify any additional parameters required for the filter.
+ */
+<span class="nc" id="L54">@Serializable</span>
+<span class="nc" id="L55">public sealed class HostFilterSpec</span>
+
+<span class="nc bnc" id="L57" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;Compute&quot;)
+<span class="nc" id="L59">public data class ComputeFilterSpec(</span>
+<span class="nc" id="L60">    val filterName: HostFilterEnum = HostFilterEnum.Compute,</span>
+<span class="nc" id="L61">) : HostFilterSpec()</span>
+
+<span class="nc bnc" id="L63" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;DifferentHost&quot;)
+<span class="nc" id="L65">public data class DifferentHostFilterSpec(</span>
+<span class="nc" id="L66">    val filterName: HostFilterEnum = HostFilterEnum.DifferentHost,</span>
+<span class="nc" id="L67">) : HostFilterSpec()</span>
+
+<span class="nc bnc" id="L69" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;InstanceCount&quot;)
+<span class="nc" id="L71">public data class InstanceCountHostFilterSpec(</span>
+<span class="nc" id="L72">    val filterName: HostFilterEnum = HostFilterEnum.InstanceCount,</span>
+<span class="nc" id="L73">    val limit: Int,</span>
+<span class="nc" id="L74">) : HostFilterSpec()</span>
+
+<span class="nc bnc" id="L76" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;Ram&quot;)
+<span class="nc" id="L78">public data class RamHostFilterSpec(</span>
+<span class="nc" id="L79">    val filterName: HostFilterEnum = HostFilterEnum.Ram,</span>
+<span class="nc" id="L80">    val allocationRatio: Double = 1.0,</span>
+<span class="nc" id="L81">) : HostFilterSpec()</span>
+
+<span class="nc bnc" id="L83" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;SameHost&quot;)
+<span class="nc" id="L85">public data class SameHostHostFilterSpec(</span>
+<span class="nc" id="L86">    val filterName: HostFilterEnum = HostFilterEnum.SameHost,</span>
+<span class="nc" id="L87">) : HostFilterSpec()</span>
+
+<span class="nc bnc" id="L89" title="All 7 branches missed.">@Serializable</span>
+@SerialName(&quot;VCpuCapacity&quot;)
+<span class="nc" id="L91">public data class VCpuCapacityHostFilterSpec(</span>
+<span class="nc" id="L92">    val filterName: HostFilterEnum = HostFilterEnum.VCpuCapacity,</span>
+<span class="nc" id="L93">) : HostFilterSpec()</span>
+
+<span class="nc bnc" id="L95" title="All 8 branches missed.">@Serializable</span>
+@SerialName(&quot;VCpu&quot;)
+<span class="nc" id="L97">public data class VCpuHostFilterSpec(</span>
+<span class="nc" id="L98">    val filterName: HostFilterEnum = HostFilterEnum.VCpu,</span>
+<span class="nc" id="L99">    val allocationRatio: Double = 1.0,</span>
+<span class="nc" id="L100">) : HostFilterSpec()</span>
+
+// @Serializable
+// @SerialName(&quot;CpuUtilization&quot;)
+// public data class CpuUtilizationHostFilterSpec(
+//    val filterName: HostFilterEnum = HostFilterEnum.CpuUtilization,
+//    val allocationRatio: Double = 1.0,
+// ) : HostFilterSpec()
+
+public fun createHostFilter(filterSpec: HostFilterSpec): HostFilter {
+<span class="nc" id="L110">    return when (filterSpec) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        is ComputeFilterSpec -&gt; ComputeFilter()</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        is DifferentHostFilterSpec -&gt; DifferentHostFilter()</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        is InstanceCountHostFilterSpec -&gt; InstanceCountFilter(filterSpec.limit)</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        is RamHostFilterSpec -&gt; RamFilter(filterSpec.allocationRatio)</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        is SameHostHostFilterSpec -&gt; SameHostFilter()</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        is VCpuCapacityHostFilterSpec -&gt; VCpuCapacityFilter()</span>
+<span class="nc" id="L117">        is VCpuHostFilterSpec -&gt; VCpuFilter(filterSpec.allocationRatio)</span>
+//        is CpuUtilizationHostFilterSpec -&gt; CpuUtilizationFilter()
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
